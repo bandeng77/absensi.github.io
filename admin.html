@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Karyawan</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-left">
+                <i class="fas fa-fingerprint logo-icon"></i>
+                <h1>ABSENSI KARYAWAN</h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <span id="userName">Nama Karyawan</span>
+                        <span id="userJob">Job Title</span>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="profile-section">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <div class="profile-img">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="profile-info">
+                            <h2 id="profileName">Nama Karyawan</h2>
+                            <p id="profileJob">Job Title</p>
+                            <p id="profileId">ID: -</p>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <h3>Total Hadir</h3>
+                            <p id="totalHadir">0</p>
+                        </div>
+                        <div class="stat">
+                            <h3>Terlambat</h3>
+                            <p id="totalTerlambat">0</p>
+                        </div>
+                        <div class="stat">
+                            <h3>Izin</h3>
+                            <p id="totalIzin">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="attendance-section">
+                    <div class="current-time">
+                        <h3><i class="fas fa-clock"></i> Waktu Saat Ini</h3>
+                        <div id="currentTime">--:--:--</div>
+                        <div id="currentDate">---, -- --- ----</div>
+                    </div>
+                    
+                    <div class="attendance-actions">
+                        <div class="attendance-card">
+                            <h3><i class="fas fa-sign-in-alt"></i> Absen Masuk</h3>
+                            <p>Waktu normal: 08:00 - 09:00</p>
+                            <div class="attendance-info" id="masukInfo">
+                                <p>Status: <span class="status pending">Belum Absen</span></p>
+                                <p>Waktu: -</p>
+                            </div>
+                            <button id="absenMasukBtn" class="btn-attendance btn-masuk">
+                                <i class="fas fa-camera"></i> Ambil Foto & Absen Masuk
+                            </button>
+                        </div>
+                        
+                        <div class="attendance-card">
+                            <h3><i class="fas fa-sign-out-alt"></i> Absen Pulang</h3>
+                            <p>Waktu normal: 16:00 - 17:00</p>
+                            <div class="attendance-info" id="pulangInfo">
+                                <p>Status: <span class="status pending">Belum Absen</span></p>
+                                <p>Waktu: -</p>
+                            </div>
+                            <button id="absenPulangBtn" class="btn-attendance btn-pulang" disabled>
+                                <i class="fas fa-camera"></i> Ambil Foto & Absen Pulang
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="camera-section">
+                        <h3><i class="fas fa-camera"></i> Kamera Absensi</h3>
+                        <div class="camera-container">
+                            <video id="cameraPreview" autoplay playsinline></video>
+                            <canvas id="photoCanvas" style="display:none;"></canvas>
+                        </div>
+                        <div class="camera-controls">
+                            <button id="captureBtn" class="btn-capture">
+                                <i class="fas fa-camera"></i> Ambil Foto
+                            </button>
+                            <div class="photo-preview">
+                                <img id="photoPreview" src="" alt="Preview Foto">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="location-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Lokasi Saat Ini</h3>
+                        <div id="locationInfo">
+                            <p>Mendeteksi lokasi...</p>
+                            <p id="locationDetails">-</p>
+                            <p id="locationCoordinates">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-section">
+                <h2><i class="fas fa-history"></i> Riwayat Absensi 7 Hari Terakhir</h2>
+                <div class="table-container">
+                    <table id="attendanceHistory">
+                        <thead>
+                            <tr>
+                                <th>Tanggal</th>
+                                <th>Masuk</th>
+                                <th>Pulang</th>
+                                <th>Status</th>
+                                <th>Lokasi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data riwayat akan diisi oleh JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

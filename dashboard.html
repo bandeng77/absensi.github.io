@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Karyawan - Login</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="logo">
+                <i class="fas fa-fingerprint"></i>
+                <h1>ABSENSI KARYAWAN</h1>
+            </div>
+            
+            <div class="login-form">
+                <h2>Silakan Login</h2>
+                <div class="input-group">
+                    <label for="username"><i class="fas fa-user"></i> Username</label>
+                    <input type="text" id="username" placeholder="Masukkan username Anda">
+                </div>
+                <div class="input-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password Anda">
+                </div>
+                <div class="input-group">
+                    <label for="role"><i class="fas fa-user-tag"></i> Role</label>
+                    <select id="role">
+                        <option value="karyawan">Karyawan</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <button id="loginBtn" class="btn-login">Login</button>
+                
+                <div class="demo-credentials">
+                    <h3>Kredensial Demo:</h3>
+                    <p><strong>Karyawan:</strong> user1 / pass123</p>
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
