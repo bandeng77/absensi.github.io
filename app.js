@@ -1,408 +1,576 @@
-// app.js - Aplikasi Absensi Karyawan Modern
+// Konfigurasi Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDPfvR6WFK29D9zAhfj_qOgi3ZMwQi4rRI",
+  authDomain: "absen-efk.firebaseapp.com",
+  projectId: "absen-efk",
+  storageBucket: "absen-efk.firebasestorage.app",
+  messagingSenderId: "63730633504",
+  appId: "1:63730633504:web:d1b07245bcd43a0df92545"
+};
 
-class AttendanceApp {
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// APLIKASI ABSENSI ENTERPRISE
+class EnterpriseAttendanceSystem {
     constructor() {
-        this.location = {
-            lat: null,
-            lng: null,
-            address: 'Mendapatkan lokasi...'
-        };
+        this.currentUser = null;
+        this.userRole = null;
+        this.attendanceData = [];
+        this.employeesData = [];
         this.currentPhoto = null;
-        this.attendanceHistory = [];
-        this.isCameraActive = false;
-        this.videoStream = null;
+        this.locationData = { lat: null, lng: null, address: 'Memuat...' };
+        this.cameraStream = null;
+        this.map = null;
+        this.mapMarkers = [];
         
-        this.init();
+        this.initialize();
     }
 
-    init() {
-        // Load data dari localStorage
-        this.loadFromStorage();
+    async initialize() {
+        console.log('🚀 Inisialisasi Enterprise System...');
         
-        // Inisialisasi komponen
-        this.initDateTime();
-        this.initLocation();
-        this.initCamera();
-        this.initEventListeners();
-        this.updateUI();
-        
-        // Update waktu setiap detik
-        setInterval(() => this.updateDateTime(), 1000);
+        // Setup auth state listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.handleAuthStateChange(user);
+            } else {
+                this.showLoginPage();
+            }
+            this.hideLoading();
+        });
+
+        // Setup event listeners
+        this.setupEventListeners();
     }
 
-    // ========== LOKASI ==========
-    initLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    this.location.lat = position.coords.latitude;
-                    this.location.lng = position.coords.longitude;
-                    this.updateLocationDisplay();
-                    this.reverseGeocode();
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                    this.location.address = 'Gagal mendapatkan lokasi';
-                    this.updateLocationDisplay();
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+    // ============= AUTHENTICATION =============
+    async handleAuthStateChange(user) {
+        try {
+            // Get user role from Firestore
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            
+            if (userDoc.exists) {
+                this.currentUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    ...userDoc.data()
+                };
+                
+                this.userRole = this.currentUser.role;
+                
+                // Update UI berdasarkan role
+                if (this.userRole === 'admin') {
+                    this.showAdminPanel();
+                    await this.loadAdminData();
+                } else {
+                    this.showEmployeePanel();
+                    this.startEmployeeFeatures();
                 }
-            );
-        } else {
-            this.location.address = 'Geolocation tidak didukung';
-            this.updateLocationDisplay();
+                
+                this.updateUserDisplay();
+                this.showNotification(`Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
+            } else {
+                // Create default user if not exists
+                await this.createUserProfile(user);
+            }
+        } catch (error) {
+            console.error('Error loading user:', error);
+            this.showNotification('Gagal memuat data user', 'error');
         }
     }
 
-    reverseGeocode() {
-        if (!this.location.lat || !this.location.lng) return;
+    async createUserProfile(user) {
+        const role = localStorage.getItem('selectedRole') || 'karyawan';
+        const name = prompt('Masukkan nama Anda:') || user.email.split('@')[0];
         
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.location.lat}&lon=${this.location.lng}&zoom=18&addressdetails=1`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.display_name) {
-                    this.location.address = data.display_name.split(', ').slice(0, 3).join(', ');
-                    this.updateLocationDisplay();
-                }
-            })
-            .catch(err => {
-                console.error('Reverse geocode failed:', err);
-                this.location.address = `${this.location.lat.toFixed(4)}, ${this.location.lng.toFixed(4)}`;
-                this.updateLocationDisplay();
-            });
+        const userData = {
+            name: name,
+            email: user.email,
+            role: role,
+            createdAt: new Date().toISOString(),
+            isActive: true
+        };
+        
+        await db.collection('users').doc(user.uid).set(userData);
+        this.currentUser = { uid: user.uid, ...userData };
+        this.userRole = role;
+        
+        if (role === 'admin') {
+            this.showAdminPanel();
+            await this.loadAdminData();
+        } else {
+            this.showEmployeePanel();
+            this.startEmployeeFeatures();
+        }
     }
 
-    // ========== KAMERA ==========
-    async initCamera() {
+    async login(email, password, role) {
         try {
-            this.videoStream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    facingMode: 'user'
+            this.showLoading();
+            localStorage.setItem('selectedRole', role);
+            
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            console.log('Login success:', userCredential.user.email);
+            
+        } catch (error) {
+            console.error('Login error:', error);
+            
+            if (error.code === 'auth/user-not-found') {
+                // Create new user
+                try {
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    console.log('User created:', userCredential.user.email);
+                } catch (createError) {
+                    this.showNotification('Gagal membuat akun: ' + createError.message, 'error');
+                }
+            } else {
+                this.showNotification('Login gagal: ' + error.message, 'error');
+            }
+            
+            this.hideLoading();
+        }
+    }
+
+    logout() {
+        auth.signOut().then(() => {
+            this.currentUser = null;
+            this.userRole = null;
+            this.showLoginPage();
+            this.stopCamera();
+        });
+    }
+
+    // ============= EMPLOYEE FEATURES =============
+    startEmployeeFeatures() {
+        this.startRealTimeClock();
+        this.getUserLocation();
+        this.setupCamera();
+        this.loadEmployeeTodayStatus();
+    }
+
+    async loadEmployeeTodayStatus() {
+        if (!this.currentUser) return;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        try {
+            const snapshot = await db.collection('attendance')
+                .where('userId', '==', this.currentUser.uid)
+                .where('timestamp', '>=', today.toISOString())
+                .where('timestamp', '<', tomorrow.toISOString())
+                .orderBy('timestamp', 'desc')
+                .get();
+            
+            const todayRecords = [];
+            snapshot.forEach(doc => todayRecords.push({ id: doc.id, ...doc.data() }));
+            
+            this.updateEmployeeStatus(todayRecords);
+            
+        } catch (error) {
+            console.error('Error loading today status:', error);
+        }
+    }
+
+    async clockIn() {
+        if (!this.validateClockAction()) return;
+        
+        try {
+            // Check if already clocked in today
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const snapshot = await db.collection('attendance')
+                .where('userId', '==', this.currentUser.uid)
+                .where('type', '==', 'clockin')
+                .where('timestamp', '>=', today.toISOString())
+                .where('timestamp', '<', tomorrow.toISOString())
+                .get();
+            
+            if (!snapshot.empty) {
+                this.showNotification('Anda sudah clock in hari ini!', 'warning');
+                return;
+            }
+            
+            // Save photo to localStorage
+            const photoId = `photo_${Date.now()}`;
+            if (this.currentPhoto) {
+                localStorage.setItem(photoId, this.currentPhoto);
+            }
+            
+            // Create attendance record
+            const attendanceRecord = {
+                userId: this.currentUser.uid,
+                userName: this.currentUser.name,
+                userEmail: this.currentUser.email,
+                type: 'clockin',
+                timestamp: new Date().toISOString(),
+                location: {
+                    lat: this.locationData.lat,
+                    lng: this.locationData.lng,
+                    address: this.locationData.address
                 },
-                audio: false
+                photoId: photoId,
+                deviceInfo: navigator.userAgent
+            };
+            
+            await db.collection('attendance').add(attendanceRecord);
+            
+            this.showNotification('✅ Clock In berhasil!', 'success');
+            this.loadEmployeeTodayStatus();
+            
+        } catch (error) {
+            console.error('Clock in error:', error);
+            this.showNotification('Gagal clock in: ' + error.message, 'error');
+        }
+    }
+
+    async clockOut() {
+        if (!this.validateClockAction()) return;
+        
+        try {
+            // Check if already clocked out today
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // Check if clocked in today
+            const clockInSnapshot = await db.collection('attendance')
+                .where('userId', '==', this.currentUser.uid)
+                .where('type', '==', 'clockin')
+                .where('timestamp', '>=', today.toISOString())
+                .where('timestamp', '<', tomorrow.toISOString())
+                .get();
+            
+            if (clockInSnapshot.empty) {
+                this.showNotification('Anda belum clock in hari ini!', 'warning');
+                return;
+            }
+            
+            // Check if already clocked out
+            const clockOutSnapshot = await db.collection('attendance')
+                .where('userId', '==', this.currentUser.uid)
+                .where('type', '==', 'clockout')
+                .where('timestamp', '>=', today.toISOString())
+                .where('timestamp', '<', tomorrow.toISOString())
+                .get();
+            
+            if (!clockOutSnapshot.empty) {
+                this.showNotification('Anda sudah clock out hari ini!', 'warning');
+                return;
+            }
+            
+            // Save photo
+            const photoId = `photo_${Date.now()}`;
+            if (this.currentPhoto) {
+                localStorage.setItem(photoId, this.currentPhoto);
+            }
+            
+            // Create attendance record
+            const attendanceRecord = {
+                userId: this.currentUser.uid,
+                userName: this.currentUser.name,
+                userEmail: this.currentUser.email,
+                type: 'clockout',
+                timestamp: new Date().toISOString(),
+                location: {
+                    lat: this.locationData.lat,
+                    lng: this.locationData.lng,
+                    address: this.locationData.address
+                },
+                photoId: photoId,
+                deviceInfo: navigator.userAgent
+            };
+            
+            await db.collection('attendance').add(attendanceRecord);
+            
+            this.showNotification('✅ Clock Out berhasil!', 'success');
+            this.loadEmployeeTodayStatus();
+            
+        } catch (error) {
+            console.error('Clock out error:', error);
+            this.showNotification('Gagal clock out: ' + error.message, 'error');
+        }
+    }
+
+    // ============= ADMIN FEATURES =============
+    async loadAdminData() {
+        try {
+            this.showLoading();
+            
+            // Load all employees
+            const usersSnapshot = await db.collection('users').get();
+            this.employeesData = [];
+            usersSnapshot.forEach(doc => {
+                this.employeesData.push({ id: doc.id, ...doc.data() });
             });
             
-            const videoElement = document.getElementById('videoElement');
-            videoElement.srcObject = this.videoStream;
-            this.isCameraActive = true;
-        } catch (err) {
-            console.error('Error accessing camera:', err);
-            this.showNotification('Tidak dapat mengakses kamera', 'error');
+            // Load attendance data (last 30 days)
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const attendanceSnapshot = await db.collection('attendance')
+                .where('timestamp', '>=', thirtyDaysAgo.toISOString())
+                .orderBy('timestamp', 'desc')
+                .get();
+            
+            this.attendanceData = [];
+            attendanceSnapshot.forEach(doc => {
+                this.attendanceData.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Update UI
+            this.updateStatistics();
+            this.populateEmployeeFilter();
+            this.renderAttendanceTable();
+            this.initMap();
+            this.addMarkersToMap();
+            
+            this.hideLoading();
+            
+        } catch (error) {
+            console.error('Error loading admin data:', error);
+            this.showNotification('Gagal memuat data admin', 'error');
+            this.hideLoading();
         }
     }
 
-    capturePhoto() {
-        if (!this.isCameraActive) {
-            this.showNotification('Kamera tidak aktif', 'error');
-            return null;
+    updateStatistics() {
+        // Total karyawan
+        document.getElementById('total-karyawan').textContent = this.employeesData.length;
+        
+        // Total absensi
+        document.getElementById('total-absensi').textContent = this.attendanceData.length;
+        
+        // Clock in hari ini
+        const today = new Date().toDateString();
+        const todayClockIn = this.attendanceData.filter(record => {
+            const recordDate = new Date(record.timestamp).toDateString();
+            return recordDate === today && record.type === 'clockin';
+        }).length;
+        document.getElementById('hari-ini-clockin').textContent = todayClockIn;
+        
+        // Karyawan aktif hari ini
+        const activeEmployees = new Set();
+        this.attendanceData.forEach(record => {
+            const recordDate = new Date(record.timestamp).toDateString();
+            if (recordDate === today) {
+                activeEmployees.add(record.userId);
+            }
+        });
+        document.getElementById('aktif-hari-ini').textContent = activeEmployees.size;
+    }
+
+    populateEmployeeFilter() {
+        const select = document.getElementById('filter-employee');
+        select.innerHTML = '<option value="all">Semua Karyawan</option>';
+        
+        this.employeesData.forEach(emp => {
+            select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`;
+        });
+    }
+
+    async renderAttendanceTable() {
+        const tbody = document.getElementById('table-body');
+        let filteredData = [...this.attendanceData];
+        
+        // Apply filters
+        const startDate = document.getElementById('filter-start-date').value;
+        const endDate = document.getElementById('filter-end-date').value;
+        const employeeId = document.getElementById('filter-employee').value;
+        const type = document.getElementById('filter-type').value;
+        
+        if (startDate) {
+            filteredData = filteredData.filter(record => record.timestamp >= startDate);
         }
-
-        const video = document.getElementById('videoElement');
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
         
-        const context = canvas.getContext('2d');
-        // Mirror effect
-        context.translate(canvas.width, 0);
-        context.scale(-1, 1);
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        if (endDate) {
+            filteredData = filteredData.filter(record => record.timestamp <= endDate + 'T23:59:59');
+        }
         
-        // Simpan sebagai base64
-        const photoData = canvas.toDataURL('image/jpeg', 0.9);
-        this.currentPhoto = photoData;
+        if (employeeId !== 'all') {
+            filteredData = filteredData.filter(record => record.userId === employeeId);
+        }
         
-        // Tampilkan foto yang diambil
-        const capturedImage = document.getElementById('capturedImage');
-        const container = document.getElementById('capturedImageContainer');
-        capturedImage.src = photoData;
-        container.classList.remove('hidden');
+        if (type !== 'all') {
+            filteredData = filteredData.filter(record => record.type === type);
+        }
         
-        return photoData;
-    }
-
-    // ========== DATE & TIME ==========
-    initDateTime() {
-        this.updateDateTime();
-    }
-
-    updateDateTime() {
-        const now = new Date();
+        if (filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px;">📭 Tidak ada data absensi</td></tr>';
+            return;
+        }
         
-        // Format waktu
-        const timeString = now.toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
+        let html = '';
+        filteredData.slice(0, 100).forEach(record => {
+            const date = new Date(record.timestamp);
+            const timeStr = date.toLocaleString('id-ID');
+            
+            html += `
+                <tr>
+                    <td>${timeStr}</td>
+                    <td><strong>${record.userName || 'Unknown'}</strong></td>
+                    <td>${record.userEmail || '-'}</td>
+                    <td>
+                        <span class="badge ${record.type === 'clockin' ? 'badge-in' : 'badge-out'}">
+                            ${record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT'}
+                        </span>
+                    </td>
+                    <td>${record.location?.address || '-'}</td>
+                    <td>${record.location?.lat ? record.location.lat.toFixed(4) + ', ' + record.location.lng.toFixed(4) : '-'}</td>
+                    <td>
+                        ${record.photoId ? 
+                            `<img src="${localStorage.getItem(record.photoId) || 'default-avatar.jpg'}" 
+                                  class="photo-thumb" 
+                                  onclick="window.attendanceApp.showPhoto('${record.photoId}')">` 
+                            : '-'}
+                    </td>
+                </tr>
+            `;
         });
         
-        // Format tanggal
-        const dateString = now.toLocaleDateString('id-ID', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        tbody.innerHTML = html;
+    }
+
+    initMap() {
+        if (this.map) {
+            this.map.remove();
+        }
+        
+        this.map = L.map('attendance-map').setView([-6.2088, 106.8456], 11);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+    }
+
+    addMarkersToMap() {
+        // Clear existing markers
+        this.mapMarkers.forEach(marker => marker.remove());
+        this.mapMarkers = [];
+        
+        // Add markers for today's attendance
+        const today = new Date().toDateString();
+        const todayRecords = this.attendanceData.filter(record => {
+            const recordDate = new Date(record.timestamp).toDateString();
+            return recordDate === today;
         });
         
-        document.getElementById('currentTime').textContent = timeString;
-        document.getElementById('currentDate').textContent = dateString;
+        // Group by user and take latest
+        const latestRecords = {};
+        todayRecords.forEach(record => {
+            if (!latestRecords[record.userId] || 
+                new Date(record.timestamp) > new Date(latestRecords[record.userId].timestamp)) {
+                latestRecords[record.userId] = record;
+            }
+        });
+        
+        Object.values(latestRecords).forEach(record => {
+            if (record.location?.lat && record.location?.lng) {
+                const marker = L.marker([record.location.lat, record.location.lng])
+                    .addTo(this.map)
+                    .bindPopup(`
+                        <b>${record.userName || 'Karyawan'}</b><br>
+                        ${record.type === 'clockin' ? '✅ Clock In' : '📤 Clock Out'}<br>
+                        ${new Date(record.timestamp).toLocaleString('id-ID')}<br>
+                        ${record.location.address || ''}
+                    `);
+                
+                this.mapMarkers.push(marker);
+            }
+        });
+        
+        // Fit bounds
+        if (this.mapMarkers.length > 0) {
+            const group = L.featureGroup(this.mapMarkers);
+            this.map.fitBounds(group.getBounds().pad(0.1));
+        }
     }
 
-    // ========== CLOCK IN/OUT ==========
-    clockIn() {
-        if (!this.validateClockAction()) return;
-        
-        // Cek apakah sudah clock in hari ini
-        const today = new Date().toDateString();
-        const hasClockedInToday = this.attendanceHistory.some(
-            record => record.type === 'clockin' && 
-            new Date(record.timestamp).toDateString() === today
-        );
-        
-        if (hasClockedInToday) {
-            this.showNotification('Anda sudah melakukan clock in hari ini', 'warning');
-            return;
+    async exportToExcel() {
+        try {
+            this.showNotification('Menyiapkan data...', 'info');
+            
+            // Get filtered data
+            await this.renderAttendanceTable();
+            
+            let csv = 'Waktu,Karyawan,Email,Tipe,Lokasi,Koordinat\n';
+            
+            this.attendanceData.forEach(record => {
+                const date = new Date(record.timestamp).toLocaleString('id-ID');
+                const line = [
+                    date,
+                    record.userName || '',
+                    record.userEmail || '',
+                    record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT',
+                    record.location?.address || '',
+                    record.location?.lat ? `${record.location.lat}, ${record.location.lng}` : ''
+                ].join(',');
+                
+                csv += line + '\n';
+            });
+            
+            // Download CSV
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            
+            this.showNotification('Export berhasil!', 'success');
+            
+        } catch (error) {
+            console.error('Export error:', error);
+            this.showNotification('Gagal export data', 'error');
         }
-
-        const record = this.createAttendanceRecord('clockin');
-        this.attendanceHistory.unshift(record);
-        this.saveToStorage();
-        this.updateUI();
-        this.showNotification('Clock in berhasil!', 'success');
     }
 
-    clockOut() {
-        if (!this.validateClockAction()) return;
-        
-        // Cek apakah sudah clock in hari ini
-        const today = new Date().toDateString();
-        const hasClockedInToday = this.attendanceHistory.some(
-            record => record.type === 'clockin' && 
-            new Date(record.timestamp).toDateString() === today
-        );
-        
-        if (!hasClockedInToday) {
-            this.showNotification('Anda belum clock in hari ini', 'warning');
-            return;
+    // ============= UTILITY FUNCTIONS =============
+    showPhoto(photoId) {
+        const photo = localStorage.getItem(photoId);
+        if (photo) {
+            document.getElementById('modal-photo-img').src = photo;
+            document.getElementById('photo-modal').classList.add('active');
         }
-
-        // Cek apakah sudah clock out hari ini
-        const hasClockedOutToday = this.attendanceHistory.some(
-            record => record.type === 'clockout' && 
-            new Date(record.timestamp).toDateString() === today
-        );
-
-        if (hasClockedOutToday) {
-            this.showNotification('Anda sudah melakukan clock out hari ini', 'warning');
-            return;
-        }
-
-        const record = this.createAttendanceRecord('clockout');
-        this.attendanceHistory.unshift(record);
-        this.saveToStorage();
-        this.updateUI();
-        this.showNotification('Clock out berhasil!', 'success');
     }
 
     validateClockAction() {
-        if (!this.location.lat || !this.location.lng) {
-            this.showNotification('Lokasi belum didapatkan', 'error');
+        if (!this.locationData.lat || !this.locationData.lng) {
+            this.showNotification('Lokasi belum tersedia', 'error');
             return false;
         }
-
+        
         if (!this.currentPhoto) {
-            this.showNotification('Silakan ambil foto terlebih dahulu', 'warning');
+            this.showNotification('Ambil foto terlebih dahulu', 'warning');
             return false;
         }
-
+        
         return true;
     }
 
-    createAttendanceRecord(type) {
-        return {
-            id: Date.now(),
-            type: type,
-            timestamp: new Date().toISOString(),
-            location: {
-                lat: this.location.lat,
-                lng: this.location.lng,
-                address: this.location.address
-            },
-            photo: this.currentPhoto
-        };
-    }
-
-    // ========== STORAGE ==========
-    saveToStorage() {
-        localStorage.setItem('attendanceHistory', JSON.stringify(this.attendanceHistory));
-        localStorage.setItem('lastPhoto', this.currentPhoto || '');
-    }
-
-    loadFromStorage() {
-        // Load history
-        const savedHistory = localStorage.getItem('attendanceHistory');
-        if (savedHistory) {
-            this.attendanceHistory = JSON.parse(savedHistory);
-        }
-
-        // Load last photo
-        const savedPhoto = localStorage.getItem('lastPhoto');
-        if (savedPhoto) {
-            this.currentPhoto = savedPhoto;
-            const capturedImage = document.getElementById('capturedImage');
-            const container = document.getElementById('capturedImageContainer');
-            if (capturedImage) {
-                capturedImage.src = savedPhoto;
-                container.classList.remove('hidden');
-            }
-        }
-    }
-
-    // ========== UI UPDATE ==========
-    updateUI() {
-        this.updateStatusBadge();
-        this.updateHistoryList();
-        this.updateLastAttendance();
-    }
-
-    updateLocationDisplay() {
-        const addressEl = document.getElementById('locationAddress');
-        const coordsEl = document.getElementById('locationCoords');
-        
-        if (addressEl) addressEl.textContent = this.location.address;
-        if (coordsEl && this.location.lat && this.location.lng) {
-            coordsEl.textContent = `${this.location.lat.toFixed(4)}, ${this.location.lng.toFixed(4)}`;
-        }
-    }
-
-    updateStatusBadge() {
-        const statusEl = document.getElementById('currentStatus');
-        if (!statusEl) return;
-
-        const today = new Date().toDateString();
-        const hasClockedIn = this.attendanceHistory.some(
-            record => record.type === 'clockin' && 
-            new Date(record.timestamp).toDateString() === today
-        );
-        const hasClockedOut = this.attendanceHistory.some(
-            record => record.type === 'clockout' && 
-            new Date(record.timestamp).toDateString() === today
-        );
-
-        if (hasClockedIn && !hasClockedOut) {
-            statusEl.className = 'status-badge status-active';
-            statusEl.innerHTML = '✅ Sedang bekerja';
-        } else if (hasClockedIn && hasClockedOut) {
-            statusEl.className = 'status-badge status-inactive';
-            statusEl.innerHTML = '⌛ Sudah clock out';
-        } else {
-            statusEl.className = 'status-badge status-inactive';
-            statusEl.innerHTML = '⏳ Belum clock in';
-        }
-    }
-
-    updateHistoryList() {
-        const historyList = document.getElementById('historyList');
-        if (!historyList) return;
-
-        if (this.attendanceHistory.length === 0) {
-            historyList.innerHTML = '<div class="empty-history">📭 Belum ada riwayat absensi</div>';
-            return;
-        }
-
-        let html = '';
-        this.attendanceHistory.slice(0, 10).forEach(record => {
-            const date = new Date(record.timestamp);
-            const timeStr = date.toLocaleTimeString('id-ID');
-            const dateStr = date.toLocaleDateString('id-ID', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            });
-
-            html += `
-                <div class="history-item ${record.type}">
-                    <div class="history-time">${timeStr} • ${dateStr}</div>
-                    <span class="history-type type-${record.type}">
-                        ${record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT'}
-                    </span>
-                    <div class="history-location">
-                        📍 ${record.location.address || 'Lokasi tidak diketahui'}
-                    </div>
-                    ${record.photo ? `<img src="${record.photo}" class="history-photo" alt="Photo">` : ''}
-                </div>
-            `;
-        });
-
-        historyList.innerHTML = html;
-    }
-
-    updateLastAttendance() {
-        const lastAttendanceEl = document.getElementById('lastAttendance');
-        if (!lastAttendanceEl) return;
-
-        if (this.attendanceHistory.length === 0) {
-            lastAttendanceEl.innerHTML = '<span style="color: #9ca3af;">Belum ada absensi</span>';
-            return;
-        }
-
-        const last = this.attendanceHistory[0];
-        const date = new Date(last.timestamp);
-        const timeStr = date.toLocaleTimeString('id-ID');
-        const dateStr = date.toLocaleDateString('id-ID');
-
-        lastAttendanceEl.innerHTML = `
-            <div style="background: #f3f4f6; padding: 0.8rem; border-radius: 12px;">
-                <span style="font-weight: 600; color: #374151;">
-                    ${last.type === 'clockin' ? '📥 Clock In' : '📤 Clock Out'}
-                </span>
-                <div style="font-size: 0.9rem; color: #6b7280; margin-top: 0.3rem;">
-                    ${timeStr} - ${dateStr}
-                </div>
-            </div>
-        `;
-    }
-
-    showNotification(message, type = 'info') {
-        // Simple alert for now
-        alert(message);
-    }
-
-    // ========== EVENT LISTENERS ==========
-    initEventListeners() {
-        // Clock In button
-        const clockInBtn = document.getElementById('clockInBtn');
-        if (clockInBtn) {
-            clockInBtn.addEventListener('click', () => this.clockIn());
-        }
-
-        // Clock Out button
-        const clockOutBtn = document.getElementById('clockOutBtn');
-        if (clockOutBtn) {
-            clockOutBtn.addEventListener('click', () => this.clockOut());
-        }
-
-        // Capture button
-        const captureBtn = document.getElementById('captureBtn');
-        if (captureBtn) {
-            captureBtn.addEventListener('click', () => this.capturePhoto());
-        }
-
-        // Cleanup camera on page unload
-        window.addEventListener('beforeunload', () => {
-            if (this.videoStream) {
-                this.videoStream.getTracks().forEach(track => track.stop());
-            }
-        });
-    }
+    // ... (sertakan semua fungsi dari versi sebelumnya: 
+    // startRealTimeClock, getUserLocation, getAddressFromCoordinates,
+    // updateLocationDisplay, setupCamera, capturePhoto, updateEmployeeStatus,
+    // showNotification, showLoading, hideLoading, dll)
 }
 
-// Initialize app when DOM is ready
+// ============= EXPORT FUNCTIONS FOR GLOBAL ACCESS =============
+window.showPhoto = function(photoId) {
+    if (window.attendanceApp) {
+        window.attendanceApp.showPhoto(photoId);
+    }
+};
+
+// Initialize application
 document.addEventListener('DOMContentLoaded', () => {
-    window.attendanceApp = new AttendanceApp();
+    window.attendanceApp = new EnterpriseAttendanceSystem();
 });
