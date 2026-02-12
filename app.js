@@ -60,12 +60,18 @@ class EnterpriseAttendanceSystem {
         this.setDefaultFilterDates();
     }
 
-    // ==================== AUTHENTICATION ====================
+    // ==================== AUTHENTICATION - ROLE SYSTEM ====================
     async handleAuthStateChange(user) {
         try {
             this.showLoading();
             
-            // Get user role from Firestore
+            // Tentukan role berdasarkan email
+            let role = 'karyawan'; // Default karyawan
+            if (user.email === 'admin@genetek.co.id') {
+                role = 'admin';
+            }
+            
+            // Get atau create user di Firestore
             const userDoc = await db.collection('users').doc(user.uid).get();
             
             if (userDoc.exists) {
@@ -74,16 +80,24 @@ class EnterpriseAttendanceSystem {
                     email: user.email,
                     ...userDoc.data()
                 };
+                
+                // Pastikan role sesuai dengan email (update jika diperlukan)
+                if (user.email === 'admin@genetek.co.id' && this.currentUser.role !== 'admin') {
+                    await db.collection('users').doc(user.uid).update({
+                        role: 'admin',
+                        updatedAt: new Date().toISOString()
+                    });
+                    this.currentUser.role = 'admin';
+                }
             } else {
                 // Create new user profile
-                const role = localStorage.getItem('selectedRole') || 'karyawan';
                 const name = user.email.split('@')[0];
                 
                 this.currentUser = {
                     uid: user.uid,
                     email: user.email,
                     name: name,
-                    role: role,
+                    role: role, // Role ditentukan oleh email
                     createdAt: new Date().toISOString(),
                     isActive: true
                 };
@@ -97,13 +111,14 @@ class EnterpriseAttendanceSystem {
             if (this.userRole === 'admin') {
                 this.showAdminPanel();
                 await this.loadAdminData();
+                this.showNotification(`Selamat datang Admin!`, 'success');
             } else {
                 this.showEmployeePanel();
                 this.startEmployeeFeatures();
+                this.showNotification(`Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
             }
             
             this.updateUserDisplay();
-            this.showNotification(`Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
             this.hideLoading();
             
         } catch (error) {
@@ -113,10 +128,23 @@ class EnterpriseAttendanceSystem {
         }
     }
 
-    async login(email, password, role) {
+    async login(email, password, selectedRole) {
         try {
             this.showLoading();
-            localStorage.setItem('selectedRole', role);
+            
+            // VALIDASI: Cek apakah admin emailnya benar
+            if (selectedRole === 'admin' && email !== 'admin@genetek.co.id') {
+                this.showNotification('Admin hanya bisa login dengan email admin@genetek.co.id', 'error');
+                this.hideLoading();
+                return;
+            }
+            
+            // VALIDASI: Cek apakah karyawan mencoba login sebagai admin
+            if (email === 'admin@genetek.co.id' && selectedRole !== 'admin') {
+                this.showNotification('Email admin harus login sebagai Admin', 'error');
+                this.hideLoading();
+                return;
+            }
             
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             console.log('Login success:', userCredential.user.email);
@@ -125,18 +153,26 @@ class EnterpriseAttendanceSystem {
             console.error('Login error:', error);
             
             if (error.code === 'auth/user-not-found') {
+                // VALIDASI: Cek email untuk pembuatan akun baru
+                if (email === 'admin@genetek.co.id' && selectedRole !== 'admin') {
+                    this.showNotification('Email admin harus didaftarkan sebagai Admin', 'error');
+                    this.hideLoading();
+                    return;
+                }
+                
                 // Create new user
                 try {
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                     console.log('User created:', userCredential.user.email);
+                    this.showNotification('Akun berhasil dibuat!', 'success');
                 } catch (createError) {
                     this.showNotification('Gagal membuat akun: ' + createError.message, 'error');
-                    this.hideLoading();
                 }
             } else {
                 this.showNotification('Login gagal: ' + error.message, 'error');
-                this.hideLoading();
             }
+            
+            this.hideLoading();
         }
     }
 
@@ -151,6 +187,8 @@ class EnterpriseAttendanceSystem {
                 clearInterval(this.clockInterval);
                 this.clockInterval = null;
             }
+            
+            this.showNotification('Berhasil logout', 'success');
         });
     }
 
@@ -520,11 +558,15 @@ class EnterpriseAttendanceSystem {
         try {
             this.showLoading();
             
-            // Load all employees
+            // Load all employees (exclude admin)
             const usersSnapshot = await db.collection('users').get();
             this.employeesData = [];
             usersSnapshot.forEach(doc => {
-                this.employeesData.push({ id: doc.id, ...doc.data() });
+                const userData = doc.data();
+                // Filter: hanya karyawan (bukan admin) yang ditampilkan
+                if (userData.role !== 'admin') {
+                    this.employeesData.push({ id: doc.id, ...userData });
+                }
             });
             
             // Load attendance data (last 30 days)
@@ -557,7 +599,7 @@ class EnterpriseAttendanceSystem {
     }
 
     updateStatistics() {
-        // Total karyawan
+        // Total karyawan (exclude admin)
         const totalKaryawanEl = document.getElementById('total-karyawan');
         if (totalKaryawanEl) totalKaryawanEl.textContent = this.employeesData.length;
         
@@ -804,6 +846,12 @@ class EnterpriseAttendanceSystem {
         document.getElementById('login-page').classList.remove('hidden');
         document.getElementById('app-container').classList.remove('active');
         document.getElementById('admin-container').classList.remove('active');
+        
+        // Reset form login
+        const emailInput = document.getElementById('login-email');
+        const roleSelect = document.getElementById('login-role');
+        if (emailInput) emailInput.value = '';
+        if (roleSelect) roleSelect.value = 'karyawan';
     }
 
     showEmployeePanel() {
@@ -827,7 +875,7 @@ class EnterpriseAttendanceSystem {
         }
         
         if (adminDisplay && this.currentUser) {
-            adminDisplay.textContent = `👑 ${this.currentUser.name || this.currentUser.email}`;
+            adminDisplay.textContent = `👑 Admin • ${this.currentUser.name || this.currentUser.email}`;
         }
     }
 
@@ -937,7 +985,7 @@ class EnterpriseAttendanceSystem {
 
         // Enter key for login
         document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && document.getElementById('login-page').classList.contains('hidden') === false) {
+            if (e.key === 'Enter' && !document.getElementById('login-page').classList.contains('hidden')) {
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
                 const role = document.getElementById('login-role').value;
