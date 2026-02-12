@@ -1,11 +1,11 @@
-// Konfigurasi Firebase
+// ==================== FIREBASE CONFIG ====================
 const firebaseConfig = {
-  apiKey: "AIzaSyDPfvR6WFK29D9zAhfj_qOgi3ZMwQi4rRI",
-  authDomain: "absen-efk.firebaseapp.com",
-  projectId: "absen-efk",
-  storageBucket: "absen-efk.firebasestorage.app",
-  messagingSenderId: "63730633504",
-  appId: "1:63730633504:web:d1b07245bcd43a0df92545"
+    apiKey: "AIzaSyDPfvR6WFK29D9zAhfj_qOgi3ZMwQi4rRI",
+    authDomain: "absen-efk.firebaseapp.com",
+    projectId: "absen-efk",
+    storageBucket: "absen-efk.firebasestorage.app",
+    messagingSenderId: "63730633504",
+    appId: "1:63730633504:web:d1b07245bcd43a0df92545"
 };
 
 // Initialize Firebase
@@ -20,7 +20,7 @@ class EnterpriseAttendanceSystem {
         this.userRole = null;
         this.attendanceData = [];
         this.employeesData = [];
-        this.currentPhoto = localStorage.getItem('lastPhoto') || null;
+        this.currentPhoto = null;
         this.locationData = {
             lat: null,
             lng: null,
@@ -32,19 +32,18 @@ class EnterpriseAttendanceSystem {
         this.mapMarkers = [];
         this.clockInterval = null;
         
-        // Initialize after DOM is ready
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             this.initialize();
         });
     }
 
+    // ==================== INITIALIZATION ====================
     async initialize() {
-        console.log('🚀 Inisialisasi Enterprise System...');
+        console.log('🚀 Inisialisasi Sistem Absensi...');
         
-        // Hide loading after initialization
         setTimeout(() => this.hideLoading(), 1000);
         
-        // Setup auth state listener
         auth.onAuthStateChanged((user) => {
             if (user) {
                 this.handleAuthStateChange(user);
@@ -53,10 +52,7 @@ class EnterpriseAttendanceSystem {
             }
         });
 
-        // Setup event listeners
         this.setupEventListeners();
-        
-        // Set default dates for filter
         this.setDefaultFilterDates();
     }
 
@@ -66,10 +62,10 @@ class EnterpriseAttendanceSystem {
             this.showLoading();
             
             // Tentukan role berdasarkan email
-            let role = 'karyawan'; // Default karyawan
-            if (user.email === 'admin@genetek.co.id') {
-                role = 'admin';
-            }
+            // HANYA admin@genetek.co.id yang jadi ADMIN
+            const role = (user.email === 'admin@genetek.co.id') ? 'admin' : 'karyawan';
+            
+            console.log(`📧 Email: ${user.email}, Role: ${role}`);
             
             // Get atau create user di Firestore
             const userDoc = await db.collection('users').doc(user.uid).get();
@@ -81,25 +77,28 @@ class EnterpriseAttendanceSystem {
                     ...userDoc.data()
                 };
                 
-                // Pastikan role sesuai dengan email (update jika diperlukan)
-                if (user.email === 'admin@genetek.co.id' && this.currentUser.role !== 'admin') {
+                // PASTIKAN role sesuai email (update jika diperlukan)
+                if (this.currentUser.role !== role) {
                     await db.collection('users').doc(user.uid).update({
-                        role: 'admin',
+                        role: role,
                         updatedAt: new Date().toISOString()
                     });
-                    this.currentUser.role = 'admin';
+                    this.currentUser.role = role;
                 }
             } else {
                 // Create new user profile
                 const name = user.email.split('@')[0];
+                const displayName = name.charAt(0).toUpperCase() + name.slice(1);
                 
                 this.currentUser = {
                     uid: user.uid,
                     email: user.email,
-                    name: name,
-                    role: role, // Role ditentukan oleh email
+                    name: displayName,
+                    role: role,
                     createdAt: new Date().toISOString(),
-                    isActive: true
+                    lastActive: new Date().toISOString(),
+                    isActive: true,
+                    deviceInfo: navigator.userAgent
                 };
                 
                 await db.collection('users').doc(user.uid).set(this.currentUser);
@@ -111,11 +110,11 @@ class EnterpriseAttendanceSystem {
             if (this.userRole === 'admin') {
                 this.showAdminPanel();
                 await this.loadAdminData();
-                this.showNotification(`Selamat datang Admin!`, 'success');
+                this.showNotification(`👑 Selamat datang Admin!`, 'success');
             } else {
                 this.showEmployeePanel();
                 this.startEmployeeFeatures();
-                this.showNotification(`Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
+                this.showNotification(`👤 Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
             }
             
             this.updateUserDisplay();
@@ -128,46 +127,38 @@ class EnterpriseAttendanceSystem {
         }
     }
 
-    async login(email, password, selectedRole) {
+    async login(email, password) {
         try {
             this.showLoading();
             
-            // VALIDASI: Cek apakah admin emailnya benar
-            if (selectedRole === 'admin' && email !== 'admin@genetek.co.id') {
-                this.showNotification('Admin hanya bisa login dengan email admin@genetek.co.id', 'error');
-                this.hideLoading();
-                return;
-            }
-            
-            // VALIDASI: Cek apakah karyawan mencoba login sebagai admin
-            if (email === 'admin@genetek.co.id' && selectedRole !== 'admin') {
-                this.showNotification('Email admin harus login sebagai Admin', 'error');
-                this.hideLoading();
-                return;
+            // VALIDASI: Admin harus menggunakan email yang benar
+            if (email === 'admin@genetek.co.id') {
+                console.log('🔐 Login sebagai Admin');
+            } else {
+                console.log('🔐 Login sebagai Karyawan');
             }
             
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            console.log('Login success:', userCredential.user.email);
+            console.log('✅ Login berhasil:', userCredential.user.email);
             
         } catch (error) {
             console.error('Login error:', error);
             
             if (error.code === 'auth/user-not-found') {
-                // VALIDASI: Cek email untuk pembuatan akun baru
-                if (email === 'admin@genetek.co.id' && selectedRole !== 'admin') {
-                    this.showNotification('Email admin harus didaftarkan sebagai Admin', 'error');
-                    this.hideLoading();
-                    return;
-                }
-                
-                // Create new user
+                // Auto register untuk user baru
                 try {
+                    this.showNotification('Membuat akun baru...', 'info');
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    console.log('User created:', userCredential.user.email);
+                    console.log('✅ Akun berhasil dibuat:', userCredential.user.email);
                     this.showNotification('Akun berhasil dibuat!', 'success');
                 } catch (createError) {
+                    console.error('Create account error:', createError);
                     this.showNotification('Gagal membuat akun: ' + createError.message, 'error');
                 }
+            } else if (error.code === 'auth/wrong-password') {
+                this.showNotification('Password salah!', 'error');
+            } else if (error.code === 'auth/invalid-email') {
+                this.showNotification('Email tidak valid!', 'error');
             } else {
                 this.showNotification('Login gagal: ' + error.message, 'error');
             }
@@ -177,18 +168,22 @@ class EnterpriseAttendanceSystem {
     }
 
     logout() {
+        this.stopCamera();
+        
+        if (this.clockInterval) {
+            clearInterval(this.clockInterval);
+            this.clockInterval = null;
+        }
+        
         auth.signOut().then(() => {
             this.currentUser = null;
             this.userRole = null;
+            this.currentPhoto = null;
             this.showLoginPage();
-            this.stopCamera();
-            
-            if (this.clockInterval) {
-                clearInterval(this.clockInterval);
-                this.clockInterval = null;
-            }
-            
             this.showNotification('Berhasil logout', 'success');
+        }).catch((error) => {
+            console.error('Logout error:', error);
+            this.showNotification('Gagal logout', 'error');
         });
     }
 
@@ -201,7 +196,7 @@ class EnterpriseAttendanceSystem {
     }
 
     startRealTimeClock() {
-        // Update clock every second
+        this.updateDateTime();
         this.clockInterval = setInterval(() => {
             this.updateDateTime();
         }, 1000);
@@ -245,7 +240,7 @@ class EnterpriseAttendanceSystem {
             },
             (error) => {
                 console.error('Location error:', error);
-                this.locationData.address = 'Gagal mendapatkan lokasi';
+                this.locationData.address = '❌ Gagal mendapatkan lokasi';
                 this.updateLocationDisplay();
             },
             {
@@ -305,7 +300,7 @@ class EnterpriseAttendanceSystem {
             }
         } catch (error) {
             console.error('Camera error:', error);
-            this.showNotification('Tidak dapat mengakses kamera', 'error');
+            this.showNotification('❌ Tidak dapat mengakses kamera', 'error');
         }
     }
 
@@ -331,11 +326,8 @@ class EnterpriseAttendanceSystem {
             context.scale(-1, 1);
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            const photoData = canvas.toDataURL('image/jpeg', 0.95);
+            const photoData = canvas.toDataURL('image/jpeg', 0.9);
             this.currentPhoto = photoData;
-            
-            // Save to localStorage
-            localStorage.setItem('lastPhoto', photoData);
             
             // Show preview
             const photoPreview = document.getElementById('captured-photo');
@@ -346,7 +338,7 @@ class EnterpriseAttendanceSystem {
                 previewContainer.classList.add('active');
             }
             
-            this.showNotification('Foto berhasil diambil!', 'success');
+            this.showNotification('✅ Foto berhasil diambil!', 'success');
             return photoData;
             
         } catch (error) {
@@ -394,13 +386,13 @@ class EnterpriseAttendanceSystem {
         
         if (hasClockIn && !hasClockOut) {
             statusContainer.classList.add('active');
-            statusText.textContent = 'Sedang bekerja';
+            statusText.textContent = '✅ Sedang bekerja';
         } else if (hasClockIn && hasClockOut) {
             statusContainer.classList.remove('active');
-            statusText.textContent = 'Sudah clock out';
+            statusText.textContent = '📤 Sudah clock out';
         } else {
             statusContainer.classList.remove('active');
-            statusText.textContent = 'Belum clock in';
+            statusText.textContent = '⏳ Belum clock in';
         }
     }
 
@@ -424,13 +416,15 @@ class EnterpriseAttendanceSystem {
                 .get();
             
             if (!snapshot.empty) {
-                this.showNotification('Anda sudah clock in hari ini!', 'warning');
+                this.showNotification('⚠️ Anda sudah clock in hari ini!', 'warning');
                 this.hideLoading();
                 return;
             }
             
-            // Save photo to localStorage
+            // Generate ID untuk foto
             const photoId = `photo_${Date.now()}`;
+            
+            // Simpan foto ke localStorage
             if (this.currentPhoto) {
                 localStorage.setItem(photoId, this.currentPhoto);
             }
@@ -438,27 +432,36 @@ class EnterpriseAttendanceSystem {
             // Create attendance record
             const attendanceRecord = {
                 userId: this.currentUser.uid,
-                userName: this.currentUser.name || this.currentUser.email,
+                userName: this.currentUser.name || this.currentUser.email.split('@')[0],
                 userEmail: this.currentUser.email,
                 type: 'clockin',
                 timestamp: new Date().toISOString(),
+                date: new Date().toISOString().split('T')[0],
                 location: {
                     lat: this.locationData.lat,
                     lng: this.locationData.lng,
                     address: this.locationData.address
                 },
                 photoId: photoId,
-                deviceInfo: navigator.userAgent
+                deviceInfo: navigator.userAgent,
+                ipAddress: 'N/A',
+                createdAt: new Date().toISOString()
             };
             
             await db.collection('attendance').add(attendanceRecord);
+            
+            // Update last active
+            await db.collection('users').doc(this.currentUser.uid).update({
+                lastActive: new Date().toISOString(),
+                lastLocation: attendanceRecord.location
+            });
             
             this.showNotification('✅ Clock In berhasil!', 'success');
             await this.loadEmployeeTodayStatus();
             
         } catch (error) {
             console.error('Clock in error:', error);
-            this.showNotification('Gagal clock in: ' + error.message, 'error');
+            this.showNotification('❌ Gagal clock in: ' + error.message, 'error');
         } finally {
             this.hideLoading();
         }
@@ -470,13 +473,12 @@ class EnterpriseAttendanceSystem {
         try {
             this.showLoading();
             
-            // Check if already clocked out today
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             
-            // Check if clocked in today
+            // Check if already clocked in today
             const clockInSnapshot = await db.collection('attendance')
                 .where('userId', '==', this.currentUser.uid)
                 .where('type', '==', 'clockin')
@@ -485,7 +487,7 @@ class EnterpriseAttendanceSystem {
                 .get();
             
             if (clockInSnapshot.empty) {
-                this.showNotification('Anda belum clock in hari ini!', 'warning');
+                this.showNotification('⚠️ Anda belum clock in hari ini!', 'warning');
                 this.hideLoading();
                 return;
             }
@@ -499,13 +501,15 @@ class EnterpriseAttendanceSystem {
                 .get();
             
             if (!clockOutSnapshot.empty) {
-                this.showNotification('Anda sudah clock out hari ini!', 'warning');
+                this.showNotification('⚠️ Anda sudah clock out hari ini!', 'warning');
                 this.hideLoading();
                 return;
             }
             
-            // Save photo
+            // Generate ID untuk foto
             const photoId = `photo_${Date.now()}`;
+            
+            // Simpan foto ke localStorage
             if (this.currentPhoto) {
                 localStorage.setItem(photoId, this.currentPhoto);
             }
@@ -513,27 +517,35 @@ class EnterpriseAttendanceSystem {
             // Create attendance record
             const attendanceRecord = {
                 userId: this.currentUser.uid,
-                userName: this.currentUser.name || this.currentUser.email,
+                userName: this.currentUser.name || this.currentUser.email.split('@')[0],
                 userEmail: this.currentUser.email,
                 type: 'clockout',
                 timestamp: new Date().toISOString(),
+                date: new Date().toISOString().split('T')[0],
                 location: {
                     lat: this.locationData.lat,
                     lng: this.locationData.lng,
                     address: this.locationData.address
                 },
                 photoId: photoId,
-                deviceInfo: navigator.userAgent
+                deviceInfo: navigator.userAgent,
+                ipAddress: 'N/A',
+                createdAt: new Date().toISOString()
             };
             
             await db.collection('attendance').add(attendanceRecord);
+            
+            // Update last active
+            await db.collection('users').doc(this.currentUser.uid).update({
+                lastActive: new Date().toISOString()
+            });
             
             this.showNotification('✅ Clock Out berhasil!', 'success');
             await this.loadEmployeeTodayStatus();
             
         } catch (error) {
             console.error('Clock out error:', error);
-            this.showNotification('Gagal clock out: ' + error.message, 'error');
+            this.showNotification('❌ Gagal clock out: ' + error.message, 'error');
         } finally {
             this.hideLoading();
         }
@@ -541,12 +553,12 @@ class EnterpriseAttendanceSystem {
 
     validateClockAction() {
         if (!this.locationData.lat || !this.locationData.lng) {
-            this.showNotification('Lokasi belum tersedia', 'error');
+            this.showNotification('📍 Lokasi belum tersedia', 'error');
             return false;
         }
         
         if (!this.currentPhoto) {
-            this.showNotification('Ambil foto terlebih dahulu', 'warning');
+            this.showNotification('📸 Ambil foto terlebih dahulu', 'warning');
             return false;
         }
         
@@ -558,14 +570,18 @@ class EnterpriseAttendanceSystem {
         try {
             this.showLoading();
             
-            // Load all employees (exclude admin)
+            // Load all employees - HANYA KARYAWAN (bukan admin)
             const usersSnapshot = await db.collection('users').get();
             this.employeesData = [];
+            
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
-                // Filter: hanya karyawan (bukan admin) yang ditampilkan
+                // Filter: HANYA karyawan (bukan admin) yang ditampilkan
                 if (userData.role !== 'admin') {
-                    this.employeesData.push({ id: doc.id, ...userData });
+                    this.employeesData.push({ 
+                        id: doc.id, 
+                        ...userData 
+                    });
                 }
             });
             
@@ -580,7 +596,10 @@ class EnterpriseAttendanceSystem {
             
             this.attendanceData = [];
             attendanceSnapshot.forEach(doc => {
-                this.attendanceData.push({ id: doc.id, ...doc.data() });
+                this.attendanceData.push({ 
+                    id: doc.id, 
+                    ...doc.data() 
+                });
             });
             
             // Update UI
@@ -592,18 +611,16 @@ class EnterpriseAttendanceSystem {
             
         } catch (error) {
             console.error('Error loading admin data:', error);
-            this.showNotification('Gagal memuat data admin: ' + error.message, 'error');
+            this.showNotification('❌ Gagal memuat data admin: ' + error.message, 'error');
         } finally {
             this.hideLoading();
         }
     }
 
     updateStatistics() {
-        // Total karyawan (exclude admin)
         const totalKaryawanEl = document.getElementById('total-karyawan');
         if (totalKaryawanEl) totalKaryawanEl.textContent = this.employeesData.length;
         
-        // Total absensi
         const totalAbsensiEl = document.getElementById('total-absensi');
         if (totalAbsensiEl) totalAbsensiEl.textContent = this.attendanceData.length;
         
@@ -634,7 +651,9 @@ class EnterpriseAttendanceSystem {
         const select = document.getElementById('filter-employee');
         if (!select) return;
         
-        select.innerHTML = '<option value="all">Semua Karyawan</option>';
+        select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
+        
+        this.employeesData.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
         
         this.employeesData.forEach(emp => {
             select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`;
@@ -654,11 +673,15 @@ class EnterpriseAttendanceSystem {
         const type = document.getElementById('filter-type')?.value;
         
         if (startDate) {
-            filteredData = filteredData.filter(record => record.timestamp >= startDate);
+            filteredData = filteredData.filter(record => 
+                record.timestamp && record.timestamp.split('T')[0] >= startDate
+            );
         }
         
         if (endDate) {
-            filteredData = filteredData.filter(record => record.timestamp <= endDate + 'T23:59:59');
+            filteredData = filteredData.filter(record => 
+                record.timestamp && record.timestamp.split('T')[0] <= endDate
+            );
         }
         
         if (employeeId && employeeId !== 'all') {
@@ -677,7 +700,15 @@ class EnterpriseAttendanceSystem {
         let html = '';
         filteredData.slice(0, 100).forEach(record => {
             const date = new Date(record.timestamp);
-            const timeStr = date.toLocaleString('id-ID');
+            const timeStr = date.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const photo = record.photoId ? localStorage.getItem(record.photoId) : null;
             
             html += `
                 <tr>
@@ -686,17 +717,18 @@ class EnterpriseAttendanceSystem {
                     <td>${record.userEmail || '-'}</td>
                     <td>
                         <span class="badge ${record.type === 'clockin' ? 'badge-in' : 'badge-out'}">
-                            ${record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT'}
+                            ${record.type === 'clockin' ? '📥 CLOCK IN' : '📤 CLOCK OUT'}
                         </span>
                     </td>
                     <td>${record.location?.address || '-'}</td>
                     <td>${record.location?.lat ? record.location.lat.toFixed(4) + ', ' + record.location.lng.toFixed(4) : '-'}</td>
                     <td>
-                        ${record.photoId ? 
-                            `<img src="${localStorage.getItem(record.photoId) || 'https://via.placeholder.com/50'}" 
+                        ${photo ? 
+                            `<img src="${photo}" 
                                   class="photo-thumb" 
-                                  onclick="window.attendanceSystem.showPhoto('${record.photoId}')">` 
-                            : '-'}
+                                  onclick="window.attendanceSystem.showPhoto('${record.photoId}')"
+                                  alt="Foto">` 
+                            : '<span style="color: var(--gray);">📷 Tidak ada</span>'}
                     </td>
                 </tr>
             `;
@@ -751,7 +783,7 @@ class EnterpriseAttendanceSystem {
                         <b>${record.userName || 'Karyawan'}</b><br>
                         ${record.type === 'clockin' ? '✅ Clock In' : '📤 Clock Out'}<br>
                         ${new Date(record.timestamp).toLocaleString('id-ID')}<br>
-                        ${record.location.address || ''}
+                        <small>${record.location.address || ''}</small>
                     `);
                 
                 this.mapMarkers.push(marker);
@@ -784,7 +816,7 @@ class EnterpriseAttendanceSystem {
 
     async exportToExcel() {
         try {
-            this.showNotification('Menyiapkan data...', 'info');
+            this.showNotification('📊 Menyiapkan data...', 'info');
             
             let csv = 'Waktu,Karyawan,Email,Tipe,Lokasi,Koordinat\n';
             
@@ -795,7 +827,7 @@ class EnterpriseAttendanceSystem {
                     `"${record.userName || ''}"`,
                     `"${record.userEmail || ''}"`,
                     record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT',
-                    `"${record.location?.address || ''}"`,
+                    `"${(record.location?.address || '').replace(/"/g, '""')}"`,
                     record.location?.lat ? `${record.location.lat}, ${record.location.lng}` : ''
                 ].join(',');
                 
@@ -811,11 +843,11 @@ class EnterpriseAttendanceSystem {
             a.click();
             window.URL.revokeObjectURL(url);
             
-            this.showNotification('Export berhasil!', 'success');
+            this.showNotification('✅ Export berhasil!', 'success');
             
         } catch (error) {
             console.error('Export error:', error);
-            this.showNotification('Gagal export data', 'error');
+            this.showNotification('❌ Gagal export data', 'error');
         }
     }
 
@@ -835,7 +867,9 @@ class EnterpriseAttendanceSystem {
 
     stopCamera() {
         if (this.cameraStream) {
-            this.cameraStream.getTracks().forEach(track => track.stop());
+            this.cameraStream.getTracks().forEach(track => {
+                track.stop();
+            });
             this.cameraStream = null;
             this.isCameraReady = false;
         }
@@ -847,11 +881,8 @@ class EnterpriseAttendanceSystem {
         document.getElementById('app-container').classList.remove('active');
         document.getElementById('admin-container').classList.remove('active');
         
-        // Reset form login
         const emailInput = document.getElementById('login-email');
-        const roleSelect = document.getElementById('login-role');
-        if (emailInput) emailInput.value = '';
-        if (roleSelect) roleSelect.value = 'karyawan';
+        if (emailInput) emailInput.value = 'admin@genetek.co.id';
     }
 
     showEmployeePanel() {
@@ -871,11 +902,11 @@ class EnterpriseAttendanceSystem {
         const adminDisplay = document.getElementById('admin-display');
         
         if (userDisplay && this.currentUser) {
-            userDisplay.textContent = `👤 ${this.currentUser.name || this.currentUser.email}`;
+            userDisplay.textContent = `👤 ${this.currentUser.name || this.currentUser.email.split('@')[0]}`;
         }
         
         if (adminDisplay && this.currentUser) {
-            adminDisplay.textContent = `👑 Admin • ${this.currentUser.name || this.currentUser.email}`;
+            adminDisplay.textContent = `👑 ${this.currentUser.name || 'Admin'}`;
         }
     }
 
@@ -886,29 +917,18 @@ class EnterpriseAttendanceSystem {
         
         if (!notification || !messageEl) return;
         
-        // Set icon and class
-        switch(type) {
-            case 'success':
-                icon.textContent = '✅';
-                notification.className = 'notification success';
-                break;
-            case 'error':
-                icon.textContent = '❌';
-                notification.className = 'notification error';
-                break;
-            case 'warning':
-                icon.textContent = '⚠️';
-                notification.className = 'notification warning';
-                break;
-            default:
-                icon.textContent = 'ℹ️';
-                notification.className = 'notification';
-        }
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
         
+        icon.textContent = icons[type] || 'ℹ️';
+        notification.className = `notification ${type}`;
         messageEl.textContent = message;
         notification.classList.add('show');
         
-        // Auto hide after 3 seconds
         setTimeout(() => {
             notification.classList.remove('show');
         }, 3000);
@@ -935,10 +955,20 @@ class EnterpriseAttendanceSystem {
         if (loginBtn) {
             loginBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                const email = document.getElementById('login-email').value;
+                const email = document.getElementById('login-email').value.trim();
                 const password = document.getElementById('login-password').value;
-                const role = document.getElementById('login-role').value;
-                this.login(email, password, role);
+                
+                if (!email || !password) {
+                    this.showNotification('Email dan password harus diisi!', 'warning');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    this.showNotification('Password minimal 6 karakter!', 'warning');
+                    return;
+                }
+                
+                this.login(email, password);
             });
         }
 
@@ -986,14 +1016,13 @@ class EnterpriseAttendanceSystem {
         // Enter key for login
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !document.getElementById('login-page').classList.contains('hidden')) {
-                const email = document.getElementById('login-email').value;
+                const email = document.getElementById('login-email').value.trim();
                 const password = document.getElementById('login-password').value;
-                const role = document.getElementById('login-role').value;
-                this.login(email, password, role);
+                this.login(email, password);
             }
         });
 
-        // Cleanup on page unload
+        // Cleanup
         window.addEventListener('beforeunload', () => {
             this.stopCamera();
             if (this.clockInterval) {
@@ -1004,11 +1033,9 @@ class EnterpriseAttendanceSystem {
 }
 
 // ==================== GLOBAL ACCESS ====================
+window.attendanceSystem = new EnterpriseAttendanceSystem();
 window.showPhoto = function(photoId) {
     if (window.attendanceSystem) {
         window.attendanceSystem.showPhoto(photoId);
     }
 };
-
-// ==================== INITIALIZE APPLICATION ====================
-window.attendanceSystem = new EnterpriseAttendanceSystem();
