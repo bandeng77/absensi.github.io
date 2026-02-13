@@ -31,6 +31,7 @@ class EnterpriseAttendanceSystem {
         this.map = null;
         this.mapMarkers = [];
         this.clockInterval = null;
+        this.currentCalendarDate = new Date(); // Untuk tracking tanggal di calendar
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +55,9 @@ class EnterpriseAttendanceSystem {
 
         this.setupEventListeners();
         this.setDefaultFilterDates();
+        
+        // Render calendar
+        this.renderCalendar();
     }
 
     // ==================== AUTHENTICATION - ROLE SYSTEM ====================
@@ -329,7 +333,7 @@ class EnterpriseAttendanceSystem {
             const photoData = canvas.toDataURL('image/jpeg', 0.9);
             this.currentPhoto = photoData;
             
-            // Show preview
+            // Show preview - PREVIEW DITAMPILKAN SEMENTARA
             const photoPreview = document.getElementById('captured-photo');
             const previewContainer = document.getElementById('photo-preview-container');
             
@@ -424,7 +428,7 @@ class EnterpriseAttendanceSystem {
             // Generate ID untuk foto
             const photoId = `photo_${Date.now()}`;
             
-            // Simpan foto ke localStorage
+            // Simpan foto ke localStorage (BASE64)
             if (this.currentPhoto) {
                 localStorage.setItem(photoId, this.currentPhoto);
             }
@@ -443,8 +447,8 @@ class EnterpriseAttendanceSystem {
                     address: this.locationData.address
                 },
                 photoId: photoId,
+                photoBase64: this.currentPhoto, // Simpan base64 langsung di record
                 deviceInfo: navigator.userAgent,
-                ipAddress: 'N/A',
                 createdAt: new Date().toISOString()
             };
             
@@ -455,6 +459,9 @@ class EnterpriseAttendanceSystem {
                 lastActive: new Date().toISOString(),
                 lastLocation: attendanceRecord.location
             });
+            
+            // HAPUS PREVIEW FOTO SETELAH CLOCK IN BERHASIL
+            this.clearPhotoPreview();
             
             this.showNotification('✅ Clock In berhasil!', 'success');
             await this.loadEmployeeTodayStatus();
@@ -509,7 +516,7 @@ class EnterpriseAttendanceSystem {
             // Generate ID untuk foto
             const photoId = `photo_${Date.now()}`;
             
-            // Simpan foto ke localStorage
+            // Simpan foto ke localStorage (BASE64)
             if (this.currentPhoto) {
                 localStorage.setItem(photoId, this.currentPhoto);
             }
@@ -528,8 +535,8 @@ class EnterpriseAttendanceSystem {
                     address: this.locationData.address
                 },
                 photoId: photoId,
+                photoBase64: this.currentPhoto, // Simpan base64 langsung di record
                 deviceInfo: navigator.userAgent,
-                ipAddress: 'N/A',
                 createdAt: new Date().toISOString()
             };
             
@@ -540,6 +547,9 @@ class EnterpriseAttendanceSystem {
                 lastActive: new Date().toISOString()
             });
             
+            // HAPUS PREVIEW FOTO SETELAH CLOCK OUT BERHASIL
+            this.clearPhotoPreview();
+            
             this.showNotification('✅ Clock Out berhasil!', 'success');
             await this.loadEmployeeTodayStatus();
             
@@ -549,6 +559,25 @@ class EnterpriseAttendanceSystem {
         } finally {
             this.hideLoading();
         }
+    }
+
+    // FUNGSI BARU: Membersihkan preview foto
+    clearPhotoPreview() {
+        this.currentPhoto = null;
+        
+        const photoPreview = document.getElementById('captured-photo');
+        const previewContainer = document.getElementById('photo-preview-container');
+        
+        if (photoPreview) {
+            photoPreview.src = '';
+        }
+        
+        if (previewContainer) {
+            previewContainer.classList.remove('active');
+        }
+        
+        // Hapus juga dari localStorage jika ada
+        // Tapi tidak perlu karena kita simpan dengan ID spesifik
     }
 
     validateClockAction() {
@@ -667,10 +696,23 @@ class EnterpriseAttendanceSystem {
         let filteredData = [...this.attendanceData];
         
         // Apply filters
-        const startDate = document.getElementById('filter-start-date')?.value;
-        const endDate = document.getElementById('filter-end-date')?.value;
+        let startDate = document.getElementById('filter-start-date')?.value;
+        let endDate = document.getElementById('filter-end-date')?.value;
         const employeeId = document.getElementById('filter-employee')?.value;
         const type = document.getElementById('filter-type')?.value;
+        
+        // Jika tidak ada filter tanggal, gunakan tanggal yang dipilih di calendar
+        if (!startDate && !endDate) {
+            const selectedDate = this.currentCalendarDate;
+            startDate = selectedDate.toISOString().split('T')[0];
+            endDate = startDate;
+            
+            // Update input filter
+            const startDateEl = document.getElementById('filter-start-date');
+            const endDateEl = document.getElementById('filter-end-date');
+            if (startDateEl) startDateEl.value = startDate;
+            if (endDateEl) endDateEl.value = endDate;
+        }
         
         if (startDate) {
             filteredData = filteredData.filter(record => 
@@ -708,7 +750,16 @@ class EnterpriseAttendanceSystem {
                 minute: '2-digit'
             });
             
-            const photo = record.photoId ? localStorage.getItem(record.photoId) : null;
+            // PRIORITAS: Gunakan photoBase64 yang ada di record
+            let photoSrc = null;
+            
+            if (record.photoBase64) {
+                // Foto langsung dari database (base64)
+                photoSrc = record.photoBase64;
+            } else if (record.photoId) {
+                // Fallback ke localStorage
+                photoSrc = localStorage.getItem(record.photoId);
+            }
             
             html += `
                 <tr>
@@ -723,10 +774,10 @@ class EnterpriseAttendanceSystem {
                     <td>${record.location?.address || '-'}</td>
                     <td>${record.location?.lat ? record.location.lat.toFixed(4) + ', ' + record.location.lng.toFixed(4) : '-'}</td>
                     <td>
-                        ${photo ? 
-                            `<img src="${photo}" 
+                        ${photoSrc ? 
+                            `<img src="${photoSrc}" 
                                   class="photo-thumb" 
-                                  onclick="window.attendanceSystem.showPhoto('${record.photoId}')"
+                                  onclick="window.attendanceSystem.showPhotoBase64('${photoSrc}')"
                                   alt="Foto">` 
                             : '<span style="color: var(--gray);">📷 Tidak ada</span>'}
                     </td>
@@ -735,6 +786,308 @@ class EnterpriseAttendanceSystem {
         });
         
         tbody.innerHTML = html;
+    }
+
+    // ==================== CALENDAR FEATURE ====================
+    renderCalendar() {
+        const calendarContainer = document.getElementById('attendance-calendar');
+        if (!calendarContainer) {
+            // Buat calendar container jika belum ada
+            this.createCalendarContainer();
+        }
+        
+        this.updateCalendar();
+    }
+    
+    createCalendarContainer() {
+        const adminContainer = document.getElementById('admin-container');
+        if (!adminContainer) return;
+        
+        // Cari elemen setelah stats-grid
+        const statsGrid = document.querySelector('.stats-grid');
+        if (!statsGrid) return;
+        
+        // Buat section calendar
+        const calendarSection = document.createElement('div');
+        calendarSection.className = 'calendar-section';
+        calendarSection.innerHTML = `
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-title">
+                    <span>📅</span> Kalender Absensi
+                </div>
+                <div id="attendance-calendar" class="calendar-container"></div>
+                <div id="calendar-legend" class="calendar-legend">
+                    <span><span class="legend-dot" style="background: #06d6a0;"></span> Ada absensi</span>
+                    <span><span class="legend-dot" style="background: #ef476f;"></span> Tidak ada absensi</span>
+                    <span><span class="legend-dot" style="background: #4361ee;"></span> Hari ini</span>
+                </div>
+            </div>
+        `;
+        
+        // Insert setelah stats-grid
+        statsGrid.parentNode.insertBefore(calendarSection, statsGrid.nextSibling);
+        
+        // Tambahkan CSS untuk calendar
+        this.addCalendarStyles();
+        
+        // Render calendar
+        this.updateCalendar();
+    }
+    
+    addCalendarStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .calendar-container {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 8px;
+                padding: 16px 0;
+            }
+            
+            .calendar-header {
+                text-align: center;
+                font-weight: 600;
+                color: var(--dark);
+                padding: 8px;
+                font-size: 0.85rem;
+            }
+            
+            .calendar-day {
+                aspect-ratio: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: #f8fafc;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                position: relative;
+                padding: 8px;
+            }
+            
+            .calendar-day:hover {
+                background: #e2e8f0;
+                transform: scale(1.05);
+            }
+            
+            .calendar-day.selected {
+                background: var(--primary);
+                color: white;
+                font-weight: 600;
+                box-shadow: 0 4px 10px rgba(67, 97, 238, 0.3);
+            }
+            
+            .calendar-day.today {
+                border: 2px solid var(--primary);
+            }
+            
+            .calendar-day.has-attendance {
+                background: #d1fae5;
+            }
+            
+            .calendar-day.has-attendance.selected {
+                background: var(--primary);
+                color: white;
+            }
+            
+            .day-number {
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+            
+            .attendance-count {
+                font-size: 0.7rem;
+                background: var(--primary);
+                color: white;
+                padding: 2px 6px;
+                border-radius: 20px;
+                margin-top: 4px;
+            }
+            
+            .calendar-day.selected .attendance-count {
+                background: white;
+                color: var(--primary);
+            }
+            
+            .calendar-legend {
+                display: flex;
+                gap: 24px;
+                margin-top: 16px;
+                padding-top: 16px;
+                border-top: 1px solid #e2e8f0;
+                flex-wrap: wrap;
+            }
+            
+            .legend-dot {
+                display: inline-block;
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                margin-right: 6px;
+            }
+            
+            .calendar-month {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            
+            .calendar-month h3 {
+                color: var(--dark);
+                font-size: 1.2rem;
+            }
+            
+            .calendar-nav {
+                display: flex;
+                gap: 12px;
+            }
+            
+            .calendar-nav-btn {
+                background: #f1f5f9;
+                border: none;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                font-size: 1.2rem;
+                transition: all 0.2s;
+            }
+            
+            .calendar-nav-btn:hover {
+                background: var(--primary);
+                color: white;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    updateCalendar() {
+        const calendarEl = document.getElementById('attendance-calendar');
+        if (!calendarEl) return;
+        
+        const year = this.currentCalendarDate.getFullYear();
+        const month = this.currentCalendarDate.getMonth();
+        
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        
+        const startDay = firstDay.getDay(); // 0 = Minggu
+        const totalDays = lastDay.getDate();
+        
+        // Nama hari
+        const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        
+        // Header hari
+        let html = `
+            <div class="calendar-month">
+                <h3>${this.currentCalendarDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</h3>
+                <div class="calendar-nav">
+                    <button class="calendar-nav-btn" onclick="window.attendanceSystem.prevMonth()">◀</button>
+                    <button class="calendar-nav-btn" onclick="window.attendanceSystem.nextMonth()">▶</button>
+                </div>
+            </div>
+            <div class="calendar-container">
+        `;
+        
+        // Header hari
+        days.forEach(day => {
+            html += `<div class="calendar-header">${day}</div>`;
+        });
+        
+        // Empty cells sebelum tanggal 1
+        for (let i = 0; i < startDay; i++) {
+            html += `<div class="calendar-day" style="background: transparent; cursor: default;"></div>`;
+        }
+        
+        // Tanggal
+        const today = new Date();
+        const todayStr = today.toDateString();
+        
+        // Hitung absensi per tanggal
+        const attendanceByDate = {};
+        this.attendanceData.forEach(record => {
+            const date = record.timestamp.split('T')[0];
+            if (!attendanceByDate[date]) {
+                attendanceByDate[date] = 0;
+            }
+            attendanceByDate[date]++;
+        });
+        
+        for (let d = 1; d <= totalDays; d++) {
+            const date = new Date(year, month, d);
+            const dateStr = date.toISOString().split('T')[0];
+            const isToday = date.toDateString() === todayStr;
+            const isSelected = this.currentCalendarDate.toDateString() === date.toDateString();
+            const hasAttendance = attendanceByDate[dateStr] > 0;
+            const attendanceCount = attendanceByDate[dateStr] || 0;
+            
+            let classes = 'calendar-day';
+            if (isToday) classes += ' today';
+            if (isSelected) classes += ' selected';
+            if (hasAttendance) classes += ' has-attendance';
+            
+            html += `
+                <div class="${classes}" onclick="window.attendanceSystem.selectDate('${dateStr}')">
+                    <span class="day-number">${d}</span>
+                    ${attendanceCount > 0 ? `<span class="attendance-count">${attendanceCount}</span>` : ''}
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+        calendarEl.innerHTML = html;
+    }
+    
+    selectDate(dateStr) {
+        // Update current calendar date
+        const [year, month, day] = dateStr.split('-').map(Number);
+        this.currentCalendarDate = new Date(year, month - 1, day);
+        
+        // Update filter tanggal
+        const startDateEl = document.getElementById('filter-start-date');
+        const endDateEl = document.getElementById('filter-end-date');
+        
+        if (startDateEl) startDateEl.value = dateStr;
+        if (endDateEl) endDateEl.value = dateStr;
+        
+        // Re-render calendar dan table
+        this.updateCalendar();
+        this.renderAttendanceTable();
+        
+        this.showNotification(`📅 Menampilkan data tanggal ${dateStr}`, 'info');
+    }
+    
+    prevMonth() {
+        this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+        this.updateCalendar();
+        
+        // Reset filter tanggal
+        const startDateEl = document.getElementById('filter-start-date');
+        const endDateEl = document.getElementById('filter-end-date');
+        
+        if (startDateEl) startDateEl.value = '';
+        if (endDateEl) endDateEl.value = '';
+        
+        this.renderAttendanceTable();
+    }
+    
+    nextMonth() {
+        this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+        this.updateCalendar();
+        
+        // Reset filter tanggal
+        const startDateEl = document.getElementById('filter-start-date');
+        const endDateEl = document.getElementById('filter-end-date');
+        
+        if (startDateEl) startDateEl.value = '';
+        if (endDateEl) endDateEl.value = '';
+        
+        this.renderAttendanceTable();
     }
 
     initMap() {
@@ -759,16 +1112,24 @@ class EnterpriseAttendanceSystem {
         this.mapMarkers.forEach(marker => marker.remove());
         this.mapMarkers = [];
         
-        // Add markers for today's attendance
-        const today = new Date().toDateString();
-        const todayRecords = this.attendanceData.filter(record => {
+        // Get selected date from filter or use today
+        let targetDate = new Date();
+        const filterDate = document.getElementById('filter-start-date')?.value;
+        if (filterDate) {
+            targetDate = new Date(filterDate);
+        }
+        
+        const targetDateStr = targetDate.toDateString();
+        
+        // Add markers for selected date
+        const dateRecords = this.attendanceData.filter(record => {
             const recordDate = new Date(record.timestamp).toDateString();
-            return recordDate === today;
+            return recordDate === targetDateStr;
         });
         
         // Group by user and take latest
         const latestRecords = {};
-        todayRecords.forEach(record => {
+        dateRecords.forEach(record => {
             if (!latestRecords[record.userId] || 
                 new Date(record.timestamp) > new Date(latestRecords[record.userId].timestamp)) {
                 latestRecords[record.userId] = record;
@@ -853,12 +1214,17 @@ class EnterpriseAttendanceSystem {
 
     // ==================== UTILITY FUNCTIONS ====================
     showPhoto(photoId) {
+        // Method lama - untuk kompatibilitas
         const photo = localStorage.getItem(photoId);
+        this.showPhotoBase64(photo);
+    }
+    
+    showPhotoBase64(photoBase64) {
         const modal = document.getElementById('photo-modal');
         const modalImg = document.getElementById('modal-photo-img');
         
-        if (photo && modal && modalImg) {
-            modalImg.src = photo;
+        if (photoBase64 && modal && modalImg) {
+            modalImg.src = photoBase64;
             modal.classList.add('active');
         } else {
             this.showNotification('Foto tidak ditemukan', 'warning');
@@ -895,6 +1261,9 @@ class EnterpriseAttendanceSystem {
         document.getElementById('login-page').classList.add('hidden');
         document.getElementById('app-container').classList.remove('active');
         document.getElementById('admin-container').classList.add('active');
+        
+        // Render calendar setelah admin panel muncul
+        setTimeout(() => this.renderCalendar(), 100);
     }
 
     updateUserDisplay() {
@@ -1006,7 +1375,10 @@ class EnterpriseAttendanceSystem {
         const exportBtn = document.getElementById('btn-export-excel');
         
         if (applyFilterBtn) {
-            applyFilterBtn.addEventListener('click', () => this.renderAttendanceTable());
+            applyFilterBtn.addEventListener('click', () => {
+                this.renderAttendanceTable();
+                this.addMarkersToMap();
+            });
         }
         
         if (exportBtn) {
@@ -1034,8 +1406,33 @@ class EnterpriseAttendanceSystem {
 
 // ==================== GLOBAL ACCESS ====================
 window.attendanceSystem = new EnterpriseAttendanceSystem();
+
 window.showPhoto = function(photoId) {
     if (window.attendanceSystem) {
         window.attendanceSystem.showPhoto(photoId);
+    }
+};
+
+window.showPhotoBase64 = function(photoBase64) {
+    if (window.attendanceSystem) {
+        window.attendanceSystem.showPhotoBase64(photoBase64);
+    }
+};
+
+window.selectDate = function(dateStr) {
+    if (window.attendanceSystem) {
+        window.attendanceSystem.selectDate(dateStr);
+    }
+};
+
+window.prevMonth = function() {
+    if (window.attendanceSystem) {
+        window.attendanceSystem.prevMonth();
+    }
+};
+
+window.nextMonth = function() {
+    if (window.attendanceSystem) {
+        window.attendanceSystem.nextMonth();
     }
 };
