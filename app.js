@@ -13,25 +13,63 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ==================== ENTERPRISE ATTENDANCE SYSTEM ====================
-class EnterpriseAttendanceSystem {
+// ==================== OB TASK CHECKLIST SYSTEM ====================
+class OBTaskSystem {
     constructor() {
         this.currentUser = null;
         this.userRole = null;
-        this.attendanceData = [];
+        this.taskData = [];
         this.employeesData = [];
         this.currentPhoto = null;
-        this.locationData = {
-            lat: null,
-            lng: null,
-            address: 'Mendapatkan lokasi...'
-        };
         this.cameraStream = null;
         this.isCameraReady = false;
         this.map = null;
         this.mapMarkers = [];
         this.clockInterval = null;
-        this.currentCalendarDate = new Date(); // Untuk tracking tanggal di calendar
+        this.currentCalendarDate = new Date();
+        
+        // Task definitions per floor
+        this.tasksByFloor = {
+            'Lantai 1': [
+                { id: 'l1_task1', name: 'Sapu lobby dan resepsionis' },
+                { id: 'l1_task2', name: 'Pel lantai lobby' },
+                { id: 'l1_task3', name: 'Bersihkan meja resepsionis' },
+                { id: 'l1_task4', name: 'Buang sampah' },
+                { id: 'l1_task5', name: 'Semprot pewangi ruangan' }
+            ],
+            'Lantai 2': [
+                { id: 'l2_task1', name: 'Sapu area kantor utama' },
+                { id: 'l2_task2', name: 'Bersihkan meja karyawan' },
+                { id: 'l2_task3', name: 'Buang sampah' },
+                { id: 'l2_task4', name: 'Bersihkan pantry' },
+                { id: 'l2_task5', name: 'Cuci peralatan pantry' },
+                { id: 'l2_task6', name: 'Bersihkan toilet' }
+            ],
+            'Lantai 3': [
+                { id: 'l3_task1', name: 'Bersihkan ruang meeting A' },
+                { id: 'l3_task2', name: 'Bersihkan ruang meeting B' },
+                { id: 'l3_task3', name: 'Rapikan kursi meeting' },
+                { id: 'l3_task4', name: 'Buang sampah' },
+                { id: 'l3_task5', name: 'Bersihkan proyektor/LCD' }
+            ],
+            'Lantai 4': [
+                { id: 'l4_task1', name: 'Bersihkan ruang direktur' },
+                { id: 'l4_task2', name: 'Bersihkan ruang wakil direktur' },
+                { id: 'l4_task3', name: 'Bersihkan ruang rapat direksi' },
+                { id: 'l4_task4', name: 'Buang sampah' },
+                { id: 'l4_task5', name: 'Sapu dan pel lantai' }
+            ]
+        };
+        
+        // Current session data
+        this.currentSession = {
+            floor: null,
+            tasks: [],
+            completedTasks: [],
+            taskPhotos: {},
+            startTime: null,
+            status: 'idle' // idle, active, completed
+        };
         
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -41,7 +79,7 @@ class EnterpriseAttendanceSystem {
 
     // ==================== INITIALIZATION ====================
     async initialize() {
-        console.log('🚀 Inisialisasi Sistem Absensi...');
+        console.log('🚀 Inisialisasi Sistem OB Task...');
         
         setTimeout(() => this.hideLoading(), 1000);
         
@@ -55,8 +93,6 @@ class EnterpriseAttendanceSystem {
 
         this.setupEventListeners();
         this.setDefaultFilterDates();
-        
-        // Render calendar
         this.renderCalendar();
     }
 
@@ -65,13 +101,10 @@ class EnterpriseAttendanceSystem {
         try {
             this.showLoading();
             
-            // Tentukan role berdasarkan email
-            // HANYA admin@genetek.co.id yang jadi ADMIN
             const role = (user.email === 'admin@genetek.co.id') ? 'admin' : 'karyawan';
             
             console.log(`📧 Email: ${user.email}, Role: ${role}`);
             
-            // Get atau create user di Firestore
             const userDoc = await db.collection('users').doc(user.uid).get();
             
             if (userDoc.exists) {
@@ -81,7 +114,6 @@ class EnterpriseAttendanceSystem {
                     ...userDoc.data()
                 };
                 
-                // PASTIKAN role sesuai email (update jika diperlukan)
                 if (this.currentUser.role !== role) {
                     await db.collection('users').doc(user.uid).update({
                         role: role,
@@ -90,7 +122,6 @@ class EnterpriseAttendanceSystem {
                     this.currentUser.role = role;
                 }
             } else {
-                // Create new user profile
                 const name = user.email.split('@')[0];
                 const displayName = name.charAt(0).toUpperCase() + name.slice(1);
                 
@@ -110,7 +141,6 @@ class EnterpriseAttendanceSystem {
             
             this.userRole = this.currentUser.role;
             
-            // Update UI based on role
             if (this.userRole === 'admin') {
                 this.showAdminPanel();
                 await this.loadAdminData();
@@ -135,11 +165,10 @@ class EnterpriseAttendanceSystem {
         try {
             this.showLoading();
             
-            // VALIDASI: Admin harus menggunakan email yang benar
             if (email === 'admin@genetek.co.id') {
                 console.log('🔐 Login sebagai Admin');
             } else {
-                console.log('🔐 Login sebagai Karyawan');
+                console.log('🔐 Login sebagai OB');
             }
             
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -149,7 +178,6 @@ class EnterpriseAttendanceSystem {
             console.error('Login error:', error);
             
             if (error.code === 'auth/user-not-found') {
-                // Auto register untuk user baru
                 try {
                     this.showNotification('Membuat akun baru...', 'info');
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
@@ -183,6 +211,14 @@ class EnterpriseAttendanceSystem {
             this.currentUser = null;
             this.userRole = null;
             this.currentPhoto = null;
+            this.currentSession = {
+                floor: null,
+                tasks: [],
+                completedTasks: [],
+                taskPhotos: {},
+                startTime: null,
+                status: 'idle'
+            };
             this.showLoginPage();
             this.showNotification('Berhasil logout', 'success');
         }).catch((error) => {
@@ -191,12 +227,12 @@ class EnterpriseAttendanceSystem {
         });
     }
 
-    // ==================== EMPLOYEE FEATURES ====================
+    // ==================== EMPLOYEE (OB) FEATURES ====================
     startEmployeeFeatures() {
         this.startRealTimeClock();
-        this.getUserLocation();
         this.setupCamera();
-        this.loadEmployeeTodayStatus();
+        this.setupFloorSelector();
+        this.loadTodaySession();
     }
 
     startRealTimeClock() {
@@ -228,61 +264,385 @@ class EnterpriseAttendanceSystem {
         });
     }
 
-    getUserLocation() {
-        if (!navigator.geolocation) {
-            this.locationData.address = 'Geolocation tidak didukung';
-            this.updateLocationDisplay();
+    setupFloorSelector() {
+        const floorSelect = document.getElementById('floor-select');
+        if (!floorSelect) return;
+        
+        floorSelect.addEventListener('change', (e) => {
+            const floor = e.target.value;
+            if (floor) {
+                this.loadTasksForFloor(floor);
+            } else {
+                document.getElementById('task-checklist-container').innerHTML = 
+                    '<p style="color: var(--gray); text-align: center;">Pilih lantai untuk melihat tugas</p>';
+            }
+        });
+    }
+
+    loadTasksForFloor(floor) {
+        const container = document.getElementById('task-checklist-container');
+        if (!container) return;
+        
+        const tasks = this.tasksByFloor[floor] || [];
+        let html = '<h4 style="margin-bottom: 16px;">📋 Daftar Tugas:</h4>';
+        
+        tasks.forEach(task => {
+            const isCompleted = this.currentSession.completedTasks.includes(task.id);
+            const hasPhoto = this.currentSession.taskPhotos[task.id];
+            
+            html += `
+                <div class="task-item ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
+                    <div class="task-header">
+                        <input type="checkbox" 
+                               class="task-checkbox" 
+                               data-task-id="${task.id}"
+                               ${isCompleted ? 'checked' : ''}
+                               ${!this.isCameraReady ? 'disabled' : ''}>
+                        <span class="task-name">${task.name}</span>
+                        <button class="task-camera-btn ${hasPhoto ? 'completed' : ''}" 
+                                data-task-id="${task.id}"
+                                ${!this.isCameraReady ? 'disabled' : ''}>
+                            📸
+                        </button>
+                    </div>
+                    <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
+                        <img src="${hasPhoto || ''}" alt="Foto tugas">
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+        
+        // Add event listeners
+        tasks.forEach(task => {
+            const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${task.id}"]`);
+            if (cameraBtn) {
+                cameraBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.capturePhotoForTask(task.id, task.name);
+                });
+            }
+            
+            const checkbox = document.querySelector(`.task-checkbox[data-task-id="${task.id}"]`);
+            if (checkbox) {
+                checkbox.addEventListener('change', (e) => {
+                    this.toggleTaskCompletion(task.id, e.target.checked);
+                });
+            }
+        });
+        
+        this.updateStartButton();
+        this.updateProgress();
+    }
+
+    async capturePhotoForTask(taskId, taskName) {
+        if (!this.isCameraReady) {
+            this.showNotification('Kamera belum siap', 'error');
             return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                this.locationData.lat = position.coords.latitude;
-                this.locationData.lng = position.coords.longitude;
-                this.updateLocationDisplay();
-                this.getAddressFromCoordinates();
-            },
-            (error) => {
-                console.error('Location error:', error);
-                this.locationData.address = '❌ Gagal mendapatkan lokasi';
-                this.updateLocationDisplay();
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
+        const video = document.getElementById('video-feed');
+        if (!video || video.readyState !== 4) {
+            this.showNotification('Video belum siap', 'warning');
+            return;
+        }
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const context = canvas.getContext('2d');
+            context.translate(canvas.width, 0);
+            context.scale(-1, 1);
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const photoData = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Store photo for this task
+            this.currentSession.taskPhotos[taskId] = photoData;
+            
+            // Show preview
+            const previewContainer = document.getElementById(`photo-preview-${taskId}`);
+            const previewImg = previewContainer?.querySelector('img');
+            if (previewContainer && previewImg) {
+                previewImg.src = photoData;
+                previewContainer.classList.add('active');
             }
-        );
+            
+            // Update camera button
+            const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
+            if (cameraBtn) {
+                cameraBtn.classList.add('completed');
+            }
+            
+            // Show current task info
+            const taskInfo = document.getElementById('current-task-info');
+            const taskNameEl = document.getElementById('current-task-name');
+            if (taskInfo && taskNameEl) {
+                taskInfo.style.display = 'block';
+                taskNameEl.textContent = taskName;
+            }
+            
+            this.showNotification(`✅ Foto untuk "${taskName}" berhasil!`, 'success');
+            
+        } catch (error) {
+            console.error('Capture error:', error);
+            this.showNotification('Gagal mengambil foto', 'error');
+        }
     }
 
-    async getAddressFromCoordinates() {
-        if (!this.locationData.lat || !this.locationData.lng) return;
-        
-        try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${this.locationData.lat}&lon=${this.locationData.lng}&zoom=18&addressdetails=1`
-            );
-            const data = await response.json();
-            
-            if (data.display_name) {
-                const addressParts = data.display_name.split(', ');
-                this.locationData.address = addressParts.slice(0, 4).join(', ');
+    toggleTaskCompletion(taskId, completed) {
+        if (completed) {
+            // Check if photo exists
+            if (!this.currentSession.taskPhotos[taskId]) {
+                this.showNotification('📸 Ambil foto terlebih dahulu!', 'warning');
+                // Revert checkbox
+                const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
+                if (checkbox) checkbox.checked = false;
+                return;
             }
-        } catch (error) {
-            console.error('Reverse geocoding error:', error);
-            this.locationData.address = `${this.locationData.lat.toFixed(4)}, ${this.locationData.lng.toFixed(4)}`;
+            
+            if (!this.currentSession.completedTasks.includes(taskId)) {
+                this.currentSession.completedTasks.push(taskId);
+            }
+        } else {
+            const index = this.currentSession.completedTasks.indexOf(taskId);
+            if (index > -1) {
+                this.currentSession.completedTasks.splice(index, 1);
+            }
         }
         
-        this.updateLocationDisplay();
+        // Update task item style
+        const taskItem = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
+        if (taskItem) {
+            if (completed) {
+                taskItem.classList.add('completed');
+            } else {
+                taskItem.classList.remove('completed');
+            }
+        }
+        
+        this.updateProgress();
+        this.updateStartButton();
     }
 
-    updateLocationDisplay() {
-        const addressEl = document.getElementById('employee-address');
-        const coordsEl = document.getElementById('employee-coords');
+    updateProgress() {
+        const tasks = this.tasksByFloor[this.currentSession.floor] || [];
+        const completed = this.currentSession.completedTasks.length;
+        const total = tasks.length;
         
-        if (addressEl) addressEl.textContent = this.locationData.address;
-        if (coordsEl && this.locationData.lat && this.locationData.lng) {
-            coordsEl.textContent = `${this.locationData.lat.toFixed(6)}, ${this.locationData.lng.toFixed(6)}`;
+        const progressEl = document.getElementById('task-progress');
+        if (progressEl) {
+            progressEl.textContent = `${completed}/${total}`;
+        }
+        
+        // Update status text
+        const statusText = document.querySelector('.status-text');
+        if (statusText) {
+            if (this.currentSession.status === 'active') {
+                statusText.textContent = 'Sedang mengerjakan tugas';
+            } else if (this.currentSession.status === 'completed') {
+                statusText.textContent = 'Tugas selesai';
+            } else {
+                statusText.textContent = 'Belum memulai tugas';
+            }
+        }
+        
+        // Update status indicator
+        const statusContainer = document.getElementById('employee-status');
+        if (statusContainer) {
+            if (this.currentSession.status === 'active') {
+                statusContainer.classList.add('active');
+            } else {
+                statusContainer.classList.remove('active');
+            }
+        }
+    }
+
+    updateStartButton() {
+        const startBtn = document.getElementById('employee-start');
+        if (!startBtn) return;
+        
+        const floor = document.getElementById('floor-select')?.value;
+        const tasks = this.tasksByFloor[floor] || [];
+        const completed = this.currentSession.completedTasks.length;
+        const total = tasks.length;
+        
+        if (this.currentSession.status === 'idle' && floor) {
+            startBtn.disabled = false;
+            startBtn.textContent = '🚀 Mulai Tugas';
+        } else if (this.currentSession.status === 'active') {
+            if (completed === total && total > 0) {
+                startBtn.disabled = false;
+                startBtn.textContent = '✅ Selesaikan Tugas';
+            } else {
+                startBtn.disabled = true;
+                startBtn.textContent = `⏳ Progress: ${completed}/${total}`;
+            }
+        } else if (this.currentSession.status === 'completed') {
+            startBtn.disabled = true;
+            startBtn.textContent = '✨ Tugas Selesai';
+        }
+    }
+
+    async startTaskSession() {
+        const floor = document.getElementById('floor-select')?.value;
+        
+        if (!floor) {
+            this.showNotification('Pilih lantai terlebih dahulu!', 'warning');
+            return;
+        }
+        
+        if (this.currentSession.status === 'idle') {
+            // Start new session
+            this.currentSession = {
+                floor: floor,
+                tasks: this.tasksByFloor[floor] || [],
+                completedTasks: [],
+                taskPhotos: {},
+                startTime: new Date().toISOString(),
+                status: 'active'
+            };
+            
+            this.loadTasksForFloor(floor);
+            this.showNotification('✅ Tugas dimulai!', 'success');
+            
+        } else if (this.currentSession.status === 'active') {
+            // Complete session
+            const total = this.currentSession.tasks.length;
+            const completed = this.currentSession.completedTasks.length;
+            
+            if (completed !== total) {
+                this.showNotification(`Selesaikan semua tugas terlebih dahulu! (${completed}/${total})`, 'warning');
+                return;
+            }
+            
+            await this.completeTaskSession();
+        }
+        
+        this.updateProgress();
+        this.updateStartButton();
+    }
+
+    async completeTaskSession() {
+        try {
+            this.showLoading();
+            
+            if (!this.currentUser) {
+                this.showNotification('User tidak ditemukan', 'error');
+                return;
+            }
+            
+            // Validate all tasks have photos
+            for (const taskId of this.currentSession.completedTasks) {
+                if (!this.currentSession.taskPhotos[taskId]) {
+                    this.showNotification(`Foto untuk task ${taskId} tidak ditemukan`, 'error');
+                    this.hideLoading();
+                    return;
+                }
+            }
+            
+            // Create task record
+            const taskRecord = {
+                userId: this.currentUser.uid,
+                userName: this.currentUser.name || this.currentUser.email.split('@')[0],
+                userEmail: this.currentUser.email,
+                floor: this.currentSession.floor,
+                tasks: this.currentSession.tasks,
+                completedTasks: this.currentSession.completedTasks,
+                taskPhotos: this.currentSession.taskPhotos,
+                startTime: this.currentSession.startTime,
+                endTime: new Date().toISOString(),
+                date: new Date().toISOString().split('T')[0],
+                status: 'completed',
+                progress: `${this.currentSession.completedTasks.length}/${this.currentSession.tasks.length}`,
+                createdAt: new Date().toISOString()
+            };
+            
+            await db.collection('ob_tasks').add(taskRecord);
+            
+            // Update last active
+            await db.collection('users').doc(this.currentUser.uid).update({
+                lastActive: new Date().toISOString(),
+                lastTask: taskRecord
+            });
+            
+            this.currentSession.status = 'completed';
+            
+            this.showNotification('✅ Tugas selesai! Terima kasih!', 'success');
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                this.currentSession = {
+                    floor: null,
+                    tasks: [],
+                    completedTasks: [],
+                    taskPhotos: {},
+                    startTime: null,
+                    status: 'idle'
+                };
+                
+                const floorSelect = document.getElementById('floor-select');
+                if (floorSelect) floorSelect.value = '';
+                
+                document.getElementById('task-checklist-container').innerHTML = 
+                    '<p style="color: var(--gray); text-align: center;">Pilih lantai untuk melihat tugas</p>';
+                
+                document.getElementById('current-task-info').style.display = 'none';
+                
+                this.updateProgress();
+                this.updateStartButton();
+            }, 3000);
+            
+        } catch (error) {
+            console.error('Error completing task:', error);
+            this.showNotification('❌ Gagal menyelesaikan tugas: ' + error.message, 'error');
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async loadTodaySession() {
+        if (!this.currentUser) return;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        try {
+            const snapshot = await db.collection('ob_tasks')
+                .where('userId', '==', this.currentUser.uid)
+                .where('createdAt', '>=', today.toISOString())
+                .where('createdAt', '<', tomorrow.toISOString())
+                .orderBy('createdAt', 'desc')
+                .limit(1)
+                .get();
+            
+            if (!snapshot.empty) {
+                const todaySession = snapshot.docs[0].data();
+                
+                if (todaySession.status === 'completed') {
+                    this.currentSession.status = 'completed';
+                    
+                    const statusContainer = document.getElementById('employee-status');
+                    const statusText = statusContainer?.querySelector('.status-text');
+                    if (statusText) {
+                        statusText.textContent = '✅ Tugas sudah selesai hari ini';
+                    }
+                    
+                    const startBtn = document.getElementById('employee-start');
+                    if (startBtn) {
+                        startBtn.disabled = true;
+                        startBtn.textContent = '✨ Tugas Selesai';
+                    }
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error loading today session:', error);
         }
     }
 
@@ -308,304 +668,17 @@ class EnterpriseAttendanceSystem {
         }
     }
 
-    capturePhoto() {
-        if (!this.isCameraReady) {
-            this.showNotification('Kamera belum siap', 'error');
-            return null;
-        }
-
-        const video = document.getElementById('video-feed');
-        if (!video || video.readyState !== 4) {
-            this.showNotification('Video belum siap', 'warning');
-            return null;
-        }
-
-        try {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            const context = canvas.getContext('2d');
-            context.translate(canvas.width, 0);
-            context.scale(-1, 1);
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
-            const photoData = canvas.toDataURL('image/jpeg', 0.9);
-            this.currentPhoto = photoData;
-            
-            // Show preview - PREVIEW DITAMPILKAN SEMENTARA
-            const photoPreview = document.getElementById('captured-photo');
-            const previewContainer = document.getElementById('photo-preview-container');
-            
-            if (photoPreview && previewContainer) {
-                photoPreview.src = photoData;
-                previewContainer.classList.add('active');
-            }
-            
-            this.showNotification('✅ Foto berhasil diambil!', 'success');
-            return photoData;
-            
-        } catch (error) {
-            console.error('Capture error:', error);
-            this.showNotification('Gagal mengambil foto', 'error');
-            return null;
-        }
-    }
-
-    async loadEmployeeTodayStatus() {
-        if (!this.currentUser) return;
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        try {
-            const snapshot = await db.collection('attendance')
-                .where('userId', '==', this.currentUser.uid)
-                .where('timestamp', '>=', today.toISOString())
-                .where('timestamp', '<', tomorrow.toISOString())
-                .orderBy('timestamp', 'desc')
-                .get();
-            
-            const todayRecords = [];
-            snapshot.forEach(doc => todayRecords.push({ id: doc.id, ...doc.data() }));
-            
-            this.updateEmployeeStatus(todayRecords);
-            
-        } catch (error) {
-            console.error('Error loading today status:', error);
-        }
-    }
-
-    updateEmployeeStatus(records) {
-        const statusContainer = document.getElementById('employee-status');
-        if (!statusContainer) return;
-        
-        const statusText = statusContainer.querySelector('.status-text');
-        if (!statusText) return;
-        
-        const hasClockIn = records.some(r => r.type === 'clockin');
-        const hasClockOut = records.some(r => r.type === 'clockout');
-        
-        if (hasClockIn && !hasClockOut) {
-            statusContainer.classList.add('active');
-            statusText.textContent = '✅ Sedang bekerja';
-        } else if (hasClockIn && hasClockOut) {
-            statusContainer.classList.remove('active');
-            statusText.textContent = '📤 Sudah clock out';
-        } else {
-            statusContainer.classList.remove('active');
-            statusText.textContent = '⏳ Belum clock in';
-        }
-    }
-
-    async clockIn() {
-        if (!this.validateClockAction()) return;
-        
-        try {
-            this.showLoading();
-            
-            // Check if already clocked in today
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            const snapshot = await db.collection('attendance')
-                .where('userId', '==', this.currentUser.uid)
-                .where('type', '==', 'clockin')
-                .where('timestamp', '>=', today.toISOString())
-                .where('timestamp', '<', tomorrow.toISOString())
-                .get();
-            
-            if (!snapshot.empty) {
-                this.showNotification('⚠️ Anda sudah clock in hari ini!', 'warning');
-                this.hideLoading();
-                return;
-            }
-            
-            // Generate ID untuk foto
-            const photoId = `photo_${Date.now()}`;
-            
-            // Simpan foto ke localStorage (BASE64)
-            if (this.currentPhoto) {
-                localStorage.setItem(photoId, this.currentPhoto);
-            }
-            
-            // Create attendance record
-            const attendanceRecord = {
-                userId: this.currentUser.uid,
-                userName: this.currentUser.name || this.currentUser.email.split('@')[0],
-                userEmail: this.currentUser.email,
-                type: 'clockin',
-                timestamp: new Date().toISOString(),
-                date: new Date().toISOString().split('T')[0],
-                location: {
-                    lat: this.locationData.lat,
-                    lng: this.locationData.lng,
-                    address: this.locationData.address
-                },
-                photoId: photoId,
-                photoBase64: this.currentPhoto, // Simpan base64 langsung di record
-                deviceInfo: navigator.userAgent,
-                createdAt: new Date().toISOString()
-            };
-            
-            await db.collection('attendance').add(attendanceRecord);
-            
-            // Update last active
-            await db.collection('users').doc(this.currentUser.uid).update({
-                lastActive: new Date().toISOString(),
-                lastLocation: attendanceRecord.location
-            });
-            
-            // HAPUS PREVIEW FOTO SETELAH CLOCK IN BERHASIL
-            this.clearPhotoPreview();
-            
-            this.showNotification('✅ Clock In berhasil!', 'success');
-            await this.loadEmployeeTodayStatus();
-            
-        } catch (error) {
-            console.error('Clock in error:', error);
-            this.showNotification('❌ Gagal clock in: ' + error.message, 'error');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async clockOut() {
-        if (!this.validateClockAction()) return;
-        
-        try {
-            this.showLoading();
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            // Check if already clocked in today
-            const clockInSnapshot = await db.collection('attendance')
-                .where('userId', '==', this.currentUser.uid)
-                .where('type', '==', 'clockin')
-                .where('timestamp', '>=', today.toISOString())
-                .where('timestamp', '<', tomorrow.toISOString())
-                .get();
-            
-            if (clockInSnapshot.empty) {
-                this.showNotification('⚠️ Anda belum clock in hari ini!', 'warning');
-                this.hideLoading();
-                return;
-            }
-            
-            // Check if already clocked out
-            const clockOutSnapshot = await db.collection('attendance')
-                .where('userId', '==', this.currentUser.uid)
-                .where('type', '==', 'clockout')
-                .where('timestamp', '>=', today.toISOString())
-                .where('timestamp', '<', tomorrow.toISOString())
-                .get();
-            
-            if (!clockOutSnapshot.empty) {
-                this.showNotification('⚠️ Anda sudah clock out hari ini!', 'warning');
-                this.hideLoading();
-                return;
-            }
-            
-            // Generate ID untuk foto
-            const photoId = `photo_${Date.now()}`;
-            
-            // Simpan foto ke localStorage (BASE64)
-            if (this.currentPhoto) {
-                localStorage.setItem(photoId, this.currentPhoto);
-            }
-            
-            // Create attendance record
-            const attendanceRecord = {
-                userId: this.currentUser.uid,
-                userName: this.currentUser.name || this.currentUser.email.split('@')[0],
-                userEmail: this.currentUser.email,
-                type: 'clockout',
-                timestamp: new Date().toISOString(),
-                date: new Date().toISOString().split('T')[0],
-                location: {
-                    lat: this.locationData.lat,
-                    lng: this.locationData.lng,
-                    address: this.locationData.address
-                },
-                photoId: photoId,
-                photoBase64: this.currentPhoto, // Simpan base64 langsung di record
-                deviceInfo: navigator.userAgent,
-                createdAt: new Date().toISOString()
-            };
-            
-            await db.collection('attendance').add(attendanceRecord);
-            
-            // Update last active
-            await db.collection('users').doc(this.currentUser.uid).update({
-                lastActive: new Date().toISOString()
-            });
-            
-            // HAPUS PREVIEW FOTO SETELAH CLOCK OUT BERHASIL
-            this.clearPhotoPreview();
-            
-            this.showNotification('✅ Clock Out berhasil!', 'success');
-            await this.loadEmployeeTodayStatus();
-            
-        } catch (error) {
-            console.error('Clock out error:', error);
-            this.showNotification('❌ Gagal clock out: ' + error.message, 'error');
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    // FUNGSI BARU: Membersihkan preview foto
-    clearPhotoPreview() {
-        this.currentPhoto = null;
-        
-        const photoPreview = document.getElementById('captured-photo');
-        const previewContainer = document.getElementById('photo-preview-container');
-        
-        if (photoPreview) {
-            photoPreview.src = '';
-        }
-        
-        if (previewContainer) {
-            previewContainer.classList.remove('active');
-        }
-        
-        // Hapus juga dari localStorage jika ada
-        // Tapi tidak perlu karena kita simpan dengan ID spesifik
-    }
-
-    validateClockAction() {
-        if (!this.locationData.lat || !this.locationData.lng) {
-            this.showNotification('📍 Lokasi belum tersedia', 'error');
-            return false;
-        }
-        
-        if (!this.currentPhoto) {
-            this.showNotification('📸 Ambil foto terlebih dahulu', 'warning');
-            return false;
-        }
-        
-        return true;
-    }
-
     // ==================== ADMIN FEATURES ====================
     async loadAdminData() {
         try {
             this.showLoading();
             
-            // Load all employees - HANYA KARYAWAN (bukan admin)
+            // Load all employees (OB)
             const usersSnapshot = await db.collection('users').get();
             this.employeesData = [];
             
             usersSnapshot.forEach(doc => {
                 const userData = doc.data();
-                // Filter: HANYA karyawan (bukan admin) yang ditampilkan
                 if (userData.role !== 'admin') {
                     this.employeesData.push({ 
                         id: doc.id, 
@@ -614,18 +687,18 @@ class EnterpriseAttendanceSystem {
                 }
             });
             
-            // Load attendance data (last 30 days)
+            // Load task data (last 30 days)
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
             
-            const attendanceSnapshot = await db.collection('attendance')
-                .where('timestamp', '>=', thirtyDaysAgo.toISOString())
-                .orderBy('timestamp', 'desc')
+            const taskSnapshot = await db.collection('ob_tasks')
+                .where('createdAt', '>=', thirtyDaysAgo.toISOString())
+                .orderBy('createdAt', 'desc')
                 .get();
             
-            this.attendanceData = [];
-            attendanceSnapshot.forEach(doc => {
-                this.attendanceData.push({ 
+            this.taskData = [];
+            taskSnapshot.forEach(doc => {
+                this.taskData.push({ 
                     id: doc.id, 
                     ...doc.data() 
                 });
@@ -634,7 +707,7 @@ class EnterpriseAttendanceSystem {
             // Update UI
             this.updateStatistics();
             this.populateEmployeeFilter();
-            this.renderAttendanceTable();
+            this.renderTaskTable();
             this.initMap();
             this.addMarkersToMap();
             
@@ -650,37 +723,37 @@ class EnterpriseAttendanceSystem {
         const totalKaryawanEl = document.getElementById('total-karyawan');
         if (totalKaryawanEl) totalKaryawanEl.textContent = this.employeesData.length;
         
-        const totalAbsensiEl = document.getElementById('total-absensi');
-        if (totalAbsensiEl) totalAbsensiEl.textContent = this.attendanceData.length;
+        const totalTugasEl = document.getElementById('total-tugas');
+        if (totalTugasEl) totalTugasEl.textContent = this.taskData.length;
         
-        // Clock in hari ini
+        // Tugas hari ini
         const today = new Date().toDateString();
-        const todayClockIn = this.attendanceData.filter(record => {
-            const recordDate = new Date(record.timestamp).toDateString();
-            return recordDate === today && record.type === 'clockin';
+        const todayTasks = this.taskData.filter(record => {
+            const recordDate = new Date(record.createdAt).toDateString();
+            return recordDate === today;
         }).length;
         
-        const hariIniClockinEl = document.getElementById('hari-ini-clockin');
-        if (hariIniClockinEl) hariIniClockinEl.textContent = todayClockIn;
+        const hariIniTugasEl = document.getElementById('hari-ini-tugas');
+        if (hariIniTugasEl) hariIniTugasEl.textContent = todayTasks;
         
-        // Karyawan aktif hari ini
-        const activeEmployees = new Set();
-        this.attendanceData.forEach(record => {
-            const recordDate = new Date(record.timestamp).toDateString();
+        // OB aktif hari ini
+        const activeOB = new Set();
+        this.taskData.forEach(record => {
+            const recordDate = new Date(record.createdAt).toDateString();
             if (recordDate === today) {
-                activeEmployees.add(record.userId);
+                activeOB.add(record.userId);
             }
         });
         
         const aktifHariIniEl = document.getElementById('aktif-hari-ini');
-        if (aktifHariIniEl) aktifHariIniEl.textContent = activeEmployees.size;
+        if (aktifHariIniEl) aktifHariIniEl.textContent = activeOB.size;
     }
 
     populateEmployeeFilter() {
         const select = document.getElementById('filter-employee');
         if (!select) return;
         
-        select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
+        select.innerHTML = '<option value="all">📋 Semua OB</option>';
         
         this.employeesData.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
         
@@ -689,25 +762,23 @@ class EnterpriseAttendanceSystem {
         });
     }
 
-    async renderAttendanceTable() {
+    async renderTaskTable() {
         const tbody = document.getElementById('table-body');
         if (!tbody) return;
         
-        let filteredData = [...this.attendanceData];
+        let filteredData = [...this.taskData];
         
         // Apply filters
         let startDate = document.getElementById('filter-start-date')?.value;
         let endDate = document.getElementById('filter-end-date')?.value;
         const employeeId = document.getElementById('filter-employee')?.value;
-        const type = document.getElementById('filter-type')?.value;
+        const floor = document.getElementById('filter-floor')?.value;
         
-        // Jika tidak ada filter tanggal, gunakan tanggal yang dipilih di calendar
         if (!startDate && !endDate) {
             const selectedDate = this.currentCalendarDate;
             startDate = selectedDate.toISOString().split('T')[0];
             endDate = startDate;
             
-            // Update input filter
             const startDateEl = document.getElementById('filter-start-date');
             const endDateEl = document.getElementById('filter-end-date');
             if (startDateEl) startDateEl.value = startDate;
@@ -716,13 +787,13 @@ class EnterpriseAttendanceSystem {
         
         if (startDate) {
             filteredData = filteredData.filter(record => 
-                record.timestamp && record.timestamp.split('T')[0] >= startDate
+                record.createdAt && record.createdAt.split('T')[0] >= startDate
             );
         }
         
         if (endDate) {
             filteredData = filteredData.filter(record => 
-                record.timestamp && record.timestamp.split('T')[0] <= endDate
+                record.createdAt && record.createdAt.split('T')[0] <= endDate
             );
         }
         
@@ -730,18 +801,18 @@ class EnterpriseAttendanceSystem {
             filteredData = filteredData.filter(record => record.userId === employeeId);
         }
         
-        if (type && type !== 'all') {
-            filteredData = filteredData.filter(record => record.type === type);
+        if (floor && floor !== 'all') {
+            filteredData = filteredData.filter(record => record.floor === floor);
         }
         
         if (filteredData.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px; color: var(--gray);">📭 Tidak ada data absensi</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 50px; color: var(--gray);">📭 Tidak ada data tugas</td></tr>';
             return;
         }
         
         let html = '';
         filteredData.slice(0, 100).forEach(record => {
-            const date = new Date(record.timestamp);
+            const date = new Date(record.createdAt);
             const timeStr = date.toLocaleString('id-ID', {
                 day: '2-digit',
                 month: '2-digit',
@@ -750,36 +821,56 @@ class EnterpriseAttendanceSystem {
                 minute: '2-digit'
             });
             
-            // PRIORITAS: Gunakan photoBase64 yang ada di record
-            let photoSrc = null;
-            
-            if (record.photoBase64) {
-                // Foto langsung dari database (base64)
-                photoSrc = record.photoBase64;
-            } else if (record.photoId) {
-                // Fallback ke localStorage
-                photoSrc = localStorage.getItem(record.photoId);
+            // Create tasks list
+            let tasksList = '';
+            if (record.completedTasks && record.tasks) {
+                const completedTasks = record.completedTasks;
+                const allTasks = record.tasks;
+                
+                allTasks.forEach(task => {
+                    const isCompleted = completedTasks.includes(task.id);
+                    tasksList += `
+                        <div class="task-item-detail">
+                            ${isCompleted ? '✅' : '⭕'} ${task.name}
+                        </div>
+                    `;
+                });
             }
+            
+            // Create photo thumbnails
+            let photoHtml = '';
+            if (record.taskPhotos) {
+                const firstPhoto = Object.values(record.taskPhotos)[0];
+                if (firstPhoto) {
+                    photoHtml = `<img src="${firstPhoto}" class="photo-thumb" onclick="window.attendanceSystem.showPhotoBase64('${firstPhoto}')" alt="Foto">`;
+                } else {
+                    photoHtml = '<span style="color: var(--gray);">📷 Tidak ada</span>';
+                }
+            } else {
+                photoHtml = '<span style="color: var(--gray);">📷 Tidak ada</span>';
+            }
+            
+            const progress = record.progress || '0/0';
+            const [completed, total] = progress.split('/').map(Number);
+            const progressPercent = total > 0 ? (completed / total) * 100 : 0;
             
             html += `
                 <tr>
                     <td>${timeStr}</td>
                     <td><strong>${record.userName || 'Unknown'}</strong></td>
                     <td>${record.userEmail || '-'}</td>
-                    <td>
-                        <span class="badge ${record.type === 'clockin' ? 'badge-in' : 'badge-out'}">
-                            ${record.type === 'clockin' ? '📥 CLOCK IN' : '📤 CLOCK OUT'}
-                        </span>
+                    <td><span class="badge badge-floor">${record.floor || '-'}</span></td>
+                    <td class="task-detail">
+                        ${tasksList}
                     </td>
-                    <td>${record.location?.address || '-'}</td>
-                    <td>${record.location?.lat ? record.location.lat.toFixed(4) + ', ' + record.location.lng.toFixed(4) : '-'}</td>
                     <td>
-                        ${photoSrc ? 
-                            `<img src="${photoSrc}" 
-                                  class="photo-thumb" 
-                                  onclick="window.attendanceSystem.showPhotoBase64('${photoSrc}')"
-                                  alt="Foto">` 
-                            : '<span style="color: var(--gray);">📷 Tidak ada</span>'}
+                        <div>${progress}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                    </td>
+                    <td>
+                        ${photoHtml}
                     </td>
                 </tr>
             `;
@@ -792,7 +883,6 @@ class EnterpriseAttendanceSystem {
     renderCalendar() {
         const calendarContainer = document.getElementById('attendance-calendar');
         if (!calendarContainer) {
-            // Buat calendar container jika belum ada
             this.createCalendarContainer();
         }
         
@@ -803,34 +893,28 @@ class EnterpriseAttendanceSystem {
         const adminContainer = document.getElementById('admin-container');
         if (!adminContainer) return;
         
-        // Cari elemen setelah stats-grid
         const statsGrid = document.querySelector('.stats-grid');
         if (!statsGrid) return;
         
-        // Buat section calendar
         const calendarSection = document.createElement('div');
         calendarSection.className = 'calendar-section';
         calendarSection.innerHTML = `
             <div class="card" style="margin-bottom: 24px;">
                 <div class="card-title">
-                    <span>📅</span> Kalender Absensi
+                    <span>📅</span> Kalender Tugas
                 </div>
                 <div id="attendance-calendar" class="calendar-container"></div>
                 <div id="calendar-legend" class="calendar-legend">
-                    <span><span class="legend-dot" style="background: #06d6a0;"></span> Ada absensi</span>
-                    <span><span class="legend-dot" style="background: #ef476f;"></span> Tidak ada absensi</span>
+                    <span><span class="legend-dot" style="background: #06d6a0;"></span> Ada tugas</span>
+                    <span><span class="legend-dot" style="background: #ef476f;"></span> Tidak ada tugas</span>
                     <span><span class="legend-dot" style="background: #4361ee;"></span> Hari ini</span>
                 </div>
             </div>
         `;
         
-        // Insert setelah stats-grid
         statsGrid.parentNode.insertBefore(calendarSection, statsGrid.nextSibling);
         
-        // Tambahkan CSS untuk calendar
         this.addCalendarStyles();
-        
-        // Render calendar
         this.updateCalendar();
     }
     
@@ -979,10 +1063,8 @@ class EnterpriseAttendanceSystem {
         const startDay = firstDay.getDay(); // 0 = Minggu
         const totalDays = lastDay.getDate();
         
-        // Nama hari
         const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         
-        // Header hari
         let html = `
             <div class="calendar-month">
                 <h3>${this.currentCalendarDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</h3>
@@ -994,28 +1076,24 @@ class EnterpriseAttendanceSystem {
             <div class="calendar-container">
         `;
         
-        // Header hari
         days.forEach(day => {
             html += `<div class="calendar-header">${day}</div>`;
         });
         
-        // Empty cells sebelum tanggal 1
         for (let i = 0; i < startDay; i++) {
             html += `<div class="calendar-day" style="background: transparent; cursor: default;"></div>`;
         }
         
-        // Tanggal
         const today = new Date();
         const todayStr = today.toDateString();
         
-        // Hitung absensi per tanggal
-        const attendanceByDate = {};
-        this.attendanceData.forEach(record => {
-            const date = record.timestamp.split('T')[0];
-            if (!attendanceByDate[date]) {
-                attendanceByDate[date] = 0;
+        const tasksByDate = {};
+        this.taskData.forEach(record => {
+            const date = record.createdAt.split('T')[0];
+            if (!tasksByDate[date]) {
+                tasksByDate[date] = 0;
             }
-            attendanceByDate[date]++;
+            tasksByDate[date]++;
         });
         
         for (let d = 1; d <= totalDays; d++) {
@@ -1023,18 +1101,18 @@ class EnterpriseAttendanceSystem {
             const dateStr = date.toISOString().split('T')[0];
             const isToday = date.toDateString() === todayStr;
             const isSelected = this.currentCalendarDate.toDateString() === date.toDateString();
-            const hasAttendance = attendanceByDate[dateStr] > 0;
-            const attendanceCount = attendanceByDate[dateStr] || 0;
+            const hasTasks = tasksByDate[dateStr] > 0;
+            const taskCount = tasksByDate[dateStr] || 0;
             
             let classes = 'calendar-day';
             if (isToday) classes += ' today';
             if (isSelected) classes += ' selected';
-            if (hasAttendance) classes += ' has-attendance';
+            if (hasTasks) classes += ' has-attendance';
             
             html += `
                 <div class="${classes}" onclick="window.attendanceSystem.selectDate('${dateStr}')">
                     <span class="day-number">${d}</span>
-                    ${attendanceCount > 0 ? `<span class="attendance-count">${attendanceCount}</span>` : ''}
+                    ${taskCount > 0 ? `<span class="attendance-count">${taskCount}</span>` : ''}
                 </div>
             `;
         }
@@ -1044,20 +1122,17 @@ class EnterpriseAttendanceSystem {
     }
     
     selectDate(dateStr) {
-        // Update current calendar date
         const [year, month, day] = dateStr.split('-').map(Number);
         this.currentCalendarDate = new Date(year, month - 1, day);
         
-        // Update filter tanggal
         const startDateEl = document.getElementById('filter-start-date');
         const endDateEl = document.getElementById('filter-end-date');
         
         if (startDateEl) startDateEl.value = dateStr;
         if (endDateEl) endDateEl.value = dateStr;
         
-        // Re-render calendar dan table
         this.updateCalendar();
-        this.renderAttendanceTable();
+        this.renderTaskTable();
         
         this.showNotification(`📅 Menampilkan data tanggal ${dateStr}`, 'info');
     }
@@ -1066,28 +1141,26 @@ class EnterpriseAttendanceSystem {
         this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
         this.updateCalendar();
         
-        // Reset filter tanggal
         const startDateEl = document.getElementById('filter-start-date');
         const endDateEl = document.getElementById('filter-end-date');
         
         if (startDateEl) startDateEl.value = '';
         if (endDateEl) endDateEl.value = '';
         
-        this.renderAttendanceTable();
+        this.renderTaskTable();
     }
     
     nextMonth() {
         this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
         this.updateCalendar();
         
-        // Reset filter tanggal
         const startDateEl = document.getElementById('filter-start-date');
         const endDateEl = document.getElementById('filter-end-date');
         
         if (startDateEl) startDateEl.value = '';
         if (endDateEl) endDateEl.value = '';
         
-        this.renderAttendanceTable();
+        this.renderTaskTable();
     }
 
     initMap() {
@@ -1103,59 +1176,26 @@ class EnterpriseAttendanceSystem {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
+        
+        // Add markers for each floor (simulated locations)
+        const floorLocations = [
+            { floor: 'Lantai 1', lat: -6.2088, lng: 106.8456, name: 'Lobby & Resepsionis' },
+            { floor: 'Lantai 2', lat: -6.2090, lng: 106.8458, name: 'Kantor Utama' },
+            { floor: 'Lantai 3', lat: -6.2092, lng: 106.8460, name: 'Ruang Meeting' },
+            { floor: 'Lantai 4', lat: -6.2094, lng: 106.8462, name: 'Kantor Direksi' }
+        ];
+        
+        floorLocations.forEach(loc => {
+            const marker = L.marker([loc.lat, loc.lng])
+                .addTo(this.map)
+                .bindPopup(`<b>${loc.floor}</b><br>${loc.name}`);
+            
+            this.mapMarkers.push(marker);
+        });
     }
 
     addMarkersToMap() {
-        if (!this.map) return;
-        
-        // Clear existing markers
-        this.mapMarkers.forEach(marker => marker.remove());
-        this.mapMarkers = [];
-        
-        // Get selected date from filter or use today
-        let targetDate = new Date();
-        const filterDate = document.getElementById('filter-start-date')?.value;
-        if (filterDate) {
-            targetDate = new Date(filterDate);
-        }
-        
-        const targetDateStr = targetDate.toDateString();
-        
-        // Add markers for selected date
-        const dateRecords = this.attendanceData.filter(record => {
-            const recordDate = new Date(record.timestamp).toDateString();
-            return recordDate === targetDateStr;
-        });
-        
-        // Group by user and take latest
-        const latestRecords = {};
-        dateRecords.forEach(record => {
-            if (!latestRecords[record.userId] || 
-                new Date(record.timestamp) > new Date(latestRecords[record.userId].timestamp)) {
-                latestRecords[record.userId] = record;
-            }
-        });
-        
-        Object.values(latestRecords).forEach(record => {
-            if (record.location?.lat && record.location?.lng) {
-                const marker = L.marker([record.location.lat, record.location.lng])
-                    .addTo(this.map)
-                    .bindPopup(`
-                        <b>${record.userName || 'Karyawan'}</b><br>
-                        ${record.type === 'clockin' ? '✅ Clock In' : '📤 Clock Out'}<br>
-                        ${new Date(record.timestamp).toLocaleString('id-ID')}<br>
-                        <small>${record.location.address || ''}</small>
-                    `);
-                
-                this.mapMarkers.push(marker);
-            }
-        });
-        
-        // Fit bounds
-        if (this.mapMarkers.length > 0) {
-            const group = L.featureGroup(this.mapMarkers);
-            this.map.fitBounds(group.getBounds().pad(0.1));
-        }
+        // Map already initialized with floor markers
     }
 
     setDefaultFilterDates() {
@@ -1179,28 +1219,37 @@ class EnterpriseAttendanceSystem {
         try {
             this.showNotification('📊 Menyiapkan data...', 'info');
             
-            let csv = 'Waktu,Karyawan,Email,Tipe,Lokasi,Koordinat\n';
+            let csv = 'Tanggal,OB,Email,Lantai,Tugas,Progress,Status\n';
             
-            this.attendanceData.forEach(record => {
-                const date = new Date(record.timestamp).toLocaleString('id-ID');
+            this.taskData.forEach(record => {
+                const date = new Date(record.createdAt).toLocaleString('id-ID');
+                
+                // Create tasks summary
+                let tasksSummary = '';
+                if (record.completedTasks && record.tasks) {
+                    const completedCount = record.completedTasks.length;
+                    const totalCount = record.tasks.length;
+                    tasksSummary = `${completedCount}/${totalCount} tugas`;
+                }
+                
                 const line = [
                     `"${date}"`,
                     `"${record.userName || ''}"`,
                     `"${record.userEmail || ''}"`,
-                    record.type === 'clockin' ? 'CLOCK IN' : 'CLOCK OUT',
-                    `"${(record.location?.address || '').replace(/"/g, '""')}"`,
-                    record.location?.lat ? `${record.location.lat}, ${record.location.lng}` : ''
+                    `"${record.floor || ''}"`,
+                    `"${tasksSummary}"`,
+                    record.progress || '0/0',
+                    record.status || 'completed'
                 ].join(',');
                 
                 csv += line + '\n';
             });
             
-            // Download CSV
             const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `absensi_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `tugas_ob_${new Date().toISOString().split('T')[0]}.csv`;
             a.click();
             window.URL.revokeObjectURL(url);
             
@@ -1213,12 +1262,6 @@ class EnterpriseAttendanceSystem {
     }
 
     // ==================== UTILITY FUNCTIONS ====================
-    showPhoto(photoId) {
-        // Method lama - untuk kompatibilitas
-        const photo = localStorage.getItem(photoId);
-        this.showPhotoBase64(photo);
-    }
-    
     showPhotoBase64(photoBase64) {
         const modal = document.getElementById('photo-modal');
         const modalImg = document.getElementById('modal-photo-img');
@@ -1262,7 +1305,6 @@ class EnterpriseAttendanceSystem {
         document.getElementById('app-container').classList.remove('active');
         document.getElementById('admin-container').classList.add('active');
         
-        // Render calendar setelah admin panel muncul
         setTimeout(() => this.renderCalendar(), 100);
     }
 
@@ -1354,20 +1396,18 @@ class EnterpriseAttendanceSystem {
         }
 
         // Employee buttons
-        const clockInBtn = document.getElementById('employee-clockin');
-        const clockOutBtn = document.getElementById('employee-clockout');
+        const startBtn = document.getElementById('employee-start');
         const captureBtn = document.getElementById('btn-capture');
         
-        if (clockInBtn) {
-            clockInBtn.addEventListener('click', () => this.clockIn());
-        }
-        
-        if (clockOutBtn) {
-            clockOutBtn.addEventListener('click', () => this.clockOut());
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.startTaskSession());
         }
         
         if (captureBtn) {
-            captureBtn.addEventListener('click', () => this.capturePhoto());
+            captureBtn.addEventListener('click', () => {
+                // Generic capture - will be used by task-specific buttons
+                this.showNotification('Pilih tugas yang ingin difoto!', 'info');
+            });
         }
 
         // Admin buttons
@@ -1376,7 +1416,7 @@ class EnterpriseAttendanceSystem {
         
         if (applyFilterBtn) {
             applyFilterBtn.addEventListener('click', () => {
-                this.renderAttendanceTable();
+                this.renderTaskTable();
                 this.addMarkersToMap();
             });
         }
@@ -1405,13 +1445,7 @@ class EnterpriseAttendanceSystem {
 }
 
 // ==================== GLOBAL ACCESS ====================
-window.attendanceSystem = new EnterpriseAttendanceSystem();
-
-window.showPhoto = function(photoId) {
-    if (window.attendanceSystem) {
-        window.attendanceSystem.showPhoto(photoId);
-    }
-};
+window.attendanceSystem = new OBTaskSystem();
 
 window.showPhotoBase64 = function(photoBase64) {
     if (window.attendanceSystem) {
