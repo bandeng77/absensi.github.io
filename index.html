@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OB Task Checklist • Genetek</title>
+    <title>Task Checklist • Genetek</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -940,7 +940,7 @@
             <h1>✨ Genetek</h1>
             <p style="color: var(--gray);">Sistem Task Office Boy</p>
             <div class="login-sub">
-                OB Task Management System
+                Task Management System
             </div>
         </div>
         
@@ -964,7 +964,7 @@
         <div class="navbar">
             <div class="nav-brand">
                 <span style="font-size: 2rem;">🧹</span>
-                <h2>OB Task Checklist</h2>
+                <h2>Task Checklist</h2>
             </div>
             <div class="nav-menu">
                 <span id="user-display" class="user-badge"></span>
@@ -991,15 +991,15 @@
                     <div class="floor-selector">
                         <select id="floor-select">
                             <option value="">Pilih Lantai</option>
-                            <option value="Lantai 1">Lantai 1 - Lobby & Resepsionis</option>
-                            <option value="Lantai 2">Lantai 2 - Kantor Utama</option>
-                            <option value="Lantai 3">Lantai 3 - Ruang Meeting</option>
-                            <option value="Lantai 4">Lantai 4 - Kantor Direksi</option>
+                            <option value="Lantai 1">Lantai 1</option>
+                            <option value="Lantai 2">Lantai 2</option>
+                            <option value="Lantai 3">Lantai 3</option>
+                            <option value="Lantai 4">Lantai 4</option>
                         </select>
                     </div>
 
                     <div id="floor-locked-message" class="floor-locked-message hidden">
-                        <i>🔒</i> Lantai ini sudah dikerjakan oleh OB lain hari ini
+                        <i>🔒</i> Lantai ini sudah dikerjakan
                     </div>
 
                     <div id="task-checklist-container" class="task-checklist">
@@ -1052,7 +1052,7 @@
         <div class="navbar">
             <div class="nav-brand">
                 <span style="font-size: 2rem;">👑</span>
-                <h2>Admin Dashboard - OB Tasks</h2>
+                <h2>Admin Dashboard - Tasks</h2>
             </div>
             <div class="nav-menu">
                 <span id="admin-display" class="user-badge"></span>
@@ -1067,7 +1067,7 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: #e0f2fe;">👥</div>
                 <div class="stat-value" id="total-karyawan">0</div>
-                <div class="stat-label">Total OB</div>
+                <div class="stat-label">Total</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: #dcfce7;">✅</div>
@@ -1082,7 +1082,7 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: #f1f0ff;">📍</div>
                 <div class="stat-value" id="aktif-hari-ini">0</div>
-                <div class="stat-label">OB Aktif</div>
+                <div class="stat-label">Aktif</div>
             </div>
         </div>
 
@@ -1129,9 +1129,9 @@
                 <input type="date" id="filter-end-date">
             </div>
             <div class="filter-group">
-                <label>👤 OB</label>
+                <label>👤 Karyawan</label>
                 <select id="filter-employee">
-                    <option value="all">Semua OB</option>
+                    <option value="all">Semua Karyawan</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -1163,7 +1163,7 @@
                 <thead>
                     <tr>
                         <th>Tanggal</th>
-                        <th>OB</th>
+                        <th>Karyawan</th>
                         <th>Email</th>
                         <th>Lantai</th>
                         <th>Tugas</th>
@@ -1228,33 +1228,39 @@
                 // Task definitions per floor
                 this.tasksByFloor = {
                     'Lantai 1': [
-                        { id: 'l1_task1', name: 'Sapu lobby dan resepsionis' },
-                        { id: 'l1_task2', name: 'Pel lantai lobby' },
-                        { id: 'l1_task3', name: 'Bersihkan meja resepsionis' },
-                        { id: 'l1_task4', name: 'Buang sampah' },
-                        { id: 'l1_task5', name: 'Semprot pewangi ruangan' }
+                        { id: 'l1_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l1_task2', name: 'Membersihkan Ruang Meeting' },
+                        { id: 'l1_task3', name: 'Membersihkan Kaca' },
+                        { id: 'l1_task4', name: 'Membersihkan Pintu Depan' },
+                        { id: 'l1_task5', name: 'Membersihkan Lemari APD' },
+                        { id: 'l1_task6', name: 'Membersihkan Langit-Langit' },
+                        { id: 'l1_task7', name: 'Membersihkan Toilet' },
+                        { id: 'l1_task8', name: 'Membersihkan Area Pantry' },
                     ],
                     'Lantai 2': [
-                        { id: 'l2_task1', name: 'Sapu area kantor utama' },
-                        { id: 'l2_task2', name: 'Bersihkan meja karyawan' },
-                        { id: 'l2_task3', name: 'Buang sampah' },
-                        { id: 'l2_task4', name: 'Bersihkan pantry' },
-                        { id: 'l2_task5', name: 'Cuci peralatan pantry' },
-                        { id: 'l2_task6', name: 'Bersihkan toilet' }
+                        { id: 'l2_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l2_task2', name: 'Membersihkan Ruangan Direksi' },
+                        { id: 'l2_task3', name: 'Membersihkan Ruangan Komisaris' },
+                        { id: 'l2_task4', name: 'Membersihkan Langit-Langit' },
+                        { id: 'l2_task5', name: 'Membersihkan Toilet' },
+                        { id: 'l2_task6', name: 'Membersihkan Ruang Accounting' }
                     ],
                     'Lantai 3': [
-                        { id: 'l3_task1', name: 'Bersihkan ruang meeting A' },
-                        { id: 'l3_task2', name: 'Bersihkan ruang meeting B' },
-                        { id: 'l3_task3', name: 'Rapikan kursi meeting' },
-                        { id: 'l3_task4', name: 'Buang sampah' },
-                        { id: 'l3_task5', name: 'Bersihkan proyektor/LCD' }
+                        { id: 'l3_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l3_task2', name: 'Membersihkan Meja' },
+                        { id: 'l3_task3', name: 'Mengelap Kaca' },
+                        { id: 'l3_task4', name: 'Membersihkan Langit-Langit' },
+                        { id: 'l3_task5', name: 'Membersihkan Toilet' }
                     ],
                     'Lantai 4': [
-                        { id: 'l4_task1', name: 'Bersihkan ruang direktur' },
-                        { id: 'l4_task2', name: 'Bersihkan ruang wakil direktur' },
-                        { id: 'l4_task3', name: 'Bersihkan ruang rapat direksi' },
-                        { id: 'l4_task4', name: 'Buang sampah' },
-                        { id: 'l4_task5', name: 'Sapu dan pel lantai' }
+                        { id: 'l4_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l4_task2', name: 'Membersihkan Meja' },
+                        { id: 'l4_task3', name: 'Mengelap Kaca' },
+                        { id: 'l4_task4', name: 'Membersihkan Ruang Meeting' },
+                        { id: 'l4_task5', name: 'Membersihkan Mushollah' },
+                        { id: 'l4_task6', name: 'Membersihkan Ruang Arsip' },
+                        { id: 'l4_task7', name: 'Membersihkan Area Pantry' },
+                        { id: 'l4_task8', name: 'Membersihkan Area Outdoor Ruang AC' }
                     ]
                 };
                 
@@ -1364,7 +1370,7 @@
                     if (email === 'admin@genetek.co.id') {
                         console.log('🔐 Login sebagai Admin');
                     } else {
-                        console.log('🔐 Login sebagai OB');
+                        console.log('🔐 Login sebagai Karyawan');
                     }
                     
                     const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -1503,7 +1509,7 @@
                         taskContainer.innerHTML = html;
                     }
                     
-                    this.showNotification('Lantai ini sudah dikerjakan oleh OB lain hari ini', 'warning');
+                    this.showNotification('Lantai ini sudah dikerjakan oleh Karyawan lain hari ini', 'warning');
                 } else {
                     // Jika lantai tersedia
                     floorSelect.disabled = false;
