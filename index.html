@@ -2,18 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Task Checklist • Genetek</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
     
     <!-- Libraries for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         * {
@@ -152,15 +156,6 @@
             box-shadow: 0 20px 30px -10px rgba(67, 97, 238, 0.4);
         }
 
-        .login-info {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8fafc;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-
         /* App Container (Karyawan) */
         #app-container {
             max-width: 1300px;
@@ -273,7 +268,7 @@
             gap: 12px;
         }
 
-        /* Location Card - Modified for Floor Selection */
+        /* Location Card */
         .location-card {
             background: linear-gradient(145deg, #f8fafc, #f1f5f9);
             border-radius: 20px;
@@ -317,16 +312,6 @@
             border-color: #ced4da;
         }
 
-        .floor-selector select option {
-            background: white;
-            color: var(--dark);
-        }
-
-        .floor-selector select option:disabled {
-            background: #e9ecef;
-            color: #6c757d;
-        }
-
         .floor-selector select.locked {
             background: #e9ecef;
             border-color: #ced4da;
@@ -343,10 +328,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .floor-locked-message i {
-            font-size: 1.2rem;
         }
 
         .floor-locked-message.hidden {
@@ -455,6 +436,13 @@
             display: block;
         }
 
+        .task-timestamp {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 4px;
+            text-align: right;
+        }
+
         /* Button Group */
         .button-group {
             display: flex;
@@ -561,6 +549,13 @@
             transform: scaleX(-1);
         }
 
+        /* Untuk mobile, kamera belakang tidak perlu di-flip */
+        @media (max-width: 768px) {
+            #video-feed {
+                transform: none;
+            }
+        }
+
         .camera-control {
             position: absolute;
             bottom: 16px;
@@ -591,6 +586,30 @@
         .btn-capture.small {
             padding: 8px 16px;
             font-size: 0.9rem;
+        }
+
+        /* Switch Camera Button */
+        .btn-switch-camera {
+            position: absolute;
+            bottom: 16px;
+            left: 16px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .btn-switch-camera:hover {
+            background: white;
+            transform: scale(1.1);
         }
 
         /* Stats Grid */
@@ -743,25 +762,49 @@
 
         .task-item-detail {
             font-size: 0.85rem;
-            padding: 4px 0;
+            padding: 8px 0;
             border-bottom: 1px dashed #e2e8f0;
+            display: flex;
+            flex-direction: column;
         }
 
         .task-item-detail:last-child {
             border-bottom: none;
         }
 
+        .task-name-completed {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .task-time-completed {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-left: 24px;
+            margin-top: 4px;
+        }
+
+        .photo-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
         .photo-thumb {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             border-radius: 12px;
             object-fit: cover;
             cursor: pointer;
             transition: transform 0.2s;
+            border: 2px solid #e2e8f0;
         }
 
         .photo-thumb:hover {
             transform: scale(3);
+            z-index: 100;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
@@ -800,7 +843,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -826,6 +869,16 @@
             width: 100%;
             border-radius: 16px;
             margin-bottom: 16px;
+        }
+
+        .modal-close {
+            padding: 12px 24px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
         }
 
         /* Notification */
@@ -878,47 +931,6 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        /* Summary Cards for Admin */
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .summary-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .summary-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 16px;
-            background: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .summary-content h4 {
-            color: var(--gray);
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-
-        .summary-content p {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark);
         }
     </style>
 </head>
@@ -1033,6 +1045,9 @@
                             📷 Ambil Foto
                         </button>
                     </div>
+                    <button id="btn-switch-camera" class="btn-switch-camera">
+                        🔄
+                    </button>
                 </div>
 
                 <div id="current-task-info" style="margin-bottom: 16px; padding: 12px; background: #f1f5f9; border-radius: 16px; display: none;">
@@ -1067,7 +1082,7 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: #e0f2fe;">👥</div>
                 <div class="stat-value" id="total-karyawan">0</div>
-                <div class="stat-label">Total</div>
+                <div class="stat-label">Total Karyawan</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: #dcfce7;">✅</div>
@@ -1082,39 +1097,7 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: #f1f0ff;">📍</div>
                 <div class="stat-value" id="aktif-hari-ini">0</div>
-                <div class="stat-label">Aktif</div>
-            </div>
-        </div>
-
-        <!-- Summary Cards (Pengganti Maps & Kalender) -->
-        <div class="summary-cards">
-            <div class="summary-card">
-                <div class="summary-icon">📋</div>
-                <div class="summary-content">
-                    <h4>TOTAL TUGAS BULAN INI</h4>
-                    <p id="bulan-ini-total">0</p>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon">✅</div>
-                <div class="summary-content">
-                    <h4>TUGAS SELESAI</h4>
-                    <p id="tugas-selesai">0</p>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon">⏳</div>
-                <div class="summary-content">
-                    <h4>RATA-RATA TUGAS/HARI</h4>
-                    <p id="rata-tugas">0</p>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon">🏢</div>
-                <div class="summary-content">
-                    <h4>LANTAI TERAKTIF</h4>
-                    <p id="lantai-teraktif">-</p>
-                </div>
+                <div class="stat-label">Aktif Hari Ini</div>
             </div>
         </div>
 
@@ -1166,7 +1149,7 @@
                         <th>Karyawan</th>
                         <th>Email</th>
                         <th>Lantai</th>
-                        <th>Tugas</th>
+                        <th>Tugas & Waktu</th>
                         <th>Progress</th>
                         <th>Foto</th>
                     </tr>
@@ -1187,8 +1170,7 @@
         <div class="modal-content">
             <img id="modal-photo-img" class="modal-photo" src="" alt="Full Photo">
             <div style="display: flex; justify-content: flex-end;">
-                <button onclick="document.getElementById('photo-modal').classList.remove('active')" 
-                        style="padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600;">
+                <button class="modal-close" onclick="document.getElementById('photo-modal').classList.remove('active')">
                     Tutup
                 </button>
             </div>
@@ -1211,6 +1193,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
 
         // ==================== OB TASK CHECKLIST SYSTEM ====================
         class OBTaskSystem {
@@ -1223,12 +1206,13 @@
                 this.cameraStream = null;
                 this.isCameraReady = false;
                 this.clockInterval = null;
-                this.completedFloorsToday = new Set(); // Track floors completed today
+                this.completedFloorsToday = new Set();
+                this.currentFacingMode = 'environment'; // Default ke kamera belakang
                 
                 // Task definitions per floor
                 this.tasksByFloor = {
                     'Lantai 1': [
-                        { id: 'l1_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l1_task1', name: 'Menyapu dan Mengepel' },
                         { id: 'l1_task2', name: 'Membersihkan Ruang Meeting' },
                         { id: 'l1_task3', name: 'Membersihkan Kaca' },
                         { id: 'l1_task4', name: 'Membersihkan Pintu Depan' },
@@ -1238,7 +1222,7 @@
                         { id: 'l1_task8', name: 'Membersihkan Area Pantry' },
                     ],
                     'Lantai 2': [
-                        { id: 'l2_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l2_task1', name: 'Menyapu dan Mengepel' },
                         { id: 'l2_task2', name: 'Membersihkan Ruangan Direksi' },
                         { id: 'l2_task3', name: 'Membersihkan Ruangan Komisaris' },
                         { id: 'l2_task4', name: 'Membersihkan Langit-Langit' },
@@ -1246,14 +1230,14 @@
                         { id: 'l2_task6', name: 'Membersihkan Ruang Accounting' }
                     ],
                     'Lantai 3': [
-                        { id: 'l3_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l3_task1', name: 'Menyapu dan Mengepel' },
                         { id: 'l3_task2', name: 'Membersihkan Meja' },
                         { id: 'l3_task3', name: 'Mengelap Kaca' },
                         { id: 'l3_task4', name: 'Membersihkan Langit-Langit' },
                         { id: 'l3_task5', name: 'Membersihkan Toilet' }
                     ],
                     'Lantai 4': [
-                        { id: 'l4_task1', name: 'Menyapu  dan Mengepel' },
+                        { id: 'l4_task1', name: 'Menyapu dan Mengepel' },
                         { id: 'l4_task2', name: 'Membersihkan Meja' },
                         { id: 'l4_task3', name: 'Mengelap Kaca' },
                         { id: 'l4_task4', name: 'Membersihkan Ruang Meeting' },
@@ -1269,6 +1253,7 @@
                     floor: null,
                     tasks: [],
                     completedTasks: [],
+                    taskDetails: {}, // Menyimpan detail task termasuk timestamp
                     taskPhotos: {},
                     startTime: null,
                     status: 'idle' // idle, active, completed
@@ -1417,6 +1402,7 @@
                         floor: null,
                         tasks: [],
                         completedTasks: [],
+                        taskDetails: {},
                         taskPhotos: {},
                         startTime: null,
                         status: 'idle'
@@ -1462,7 +1448,6 @@
                         }
                     });
                     
-                    // Update floor selector jika ada lantai yang sudah dipilih
                     const currentFloor = document.getElementById('floor-select')?.value;
                     if (currentFloor) {
                         this.checkFloorAvailability(currentFloor);
@@ -1483,13 +1468,11 @@
                 const isLocked = this.completedFloorsToday.has(floor);
                 
                 if (isLocked) {
-                    // Jika lantai sudah dikerjakan orang lain hari ini
                     floorSelect.disabled = true;
                     floorSelect.classList.add('locked');
                     lockedMessage.classList.remove('hidden');
                     startBtn.disabled = true;
                     
-                    // Update tampilan tugas menjadi gelap
                     const taskContainer = document.getElementById('task-checklist-container');
                     if (taskContainer) {
                         const tasks = this.tasksByFloor[floor] || [];
@@ -1511,12 +1494,10 @@
                     
                     this.showNotification('Lantai ini sudah dikerjakan oleh Karyawan lain hari ini', 'warning');
                 } else {
-                    // Jika lantai tersedia
                     floorSelect.disabled = false;
                     floorSelect.classList.remove('locked');
                     lockedMessage.classList.add('hidden');
                     
-                    // Load tasks normally
                     this.loadTasksForFloor(floor);
                     
                     if (this.currentSession.status === 'idle') {
@@ -1562,6 +1543,7 @@
                     const floor = e.target.value;
                     if (floor) {
                         this.checkFloorAvailability(floor);
+                        this.currentSession.floor = floor;
                     } else {
                         document.getElementById('task-checklist-container').innerHTML = 
                             '<p style="color: var(--gray); text-align: center;">Pilih lantai untuk melihat tugas</p>';
@@ -1579,6 +1561,7 @@
                 tasks.forEach(task => {
                     const isCompleted = this.currentSession.completedTasks.includes(task.id);
                     const hasPhoto = this.currentSession.taskPhotos[task.id];
+                    const taskDetail = this.currentSession.taskDetails[task.id] || {};
                     
                     html += `
                         <div class="task-item ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
@@ -1595,6 +1578,7 @@
                                     📸
                                 </button>
                             </div>
+                            ${taskDetail.timestamp ? `<div class="task-timestamp">⏱️ ${taskDetail.timestamp}</div>` : ''}
                             <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
                                 <img src="${hasPhoto || ''}" alt="Foto tugas">
                             </div>
@@ -1604,7 +1588,6 @@
                 
                 container.innerHTML = html;
                 
-                // Add event listeners
                 tasks.forEach(task => {
                     const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${task.id}"]`);
                     if (cameraBtn) {
@@ -1644,14 +1627,30 @@
                     canvas.height = video.videoHeight;
                     
                     const context = canvas.getContext('2d');
-                    context.translate(canvas.width, 0);
-                    context.scale(-1, 1);
+                    
+                    // Untuk mobile, tidak perlu flip karena pakai kamera belakang
+                    if (this.currentFacingMode === 'user') {
+                        context.translate(canvas.width, 0);
+                        context.scale(-1, 1);
+                    }
+                    
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     const photoData = canvas.toDataURL('image/jpeg', 0.9);
                     
                     // Store photo for this task
                     this.currentSession.taskPhotos[taskId] = photoData;
+                    
+                    // Store timestamp
+                    const now = new Date();
+                    this.currentSession.taskDetails[taskId] = {
+                        timestamp: now.toLocaleTimeString('id-ID', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        }),
+                        fullTimestamp: now.toISOString()
+                    };
                     
                     // Show preview
                     const previewContainer = document.getElementById(`photo-preview-${taskId}`);
@@ -1685,10 +1684,8 @@
 
             toggleTaskCompletion(taskId, completed) {
                 if (completed) {
-                    // Check if photo exists
                     if (!this.currentSession.taskPhotos[taskId]) {
                         this.showNotification('📸 Ambil foto terlebih dahulu!', 'warning');
-                        // Revert checkbox
                         const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
                         if (checkbox) checkbox.checked = false;
                         return;
@@ -1696,6 +1693,19 @@
                     
                     if (!this.currentSession.completedTasks.includes(taskId)) {
                         this.currentSession.completedTasks.push(taskId);
+                        
+                        // Pastikan timestamp ada
+                        if (!this.currentSession.taskDetails[taskId]) {
+                            const now = new Date();
+                            this.currentSession.taskDetails[taskId] = {
+                                timestamp: now.toLocaleTimeString('id-ID', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                }),
+                                fullTimestamp: now.toISOString()
+                            };
+                        }
                     }
                 } else {
                     const index = this.currentSession.completedTasks.indexOf(taskId);
@@ -1704,7 +1714,6 @@
                     }
                 }
                 
-                // Update task item style
                 const taskItem = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
                 if (taskItem) {
                     if (completed) {
@@ -1728,7 +1737,6 @@
                     progressEl.textContent = `${completed}/${total}`;
                 }
                 
-                // Update status text
                 const statusText = document.querySelector('.status-text');
                 if (statusText) {
                     if (this.currentSession.status === 'active') {
@@ -1740,7 +1748,6 @@
                     }
                 }
                 
-                // Update status indicator
                 const statusContainer = document.getElementById('employee-status');
                 if (statusContainer) {
                     if (this.currentSession.status === 'active') {
@@ -1760,7 +1767,6 @@
                 const completed = this.currentSession.completedTasks.length;
                 const total = tasks.length;
                 
-                // Cek apakah lantai terkunci
                 if (floor && this.completedFloorsToday.has(floor)) {
                     startBtn.disabled = true;
                     startBtn.textContent = '🔒 Lantai Tidak Tersedia';
@@ -1792,18 +1798,17 @@
                     return;
                 }
                 
-                // Cek apakah lantai sudah dikerjakan orang lain
                 if (this.completedFloorsToday.has(floor)) {
-                    this.showNotification('Lantai ini sudah dikerjakan oleh OB lain hari ini!', 'error');
+                    this.showNotification('Lantai ini sudah dikerjakan oleh Karyawan lain hari ini!', 'error');
                     return;
                 }
                 
                 if (this.currentSession.status === 'idle') {
-                    // Start new session
                     this.currentSession = {
                         floor: floor,
                         tasks: this.tasksByFloor[floor] || [],
                         completedTasks: [],
+                        taskDetails: {},
                         taskPhotos: {},
                         startTime: new Date().toISOString(),
                         status: 'active'
@@ -1813,7 +1818,6 @@
                     this.showNotification('✅ Tugas dimulai!', 'success');
                     
                 } else if (this.currentSession.status === 'active') {
-                    // Complete session
                     const total = this.currentSession.tasks.length;
                     const completed = this.currentSession.completedTasks.length;
                     
@@ -1838,7 +1842,6 @@
                         return;
                     }
                     
-                    // Validate all tasks have photos
                     for (const taskId of this.currentSession.completedTasks) {
                         if (!this.currentSession.taskPhotos[taskId]) {
                             this.showNotification(`Foto untuk task ${taskId} tidak ditemukan`, 'error');
@@ -1847,7 +1850,24 @@
                         }
                     }
                     
-                    // Create task record
+                    // Pastikan semua task yang selesai memiliki timestamp
+                    const taskDetailsWithTime = {};
+                    for (const taskId of this.currentSession.completedTasks) {
+                        if (this.currentSession.taskDetails[taskId]) {
+                            taskDetailsWithTime[taskId] = this.currentSession.taskDetails[taskId];
+                        } else {
+                            const now = new Date();
+                            taskDetailsWithTime[taskId] = {
+                                timestamp: now.toLocaleTimeString('id-ID', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit'
+                                }),
+                                fullTimestamp: now.toISOString()
+                            };
+                        }
+                    }
+                    
                     const taskRecord = {
                         userId: this.currentUser.uid,
                         userName: this.currentUser.name || this.currentUser.email.split('@')[0],
@@ -1855,6 +1875,7 @@
                         floor: this.currentSession.floor,
                         tasks: this.currentSession.tasks,
                         completedTasks: this.currentSession.completedTasks,
+                        taskDetails: taskDetailsWithTime,
                         taskPhotos: this.currentSession.taskPhotos,
                         startTime: this.currentSession.startTime,
                         endTime: new Date().toISOString(),
@@ -1866,25 +1887,22 @@
                     
                     await db.collection('ob_tasks').add(taskRecord);
                     
-                    // Update last active
                     await db.collection('users').doc(this.currentUser.uid).update({
                         lastActive: new Date().toISOString(),
                         lastTask: taskRecord
                     });
                     
                     this.currentSession.status = 'completed';
-                    
-                    // Update completed floors
                     this.completedFloorsToday.add(this.currentSession.floor);
                     
                     this.showNotification('✅ Tugas selesai! Terima kasih!', 'success');
                     
-                    // Reset after 3 seconds
                     setTimeout(() => {
                         this.currentSession = {
                             floor: null,
                             tasks: [],
                             completedTasks: [],
+                            taskDetails: {},
                             taskPhotos: {},
                             startTime: null,
                             status: 'idle'
@@ -1900,8 +1918,6 @@
                         
                         this.updateProgress();
                         this.updateStartButton();
-                        
-                        // Reload completed floors
                         this.loadCompletedFloorsToday();
                     }, 3000);
                     
@@ -1957,24 +1973,46 @@
 
             async setupCamera() {
                 try {
-                    this.cameraStream = await navigator.mediaDevices.getUserMedia({
+                    if (this.cameraStream) {
+                        this.stopCamera();
+                    }
+                    
+                    const constraints = {
                         video: {
-                            width: { ideal: 640 },
-                            height: { ideal: 480 },
-                            facingMode: 'user'
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 },
+                            facingMode: this.currentFacingMode
                         },
                         audio: false
-                    });
+                    };
+                    
+                    this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
                     
                     const videoElement = document.getElementById('video-feed');
                     if (videoElement) {
                         videoElement.srcObject = this.cameraStream;
-                        this.isCameraReady = true;
+                        
+                        videoElement.onloadedmetadata = () => {
+                            videoElement.play();
+                            this.isCameraReady = true;
+                        };
                     }
+                    
                 } catch (error) {
                     console.error('Camera error:', error);
-                    this.showNotification('❌ Tidak dapat mengakses kamera', 'error');
+                    
+                    if (this.currentFacingMode === 'environment') {
+                        this.currentFacingMode = 'user';
+                        this.setupCamera();
+                    } else {
+                        this.showNotification('❌ Tidak dapat mengakses kamera', 'error');
+                    }
                 }
+            }
+
+            async switchCamera() {
+                this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
+                await this.setupCamera();
             }
 
             // ==================== ADMIN FEATURES ====================
@@ -1982,7 +2020,6 @@
                 try {
                     this.showLoading();
                     
-                    // Load all employees (OB)
                     const usersSnapshot = await db.collection('users').get();
                     this.employeesData = [];
                     
@@ -1996,7 +2033,6 @@
                         }
                     });
                     
-                    // Load task data (last 30 days)
                     const thirtyDaysAgo = new Date();
                     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
                     
@@ -2013,9 +2049,7 @@
                         });
                     });
                     
-                    // Update UI
                     this.updateStatistics();
-                    this.updateSummaryCards();
                     this.populateEmployeeFilter();
                     this.renderTaskTable();
                     
@@ -2034,7 +2068,6 @@
                 const totalTugasEl = document.getElementById('total-tugas');
                 if (totalTugasEl) totalTugasEl.textContent = this.taskData.length;
                 
-                // Tugas hari ini
                 const today = new Date().toDateString();
                 const todayTasks = this.taskData.filter(record => {
                     const recordDate = new Date(record.createdAt).toDateString();
@@ -2044,7 +2077,6 @@
                 const hariIniTugasEl = document.getElementById('hari-ini-tugas');
                 if (hariIniTugasEl) hariIniTugasEl.textContent = todayTasks;
                 
-                // OB aktif hari ini
                 const activeOB = new Set();
                 this.taskData.forEach(record => {
                     const recordDate = new Date(record.createdAt).toDateString();
@@ -2057,62 +2089,11 @@
                 if (aktifHariIniEl) aktifHariIniEl.textContent = activeOB.size;
             }
 
-            updateSummaryCards() {
-                // Total tugas bulan ini
-                const now = new Date();
-                const bulanIni = now.getMonth();
-                const tahunIni = now.getFullYear();
-                
-                const tugasBulanIni = this.taskData.filter(record => {
-                    const recordDate = new Date(record.createdAt);
-                    return recordDate.getMonth() === bulanIni && recordDate.getFullYear() === tahunIni;
-                });
-                
-                document.getElementById('bulan-ini-total').textContent = tugasBulanIni.length;
-                
-                // Tugas selesai
-                const tugasSelesai = this.taskData.filter(record => record.status === 'completed').length;
-                document.getElementById('tugas-selesai').textContent = tugasSelesai;
-                
-                // Rata-rata tugas per hari (30 hari terakhir)
-                const hariBerbeda = new Set();
-                this.taskData.forEach(record => {
-                    if (record.createdAt) {
-                        hariBerbeda.add(record.createdAt.split('T')[0]);
-                    }
-                });
-                
-                const rataTugas = hariBerbeda.size > 0 
-                    ? (this.taskData.length / hariBerbeda.size).toFixed(1) 
-                    : 0;
-                document.getElementById('rata-tugas').textContent = rataTugas;
-                
-                // Lantai teraktif
-                const floorCount = {};
-                this.taskData.forEach(record => {
-                    if (record.floor) {
-                        floorCount[record.floor] = (floorCount[record.floor] || 0) + 1;
-                    }
-                });
-                
-                let mostActiveFloor = '-';
-                let maxCount = 0;
-                
-                for (const [floor, count] of Object.entries(floorCount)) {
-                    if (count > maxCount) {
-                        maxCount = count;
-                        mostActiveFloor = floor;
-                    }
-                }
-                
-                document.getElementById('lantai-teraktif').textContent = mostActiveFloor;
-            }
-
             populateEmployeeFilter() {
                 const select = document.getElementById('filter-employee');
                 if (!select) return;
                 
-                select.innerHTML = '<option value="all">📋 Semua OB</option>';
+                select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
                 
                 this.employeesData.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
                 
@@ -2127,7 +2108,6 @@
                 
                 let filteredData = [...this.taskData];
                 
-                // Apply filters
                 let startDate = document.getElementById('filter-start-date')?.value;
                 let endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
@@ -2169,34 +2149,47 @@
                         minute: '2-digit'
                     });
                     
-                    // Create tasks list
                     let tasksList = '';
                     if (record.completedTasks && record.tasks) {
                         const completedTasks = record.completedTasks;
                         const allTasks = record.tasks;
+                        const taskDetails = record.taskDetails || {};
                         
                         allTasks.forEach(task => {
                             const isCompleted = completedTasks.includes(task.id);
+                            const detail = taskDetails[task.id] || {};
+                            const timestamp = detail.timestamp || '';
+                            
                             tasksList += `
                                 <div class="task-item-detail">
-                                    ${isCompleted ? '✅' : '⭕'} ${task.name}
+                                    <div class="task-name-completed">
+                                        ${isCompleted ? '✅' : '⭕'} ${task.name}
+                                    </div>
+                                    ${isCompleted && timestamp ? `<div class="task-time-completed">⏱️ Selesai: ${timestamp}</div>` : ''}
                                 </div>
                             `;
                         });
                     }
                     
-                    // Create photo thumbnails
-                    let photoHtml = '';
+                    let photoHtml = '<div class="photo-gallery">';
                     if (record.taskPhotos) {
-                        const firstPhoto = Object.values(record.taskPhotos)[0];
-                        if (firstPhoto) {
-                            photoHtml = `<img src="${firstPhoto}" class="photo-thumb" onclick="window.attendanceSystem.showPhotoBase64('${firstPhoto}')" alt="Foto">`;
+                        const photos = record.taskPhotos;
+                        const photoCount = Object.keys(photos).length;
+                        
+                        if (photoCount > 0) {
+                            Object.entries(photos).forEach(([taskId, photo]) => {
+                                if (photo) {
+                                    const taskName = record.tasks?.find(t => t.id === taskId)?.name || 'Task';
+                                    photoHtml += `<img src="${photo}" class="photo-thumb" onclick="window.attendanceSystem.showPhotoBase64('${photo}')" alt="${taskName}" title="${taskName}">`;
+                                }
+                            });
                         } else {
-                            photoHtml = '<span style="color: var(--gray);">📷 Tidak ada</span>';
+                            photoHtml += '<span style="color: var(--gray);">📷 Tidak ada</span>';
                         }
                     } else {
-                        photoHtml = '<span style="color: var(--gray);">📷 Tidak ada</span>';
+                        photoHtml += '<span style="color: var(--gray);">📷 Tidak ada</span>';
                     }
+                    photoHtml += '</div>';
                     
                     const progress = record.progress || '0/0';
                     const [completed, total] = progress.split('/').map(Number);
@@ -2250,11 +2243,9 @@
                     
                     const filteredData = this.getFilteredData();
                     
-                    // Convert to worksheet
                     const worksheetData = filteredData.map(record => {
                         const date = new Date(record.createdAt).toLocaleString('id-ID');
                         
-                        // Create tasks summary
                         let tasksSummary = '';
                         if (record.completedTasks && record.tasks) {
                             const completedCount = record.completedTasks.length;
@@ -2264,7 +2255,7 @@
                         
                         return {
                             'Tanggal': date,
-                            'OB': record.userName || '',
+                            'Karyawan': record.userName || '',
                             'Email': record.userEmail || '',
                             'Lantai': record.floor || '',
                             'Progress': record.progress || '0/0',
@@ -2277,7 +2268,6 @@
                     const ws = XLSX.utils.json_to_sheet(worksheetData);
                     XLSX.utils.book_append_sheet(wb, ws, 'Tugas OB');
                     
-                    // Export
                     XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`);
                     
                     this.showNotification('✅ Export Excel berhasil!', 'success');
@@ -2294,21 +2284,17 @@
                     
                     const filteredData = this.getFilteredData();
                     
-                    // Create PDF
                     const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
+                    const doc = new jsPDF('landscape');
                     
-                    // Title
                     doc.setFontSize(18);
-                    doc.text('Laporan Tugas OB - Genetek', 14, 22);
+                    doc.text('Laporan Tugas - Genetek', 14, 22);
                     
-                    // Date range
                     doc.setFontSize(10);
                     const startDate = document.getElementById('filter-start-date')?.value || '-';
                     const endDate = document.getElementById('filter-end-date')?.value || '-';
                     doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, 30);
                     
-                    // Prepare data for table
                     const tableData = filteredData.slice(0, 50).map(record => {
                         const date = new Date(record.createdAt).toLocaleString('id-ID', {
                             day: '2-digit',
@@ -2318,7 +2304,6 @@
                             minute: '2-digit'
                         });
                         
-                        // Create tasks summary
                         let tasksSummary = '';
                         if (record.completedTasks && record.tasks) {
                             const completedCount = record.completedTasks.length;
@@ -2335,10 +2320,9 @@
                         ];
                     });
                     
-                    // Create table
                     doc.autoTable({
                         startY: 35,
-                        head: [['Tanggal', 'OB', 'Lantai', 'Progress', 'Status']],
+                        head: [['Tanggal', 'Karyawan', 'Lantai', 'Progress', 'Status']],
                         body: tableData,
                         theme: 'striped',
                         headStyles: {
@@ -2352,7 +2336,6 @@
                         margin: { top: 35 }
                     });
                     
-                    // Save PDF
                     doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`);
                     
                     this.showNotification('✅ Export PDF berhasil!', 'success');
@@ -2366,7 +2349,6 @@
             getFilteredData() {
                 let filteredData = [...this.taskData];
                 
-                // Apply filters
                 const startDate = document.getElementById('filter-start-date')?.value;
                 const endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
@@ -2493,7 +2475,6 @@
 
             // ==================== EVENT LISTENERS ====================
             setupEventListeners() {
-                // Login button
                 const loginBtn = document.getElementById('btn-login');
                 if (loginBtn) {
                     loginBtn.addEventListener('click', (e) => {
@@ -2515,7 +2496,6 @@
                     });
                 }
 
-                // Logout buttons
                 const logoutBtn = document.getElementById('btn-logout');
                 const adminLogoutBtn = document.getElementById('admin-logout');
                 
@@ -2527,9 +2507,9 @@
                     adminLogoutBtn.addEventListener('click', () => this.logout());
                 }
 
-                // Employee buttons
                 const startBtn = document.getElementById('employee-start');
                 const captureBtn = document.getElementById('btn-capture');
+                const switchCameraBtn = document.getElementById('btn-switch-camera');
                 
                 if (startBtn) {
                     startBtn.addEventListener('click', () => this.startTaskSession());
@@ -2540,8 +2520,11 @@
                         this.showNotification('Pilih tugas yang ingin difoto!', 'info');
                     });
                 }
+                
+                if (switchCameraBtn) {
+                    switchCameraBtn.addEventListener('click', () => this.switchCamera());
+                }
 
-                // Admin buttons
                 const applyFilterBtn = document.getElementById('btn-apply-filter');
                 const exportExcelBtn = document.getElementById('btn-export-excel');
                 const exportPdfBtn = document.getElementById('btn-export-pdf');
@@ -2560,7 +2543,6 @@
                     exportPdfBtn.addEventListener('click', () => this.exportToPDF());
                 }
 
-                // Enter key for login
                 document.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter' && !document.getElementById('login-page').classList.contains('hidden')) {
                         const email = document.getElementById('login-email').value.trim();
@@ -2569,7 +2551,6 @@
                     }
                 });
 
-                // Cleanup
                 window.addEventListener('beforeunload', () => {
                     this.stopCamera();
                     if (this.clockInterval) {
@@ -2590,4 +2571,3 @@
     </script>
 </body>
 </html>
-           
