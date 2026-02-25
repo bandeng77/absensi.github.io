@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Karyawan • Genetek</title>
+    <title>OB Task Checklist • Genetek</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -272,15 +272,12 @@
             gap: 12px;
         }
 
-        /* Location Card */
+        /* Location Card - Modified for Floor Selection */
         .location-card {
             background: linear-gradient(145deg, #f8fafc, #f1f5f9);
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
             border: 1px solid #e2e8f0;
         }
 
@@ -294,31 +291,109 @@
             justify-content: center;
             font-size: 28px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
         }
 
-        .location-info {
+        .floor-selector {
+            margin-bottom: 20px;
+        }
+
+        .floor-selector select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .floor-selector select:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        /* Task Checklist */
+        .task-checklist {
+            margin-top: 24px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .task-item {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+
+        .task-item.completed {
+            border-color: var(--success);
+            background: #f0fdf9;
+        }
+
+        .task-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            accent-color: var(--success);
+        }
+
+        .task-name {
+            font-weight: 600;
+            color: var(--dark);
             flex: 1;
         }
 
-        .location-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--gray);
-            font-weight: 600;
+        .task-camera-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
         }
 
-        .location-address {
-            font-weight: 700;
-            color: var(--dark);
-            font-size: 1rem;
-            margin: 4px 0;
+        .task-camera-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
         }
 
-        .location-coordinates {
-            font-size: 0.8rem;
-            color: var(--gray);
-            font-family: monospace;
+        .task-camera-btn.completed {
+            background: var(--success);
+        }
+
+        .task-photo-preview {
+            margin-top: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+            display: none;
+        }
+
+        .task-photo-preview.active {
+            display: block;
+        }
+
+        .task-photo-preview img {
+            width: 100%;
+            display: block;
         }
 
         /* Button Group */
@@ -344,14 +419,9 @@
             color: white;
         }
 
-        .btn-clockin {
+        .btn-start {
             background: linear-gradient(145deg, #06d6a0, #05b386);
             box-shadow: 0 10px 20px -8px rgba(6, 214, 160, 0.4);
-        }
-
-        .btn-clockout {
-            background: linear-gradient(145deg, #ef476f, #d64161);
-            box-shadow: 0 10px 20px -8px rgba(239, 71, 111, 0.4);
         }
 
         .btn:hover:not(:disabled) {
@@ -392,7 +462,7 @@
             color: var(--dark);
         }
 
-        .clock-time {
+        .progress-text {
             margin-left: auto;
             font-size: 0.9rem;
             color: var(--gray);
@@ -459,21 +529,9 @@
             transform: scale(1.05);
         }
 
-        .photo-preview {
-            margin-top: 20px;
-            border-radius: 20px;
-            overflow: hidden;
-            border: 3px solid var(--primary);
-            display: none;
-        }
-
-        .photo-preview.active {
-            display: block;
-        }
-
-        .photo-preview img {
-            width: 100%;
-            display: block;
+        .btn-capture.small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
         }
 
         /* Stats Grid */
@@ -621,6 +679,20 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
+        .task-detail {
+            max-width: 300px;
+        }
+
+        .task-item-detail {
+            font-size: 0.85rem;
+            padding: 4px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .task-item-detail:last-child {
+            border-bottom: none;
+        }
+
         .photo-thumb {
             width: 50px;
             height: 50px;
@@ -643,14 +715,24 @@
             display: inline-block;
         }
 
-        .badge-in {
-            background: #d1fae5;
-            color: #065f46;
+        .badge-floor {
+            background: #e0e7ff;
+            color: #3730a3;
         }
 
-        .badge-out {
-            background: #fee2e2;
-            color: #991b1b;
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 3px;
+            transition: width 0.3s;
         }
 
         /* Modal */
@@ -757,8 +839,9 @@
     <div id="login-page">
         <div class="login-header">
             <h1>✨ Genetek</h1>
-            <p style="color: var(--gray);">Sistem Absensi Karyawan</p>
+            <p style="color: var(--gray);">Sistem Task Office Boy</p>
             <div class="login-sub">
+                OB Task Management System
             </div>
         </div>
         
@@ -775,17 +858,14 @@
         <button id="btn-login" class="btn-login">
             <span>🚀</span> Masuk
         </button>
-
-        <div class="login-info">  
-        </div>
     </div>
 
-    <!-- MAIN APP (KARYAWAN) -->
+    <!-- MAIN APP (KARYAWAN / OB) -->
     <div id="app-container">
         <div class="navbar">
             <div class="nav-brand">
-                <span style="font-size: 2rem;">📋</span>
-                <h2>Absensi Karyawan</h2>
+                <span style="font-size: 2rem;">🧹</span>
+                <h2>OB Task Checklist</h2>
             </div>
             <div class="nav-menu">
                 <span id="user-display" class="user-badge"></span>
@@ -796,10 +876,10 @@
         </div>
 
         <div class="dashboard-grid">
-            <!-- Clock Card -->
+            <!-- Task Card -->
             <div class="card">
                 <div class="card-title">
-                    <span>⏰</span> Clock In / Out
+                    <span>✅</span> Daily Tasks
                 </div>
                 
                 <div id="live-clock">
@@ -808,33 +888,39 @@
                 </div>
                 
                 <div class="location-card">
-                    <div class="location-icon">📍</div>
-                    <div class="location-info">
-                        <div class="location-label">LOKASI ANDA</div>
-                        <div class="location-address" id="employee-address">Mendapatkan lokasi...</div>
-                        <div class="location-coordinates" id="employee-coords">-</div>
+                    <div class="location-icon">🏢</div>
+                    <div class="floor-selector">
+                        <select id="floor-select">
+                            <option value="">Pilih Lantai</option>
+                            <option value="Lantai 1">Lantai 1 - Lobby & Resepsionis</option>
+                            <option value="Lantai 2">Lantai 2 - Kantor Utama</option>
+                            <option value="Lantai 3">Lantai 3 - Ruang Meeting</option>
+                            <option value="Lantai 4">Lantai 4 - Kantor Direksi</option>
+                        </select>
+                    </div>
+
+                    <div id="task-checklist-container" class="task-checklist">
+                        <p style="color: var(--gray); text-align: center;">Pilih lantai untuk melihat tugas</p>
                     </div>
                 </div>
 
                 <div class="button-group">
-                    <button id="employee-clockin" class="btn btn-clockin">
-                        📥 Clock In
-                    </button>
-                    <button id="employee-clockout" class="btn btn-clockout">
-                        📤 Clock Out
+                    <button id="employee-start" class="btn btn-start" disabled>
+                        🚀 Mulai Tugas
                     </button>
                 </div>
 
                 <div id="employee-status" class="status-badge">
                     <span class="status-indicator"></span>
-                    <span class="status-text">Memuat status...</span>
+                    <span class="status-text">Belum memulai tugas</span>
+                    <span id="task-progress" class="progress-text">0/0</span>
                 </div>
             </div>
 
             <!-- Camera Card -->
             <div class="card">
                 <div class="card-title">
-                    <span>📸</span> Camera & Foto
+                    <span>📸</span> Camera
                 </div>
                 
                 <div class="camera-wrapper">
@@ -846,12 +932,13 @@
                     </div>
                 </div>
 
-                <div id="photo-preview-container" class="photo-preview">
-                    <img id="captured-photo" src="" alt="Foto Absensi">
+                <div id="current-task-info" style="margin-bottom: 16px; padding: 12px; background: #f1f5f9; border-radius: 16px; display: none;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">Tugas Saat Ini:</div>
+                    <div id="current-task-name" style="color: var(--primary);"></div>
                 </div>
                 
                 <p style="color: var(--gray); font-size: 0.85rem; margin-top: 16px; text-align: center;">
-                    ⚡ Ambil foto sebelum clock in/out
+                    ⚡ Foto setiap tugas sebelum checklist
                 </p>
             </div>
         </div>
@@ -862,7 +949,7 @@
         <div class="navbar">
             <div class="nav-brand">
                 <span style="font-size: 2rem;">👑</span>
-                <h2>Admin Dashboard</h2>
+                <h2>Admin Dashboard - OB Tasks</h2>
             </div>
             <div class="nav-menu">
                 <span id="admin-display" class="user-badge"></span>
@@ -877,22 +964,22 @@
             <div class="stat-card">
                 <div class="stat-icon" style="background: #e0f2fe;">👥</div>
                 <div class="stat-value" id="total-karyawan">0</div>
-                <div class="stat-label">Total Karyawan</div>
+                <div class="stat-label">Total OB</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: #dcfce7;">✅</div>
-                <div class="stat-value" id="hari-ini-clockin">0</div>
-                <div class="stat-label">Clock In Hari Ini</div>
+                <div class="stat-value" id="hari-ini-tugas">0</div>
+                <div class="stat-label">Tugas Hari Ini</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: #fff3cd;">📊</div>
-                <div class="stat-value" id="total-absensi">0</div>
-                <div class="stat-label">Total Absensi</div>
+                <div class="stat-value" id="total-tugas">0</div>
+                <div class="stat-label">Total Tugas</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon" style="background: #f1f0ff;">📍</div>
                 <div class="stat-value" id="aktif-hari-ini">0</div>
-                <div class="stat-label">Karyawan Aktif</div>
+                <div class="stat-label">OB Aktif</div>
             </div>
         </div>
 
@@ -912,17 +999,19 @@
                 <input type="date" id="filter-end-date">
             </div>
             <div class="filter-group">
-                <label>👤 Karyawan</label>
+                <label>👤 OB</label>
                 <select id="filter-employee">
-                    <option value="all">Semua Karyawan</option>
+                    <option value="all">Semua OB</option>
                 </select>
             </div>
             <div class="filter-group">
-                <label>📋 Tipe</label>
-                <select id="filter-type">
-                    <option value="all">Semua</option>
-                    <option value="clockin">Clock In</option>
-                    <option value="clockout">Clock Out</option>
+                <label>🏢 Lantai</label>
+                <select id="filter-floor">
+                    <option value="all">Semua Lantai</option>
+                    <option value="Lantai 1">Lantai 1</option>
+                    <option value="Lantai 2">Lantai 2</option>
+                    <option value="Lantai 3">Lantai 3</option>
+                    <option value="Lantai 4">Lantai 4</option>
                 </select>
             </div>
             <button id="btn-apply-filter" class="btn-filter">
@@ -938,12 +1027,12 @@
             <table id="attendance-table">
                 <thead>
                     <tr>
-                        <th>Waktu</th>
-                        <th>Karyawan</th>
+                        <th>Tanggal</th>
+                        <th>OB</th>
                         <th>Email</th>
-                        <th>Tipe</th>
-                        <th>Lokasi</th>
-                        <th>Koordinat</th>
+                        <th>Lantai</th>
+                        <th>Tugas</th>
+                        <th>Progress</th>
                         <th>Foto</th>
                     </tr>
                 </thead>
