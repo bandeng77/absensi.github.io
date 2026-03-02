@@ -9,7 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <!-- STORAGE TIDAK DIGUNAKAN -->
     
     <!-- Libraries for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -434,6 +433,7 @@
         .task-photo-preview img {
             width: 100%;
             display: block;
+            transform: scaleX(-1); /* Mirror effect for preview */
         }
 
         .task-timestamp {
@@ -551,7 +551,7 @@
             width: 100%;
             height: auto;
             display: block;
-            transform: scaleX(-1);
+            transform: scaleX(-1); /* Mirror effect for camera */
         }
 
         /* Untuk mobile, kamera belakang tidak perlu di-flip */
@@ -761,56 +761,329 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
-        .task-detail {
-            max-width: 300px;
-        }
-
-        .task-item-detail {
-            font-size: 0.85rem;
-            padding: 8px 0;
-            border-bottom: 1px dashed #e2e8f0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .task-item-detail:last-child {
-            border-bottom: none;
-        }
-
-        .task-name-completed {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        /* Task Link Style */
+        .task-link {
+            color: var(--primary);
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
             font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            transition: all 0.2s;
         }
 
-        .task-time-completed {
-            font-size: 0.7rem;
-            color: var(--gray);
-            margin-left: 24px;
-            margin-top: 4px;
+        .task-link:hover {
+            background: #e2e8f0;
+            text-decoration: none;
         }
 
-        .photo-gallery {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        /* Photo Gallery Style - Single Photo */
+        .photo-gallery-single {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
         }
 
-        .photo-thumb {
+        .photo-thumb-single {
             width: 60px;
             height: 60px;
             border-radius: 12px;
             object-fit: cover;
-            cursor: pointer;
-            transition: transform 0.2s;
             border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+            background: #f8fafc;
+            transform: scaleX(-1); /* Mirror effect for photos */
         }
 
-        .photo-thumb:hover {
-            transform: scale(3);
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        .photo-thumb-single:hover {
+            transform: scaleX(-1) scale(1.1);
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .photo-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--primary);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 6px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .no-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-size: 0.7rem;
+            text-align: center;
+            border: 2px dashed #e2e8f0;
+        }
+
+        /* Task Popup */
+        .task-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10002;
+            display: none;
+        }
+
+        .task-popup.active {
+            display: flex;
+        }
+
+        .task-popup-content {
+            background: white;
+            border-radius: 24px;
+            padding: 28px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease;
+        }
+
+        .task-popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .task-popup-header h3 {
+            font-size: 1.3rem;
+            color: var(--dark);
+        }
+
+        .task-popup-close {
+            background: #f1f5f9;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .task-popup-close:hover {
+            background: #e2e8f0;
+            transform: rotate(90deg);
+        }
+
+        .task-popup-item {
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+
+        .task-popup-item:hover {
+            transform: translateX(5px);
+        }
+
+        .task-popup-item.completed {
+            border-left-color: var(--success);
+        }
+
+        .task-popup-item.pending {
+            border-left-color: var(--gray);
+        }
+
+        .task-popup-item .task-name {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .task-popup-item .task-time {
+            font-size: 0.85rem;
+            color: var(--gray);
+            padding-left: 28px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .task-popup-footer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .task-popup-progress {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        /* Photo Slider Modal */
+        .photo-slider-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10003;
+            display: none;
+        }
+
+        .photo-slider-modal.active {
+            display: flex;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 90%;
+            max-width: 900px;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slider-main {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slider-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transform: scaleX(-1); /* Mirror effect for photos */
+        }
+
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .slider-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .slider-btn.prev {
+            left: 20px;
+        }
+
+        .slider-btn.next {
+            right: 20px;
+        }
+
+        .slider-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.1);
+            z-index: 10;
+        }
+
+        .slider-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .slider-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .slider-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .badge {
@@ -874,6 +1147,7 @@
             width: 100%;
             border-radius: 16px;
             margin-bottom: 16px;
+            transform: scaleX(-1); /* Mirror effect for photos */
         }
 
         .modal-close {
@@ -1064,7 +1338,7 @@
                 </div>
                 
                 <p style="color: var(--gray); font-size: 0.85rem; margin-top: 16px; text-align: center;">
-                    Foto otomatis
+                    Foto otomatis di-mirror
                 </p>
             </div>
         </div>
@@ -1157,9 +1431,9 @@
                         <th>Karyawan</th>
                         <th>Email</th>
                         <th>Lantai</th>
-                        <th>Tugas & Waktu</th>
+                        <th>Tugas</th>
                         <th>Progress</th>
-                        <th>Foto (Preview)</th>
+                        <th>Foto</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
@@ -1173,7 +1447,39 @@
         </div>
     </div>
 
-    <!-- MODAL PHOTO -->
+    <!-- TASK DETAIL POPUP -->
+    <div id="task-popup" class="task-popup">
+        <div class="task-popup-content">
+            <div class="task-popup-header">
+                <h3 id="task-popup-title">📋 Detail Tugas</h3>
+                <button class="task-popup-close" onclick="document.getElementById('task-popup').classList.remove('active')">
+                    ✕
+                </button>
+            </div>
+            <div id="task-popup-body">
+                <!-- Task list akan diisi oleh JavaScript -->
+            </div>
+            <div class="task-popup-footer">
+                <div id="task-popup-progress" class="task-popup-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHOTO SLIDER MODAL -->
+    <div id="photo-slider-modal" class="photo-slider-modal">
+        <div class="slider-container">
+            <button class="slider-close" onclick="window.attendanceSystem.closePhotoSlider()">✕</button>
+            <button class="slider-btn prev" onclick="window.attendanceSystem.prevPhoto()">❮</button>
+            <div class="slider-main">
+                <img id="slider-image" class="slider-image" src="" alt="Photo">
+            </div>
+            <button class="slider-btn next" onclick="window.attendanceSystem.nextPhoto()">❯</button>
+            <div id="slider-counter" class="slider-counter"></div>
+            <div id="slider-info" class="slider-info"></div>
+        </div>
+    </div>
+
+    <!-- MODAL PHOTO (Legacy) -->
     <div id="photo-modal" class="modal">
         <div class="modal-content">
             <img id="modal-photo-img" class="modal-photo" src="" alt="Full Photo">
@@ -1201,9 +1507,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
-        // STORAGE TIDAK DIGUNAKAN
 
-        // ==================== OB TASK SYSTEM (SUBMIT PARTIAL) ====================
+        // ==================== OB TASK SYSTEM ====================
         class OBTaskSystem {
             constructor() {
                 this.currentUser = null;
@@ -1216,6 +1521,10 @@
                 this.clockInterval = null;
                 this.completedFloorsToday = new Set();
                 this.currentFacingMode = 'environment';
+                
+                // Photo slider state
+                this.currentPhotoList = [];
+                this.currentPhotoIndex = 0;
                 
                 // Task definitions per floor
                 this.tasksByFloor = {
@@ -1265,7 +1574,7 @@
                     taskPhotos: {},
                     startTime: null,
                     status: 'idle', // idle, active, partial, completed
-                    sessionId: null // untuk tracking multiple submissions
+                    sessionId: null
                 };
                 
                 // Initialize
@@ -1276,7 +1585,7 @@
 
             // ==================== INITIALIZATION ====================
             async initialize() {
-                console.log('🚀 Inisialisasi Sistem OB Task (Submit Partial)...');
+                console.log('🚀 Inisialisasi Sistem OB Task...');
                 
                 setTimeout(() => this.hideLoading(), 1000);
                 
@@ -1671,11 +1980,7 @@
                     
                     const context = canvas.getContext('2d');
                     
-                    if (this.currentFacingMode === 'user') {
-                        context.translate(canvas.width, 0);
-                        context.scale(-1, 1);
-                    }
-                    
+                    // Mirror effect already applied via CSS, so draw normally
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
                     
                     const rawPhoto = canvas.toDataURL('image/jpeg', 0.9);
@@ -2197,6 +2502,112 @@
                 });
             }
 
+            showTaskDetailPopup(record) {
+                const popup = document.getElementById('task-popup');
+                const body = document.getElementById('task-popup-body');
+                const progressEl = document.getElementById('task-popup-progress');
+                
+                if (!popup || !body) return;
+                
+                document.getElementById('task-popup-title').textContent = `📋 Detail Tugas - ${record.floor || 'Unknown'}`;
+                
+                let html = '';
+                const completedTasks = record.completedTasks || [];
+                const allTasks = record.tasks || [];
+                const taskDetails = record.taskDetails || {};
+                
+                allTasks.forEach(task => {
+                    const isCompleted = completedTasks.includes(task.id);
+                    const detail = taskDetails[task.id] || {};
+                    const timestamp = detail.timestamp || '';
+                    
+                    html += `
+                        <div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}">
+                            <div class="task-name">
+                                ${isCompleted ? '✅' : '⭕'} ${task.name}
+                            </div>
+                            ${isCompleted && timestamp ? `
+                                <div class="task-time">
+                                    ⏱️ Selesai: ${timestamp}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                body.innerHTML = html;
+                
+                const progress = record.progress || '0/0';
+                progressEl.textContent = `Progress: ${progress}`;
+                
+                popup.classList.add('active');
+            }
+
+            showPhotoSlider(photos, startIndex = 0, recordInfo = '') {
+                if (!photos || Object.keys(photos).length === 0) {
+                    this.showNotification('Tidak ada foto untuk ditampilkan', 'warning');
+                    return;
+                }
+                
+                // Convert photos object to array
+                this.currentPhotoList = Object.entries(photos).map(([taskId, photo]) => ({
+                    taskId,
+                    photo,
+                    taskName: this.getTaskNameById(taskId) || 'Unknown Task'
+                }));
+                
+                this.currentPhotoIndex = Math.min(startIndex, this.currentPhotoList.length - 1);
+                
+                this.updateSlider();
+                
+                document.getElementById('photo-slider-modal').classList.add('active');
+            }
+
+            getTaskNameById(taskId) {
+                for (const floor in this.tasksByFloor) {
+                    const task = this.tasksByFloor[floor].find(t => t.id === taskId);
+                    if (task) return task.name;
+                }
+                return null;
+            }
+
+            updateSlider() {
+                const sliderImg = document.getElementById('slider-image');
+                const counter = document.getElementById('slider-counter');
+                const info = document.getElementById('slider-info');
+                
+                if (this.currentPhotoList.length > 0 && this.currentPhotoIndex >= 0) {
+                    const currentPhoto = this.currentPhotoList[this.currentPhotoIndex];
+                    sliderImg.src = currentPhoto.photo;
+                    counter.textContent = `${this.currentPhotoIndex + 1} / ${this.currentPhotoList.length}`;
+                    info.textContent = `${currentPhoto.taskName}`;
+                }
+            }
+
+            nextPhoto() {
+                if (this.currentPhotoIndex < this.currentPhotoList.length - 1) {
+                    this.currentPhotoIndex++;
+                    this.updateSlider();
+                } else {
+                    this.showNotification('Ini foto terakhir', 'info');
+                }
+            }
+
+            prevPhoto() {
+                if (this.currentPhotoIndex > 0) {
+                    this.currentPhotoIndex--;
+                    this.updateSlider();
+                } else {
+                    this.showNotification('Ini foto pertama', 'info');
+                }
+            }
+
+            closePhotoSlider() {
+                document.getElementById('photo-slider-modal').classList.remove('active');
+                this.currentPhotoList = [];
+                this.currentPhotoIndex = 0;
+            }
+
             async renderTaskTable() {
                 const tbody = document.getElementById('table-body');
                 if (!tbody) return;
@@ -2244,53 +2655,21 @@
                         minute: '2-digit'
                     });
                     
-                    let tasksList = '';
-                    if (record.completedTasks && record.tasks) {
-                        const completedTasks = record.completedTasks;
-                        const allTasks = record.tasks;
-                        const taskDetails = record.taskDetails || {};
-                        
-                        allTasks.forEach(task => {
-                            const isCompleted = completedTasks.includes(task.id);
-                            const detail = taskDetails[task.id] || {};
-                            const timestamp = detail.timestamp || '';
-                            
-                            tasksList += `
-                                <div class="task-item-detail">
-                                    <div class="task-name-completed">
-                                        ${isCompleted ? '✅' : '⭕'} ${task.name}
-                                    </div>
-                                    ${isCompleted && timestamp ? `<div class="task-time-completed">⏱️ Selesai: ${timestamp}</div>` : ''}
-                                </div>
-                            `;
-                        });
-                    }
-                    
-                    let photoHtml = '<div class="photo-gallery">';
-                    if (record.taskPhotos) {
-                        const photos = record.taskPhotos;
-                        const photoCount = Object.keys(photos).length;
-                        
-                        if (photoCount > 0) {
-                            Object.entries(photos).forEach(([taskId, photo]) => {
-                                if (photo) {
-                                    const taskName = record.tasks?.find(t => t.id === taskId)?.name || 'Task';
-                                    photoHtml += `<img src="${photo}" class="photo-thumb" onclick="window.attendanceSystem.showPhotoBase64('${photo}')" alt="${taskName}" title="${taskName}">`;
-                                }
-                            });
-                        } else {
-                            photoHtml += '<span style="color: var(--gray);">📷 Tidak ada</span>';
-                        }
-                    } else {
-                        photoHtml += '<span style="color: var(--gray);">📷 Tidak ada</span>';
-                    }
-                    photoHtml += '</div>';
-                    
                     const progress = record.progress || '0/0';
                     const [completed, total] = progress.split('/').map(Number);
                     const progressPercent = total > 0 ? (completed / total) * 100 : 0;
                     
                     const statusBadge = record.status === 'completed' ? '✅ Selesai' : (record.status === 'partial' ? '⏳ Progress' : '❓');
+                    
+                    // Count photos
+                    const photoCount = record.taskPhotos ? Object.keys(record.taskPhotos).length : 0;
+                    
+                    // Get first photo for preview
+                    let firstPhoto = null;
+                    if (record.taskPhotos && photoCount > 0) {
+                        const photos = record.taskPhotos;
+                        firstPhoto = Object.values(photos)[0];
+                    }
                     
                     html += `
                         <tr>
@@ -2298,8 +2677,10 @@
                             <td><strong>${record.userName || 'Unknown'}</strong> <span style="font-size:0.7rem; color:var(--gray);">${statusBadge}</span></td>
                             <td>${record.userEmail || '-'}</td>
                             <td><span class="badge badge-floor">${record.floor || '-'}</span></td>
-                            <td class="task-detail">
-                                ${tasksList}
+                            <td>
+                                <span class="task-link" onclick="window.attendanceSystem.showTaskDetailPopup(${JSON.stringify(record).replace(/"/g, '&quot;')})">
+                                    📋 Lihat Tugas (${record.completedTasks?.length || 0}/${record.tasks?.length || 0})
+                                </span>
                             </td>
                             <td>
                                 <div>${progress}</div>
@@ -2308,7 +2689,16 @@
                                 </div>
                             </td>
                             <td>
-                                ${photoHtml}
+                                ${firstPhoto ? `
+                                    <div class="photo-gallery-single" onclick="window.attendanceSystem.showPhotoSlider(${JSON.stringify(record.taskPhotos).replace(/"/g, '&quot;')}, 0, '${record.floor}')">
+                                        <img src="${firstPhoto}" class="photo-thumb-single" alt="Task Photo">
+                                        ${photoCount > 1 ? `<span class="photo-badge">+${photoCount-1}</span>` : ''}
+                                    </div>
+                                ` : `
+                                    <div class="no-photo">
+                                        📷
+                                    </div>
+                                `}
                             </td>
                         </tr>
                     `;
@@ -2641,6 +3031,19 @@
                 if (exportPdfBtn) {
                     exportPdfBtn.addEventListener('click', () => this.exportToPDF());
                 }
+
+                // Keyboard navigation for slider
+                document.addEventListener('keydown', (e) => {
+                    if (document.getElementById('photo-slider-modal').classList.contains('active')) {
+                        if (e.key === 'ArrowLeft') {
+                            this.prevPhoto();
+                        } else if (e.key === 'ArrowRight') {
+                            this.nextPhoto();
+                        } else if (e.key === 'Escape') {
+                            this.closePhotoSlider();
+                        }
+                    }
+                });
 
                 document.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter' && !document.getElementById('login-page').classList.contains('hidden')) {
