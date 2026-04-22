@@ -161,16 +161,57 @@
         #live-time { font-size: 2rem; font-weight: 700; color: var(--primary); }
         #live-date { color: var(--gray); margin-top: 4px; }
         
+        /* ========== STICKY CAMERA UNTUK MOBILE ========== */
+        @media (max-width: 768px) {
+            /* Sticky Camera Card - akan tetap di atas saat scroll */
+            .dashboard-grid .card:first-child {
+                position: sticky;
+                top: 10px;
+                z-index: 100;
+                background: white;
+                margin-bottom: 20px;
+                box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
+                border: 2px solid var(--primary);
+                transition: all 0.3s ease;
+            }
+            
+            /* Efek shadow saat sticky aktif */
+            .dashboard-grid .card:first-child.sticky-active {
+                box-shadow: 0 15px 35px -8px rgba(0,0,0,0.3);
+            }
+            
+            /* Kurangi sedikit ukuran kamera di mobile */
+            .dashboard-grid .card:first-child .camera-wrapper {
+                max-height: 250px;
+            }
+            
+            /* Padding tambahan agar konten di bawah tidak tertutup sticky */
+            .dashboard-grid .card:last-child {
+                margin-bottom: 20px;
+                scroll-margin-top: 300px;
+            }
+        }
+        
         @media (min-width: 769px) {
             .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
             .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
             .filter-section { display: grid; grid-template-columns: repeat(4,1fr) auto auto; gap: 16px; align-items: end; }
             .navbar { flex-wrap: nowrap; }
+            
+            /* Di desktop tidak sticky */
+            .dashboard-grid .card:first-child {
+                position: relative;
+                top: auto;
+                z-index: auto;
+                border: none;
+            }
         }
+        
         @media (max-width: 480px) {
             .navbar { flex-direction: column; text-align: center; }
             .user-badge { max-width: none; }
         }
+        
         .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 20px; }
         .stat-card { background: white; border-radius: 22px; padding: 18px; box-shadow: var(--shadow); }
         .stat-icon { font-size: 28px; margin-bottom: 8px; }
@@ -277,7 +318,7 @@
             <button id="btn-export-pdf" class="btn-filter warning">📄 PDF</button>
         </div>
         <div class="table-container">
-            <table><thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead><tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat数据</td></tr></tbody>
+            <table><thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead><tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr></tbody>
         </div>
     </div>
 
@@ -392,6 +433,23 @@
                 });
                 this.setupEventListeners();
                 this.setDefaultFilterDates();
+                this.setupStickyEffect();
+            }
+
+            // Setup efek sticky untuk kamera di mobile
+            setupStickyEffect() {
+                const cameraCard = document.getElementById('camera-card');
+                if (!cameraCard) return;
+                
+                window.addEventListener('scroll', () => {
+                    if (window.innerWidth <= 768) {
+                        if (window.scrollY > 5) {
+                            cameraCard.classList.add('sticky-active');
+                        } else {
+                            cameraCard.classList.remove('sticky-active');
+                        }
+                    }
+                });
             }
 
             async handleAuthStateChange(user) {
@@ -540,7 +598,6 @@
                     const container = document.getElementById('task-checklist-container');
                     const tasks = MASTER_TASKS[branch]?.[floor] || [];
                     container.innerHTML = `<h4>🔒 Tugas Terkunci:</h4>${tasks.map(t => `<div class="task-item locked"><div class="task-header"><span class="task-name">🔒 ${t.name}</span></div></div>`).join('')}<p style="color:#856404;background:#fff3cd;padding:12px;border-radius:12px;margin-top:12px;">⚠️ Lantai ini sudah dikerjakan hari ini</p>`;
-                    // NOTIFICATION DIHAPUS - TIDAK ADA LAGI NOTIF POPUP
                 } else {
                     lockedMsg.classList.add('hidden');
                     startBtn.disabled = false;
@@ -914,7 +971,7 @@
                 
                 const tbody = document.getElementById('table-body');
                 if (filtered.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada数据</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada data</td></tr>';
                     return;
                 }
                 
@@ -935,7 +992,7 @@
                         <td>
                             <span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span>
                             <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-                        </td>
+                         </td>
                         <td>${firstPhoto ? `<img src="${firstPhoto}" class="photo-thumb-single" onclick='window.attendanceSystem.showPhoto("${firstPhoto}")'>` : '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>'}</td>
                     </tr>`;
                 });
