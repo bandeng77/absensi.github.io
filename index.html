@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>OB Task • Genetek</title>
+    <title>Genetek OB • Multi Cabang</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -44,7 +44,6 @@
             padding: 16px;
         }
 
-        /* Loading Screen */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -58,7 +57,6 @@
             z-index: 9999;
             transition: opacity 0.3s;
         }
-
         .loading-spinner {
             width: 50px;
             height: 50px;
@@ -67,13 +65,8 @@
             border-top-color: white;
             animation: spin 0.8s linear infinite;
         }
+        .loading-screen.hidden { opacity: 0; pointer-events: none; display: none; }
 
-        .loading-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* Login Page */
         #login-page {
             max-width: 400px;
             margin: 30px auto;
@@ -81,1224 +74,180 @@
             border-radius: 32px;
             padding: 32px 24px;
             box-shadow: var(--shadow);
-            animation: slideUp 0.4s ease;
         }
-
-        #login-page.hidden {
-            display: none;
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .login-header h1 {
-            font-size: 2.2rem;
-            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-
-        .login-sub {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--dark);
-            font-size: 0.9rem;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 18px;
-            border: 2px solid #e2e8f0;
-            border-radius: 18px;
-            font-size: 1rem;
-            transition: all 0.2s;
-            background: #f8fafc;
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-            outline: none;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-        }
-
-        .btn-login {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
-            color: white;
-            border: none;
-            border-radius: 18px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 12px;
-        }
-
-        .btn-login:active {
-            transform: scale(0.98);
-        }
-
-        /* App Container */
-        #app-container, #admin-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: none;
-        }
-
-        #app-container.active, #admin-container.active {
-            display: block;
-        }
-
-        /* Navbar */
+        #login-page.hidden, .hidden { display: none; }
+        .login-header { text-align: center; margin-bottom: 32px; }
+        .login-header h1 { font-size: 2.2rem; background: linear-gradient(145deg, var(--primary), var(--primary-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { font-weight: 600; color: var(--dark); display: block; margin-bottom: 6px; }
+        .form-group input, .form-group select { width: 100%; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 18px; background: #f8fafc; }
+        .btn-login { width: 100%; padding: 16px; background: linear-gradient(145deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: 18px; font-weight: 600; cursor: pointer; }
+        
+        #app-container, #admin-container { max-width: 1200px; margin: 0 auto; display: none; }
+        #app-container.active, #admin-container.active { display: block; }
+        
         .navbar {
-            background: white;
-            border-radius: 24px;
-            padding: 14px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 5px 20px -5px rgba(0,0,0,0.05);
-        }
-
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-brand h2 {
-            background: linear-gradient(145deg, var(--primary), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 1.3rem;
-        }
-
-        .nav-menu {
-            display: flex;
-            align-items: center;
+            background: white; border-radius: 24px; padding: 14px 20px; margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 20px -5px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
             gap: 12px;
         }
-
-        .user-badge {
-            font-weight: 600;
-            color: var(--dark);
-            padding: 6px 14px;
-            background: #f1f5f9;
-            border-radius: 30px;
+        .nav-brand { display: flex; align-items: center; gap: 10px; }
+        .nav-brand h2 { background: linear-gradient(145deg, var(--primary), var(--primary-dark)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-menu { display: flex; align-items: center; gap: 12px; }
+        .user-badge { 
+            background: #f1f5f9; 
+            padding: 8px 16px; 
+            border-radius: 30px; 
+            font-weight: 600; 
             font-size: 0.9rem;
-            max-width: 150px;
+            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            white-space: nowrap;
+            max-width: 180px;
         }
-
-        .btn-logout {
-            padding: 8px 18px;
-            background: #fee2e2;
-            color: #dc2626;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
+        .btn-logout { 
+            background: #fee2e2; 
+            color: #dc2626; 
+            border: none; 
+            padding: 8px 18px; 
+            border-radius: 30px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
             gap: 6px;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .btn-logout:active {
-            background: #fecaca;
-            transform: scale(0.95);
-        }
-
-        /* Dashboard Grid */
-        .dashboard-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Card */
-        .card {
-            background: white;
-            border-radius: 28px;
-            padding: 22px;
-            box-shadow: var(--shadow);
-        }
-
-        .card-title {
-            font-size: 1.2rem;
             font-weight: 600;
-            color: var(--dark);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Camera Card - STICKY DI MOBILE */
-        .camera-wrapper {
-            background: #0f172a;
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 12px;
-            border: 3px solid #e2e8f0;
-            aspect-ratio: 4/3;
-            max-height: 350px;
-        }
-
-        #video-feed {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .camera-control {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-        }
-
-        .btn-capture {
-            background: white;
-            color: var(--dark);
-            padding: 12px 20px;
-            border: none;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 5px 15px -3px rgba(0,0,0,0.3);
-        }
-
-        .btn-capture:active {
-            transform: scale(0.95);
-        }
-
-        .btn-switch-camera {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            background: rgba(255,255,255,0.9);
-            border: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 5px 15px -3px rgba(0,0,0,0.3);
-            font-size: 1.2rem;
-        }
-
-        .btn-switch-camera:active {
-            transform: scale(0.95);
-        }
-
-        /* Location Card */
-        .location-card {
-            background: linear-gradient(145deg, #f8fafc, #f1f5f9);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 20px;
-        }
-
-        .location-icon {
-            background: white;
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 3px 8px -2px rgba(0,0,0,0.1);
-            margin-bottom: 14px;
-        }
-
-        .floor-selector select {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 1rem;
-            background: white;
-            cursor: pointer;
-        }
-
-        .floor-selector select:disabled {
-            background: #e9ecef;
-            color: #6c757d;
-            opacity: 0.7;
-        }
-
-        .floor-locked-message {
-            margin-top: 12px;
-            padding: 12px;
-            background: #fff3cd;
-            border: 1px solid #ffeeba;
-            border-radius: 14px;
-            color: #856404;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .floor-locked-message.hidden {
-            display: none;
-        }
-
-        /* Task Checklist */
-        .task-checklist {
-            margin-top: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
-        .task-item {
-            background: white;
-            border-radius: 16px;
-            padding: 14px;
-            margin-bottom: 10px;
-            border: 2px solid #e2e8f0;
-            transition: all 0.2s;
-        }
-
-        .task-item.completed {
-            border-color: var(--success);
-            background: #f0fdf9;
-        }
-
-        .task-item.locked {
-            opacity: 0.6;
-            background: #f8f9fa;
-        }
-
-        .task-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .task-checkbox {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-            accent-color: var(--success);
-            flex-shrink: 0;
-        }
-
-        .task-name {
-            font-weight: 500;
-            color: var(--dark);
-            flex: 1;
-            font-size: 0.95rem;
-        }
-
-        .task-camera-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        .task-camera-btn.completed {
-            background: var(--success);
-        }
-
-        .task-camera-btn:disabled,
-        .task-checkbox:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .task-photo-preview {
-            margin-top: 10px;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid #e2e8f0;
-            display: none;
-        }
-
-        .task-photo-preview.active {
-            display: block;
-        }
-
-        .task-photo-preview img {
-            width: 100%;
-            display: block;
-        }
-
-        .task-timestamp {
-            font-size: 0.7rem;
-            color: var(--gray);
-            margin-top: 4px;
-            text-align: right;
-        }
-
-        /* Button Group */
-        .button-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 14px 16px;
-            border: none;
-            border-radius: 18px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .btn-start {
-            background: linear-gradient(145deg, #06d6a0, #05b386);
-        }
-
-        .btn-save {
-            background: linear-gradient(145deg, #4361ee, #3a56d4);
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* Status Badge */
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: #f1f5f9;
-        }
-
-        .status-indicator {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #94a3b8;
-        }
-
-        .status-badge.active .status-indicator {
-            background: #06d6a0;
-            box-shadow: 0 0 0 3px rgba(6, 214, 160, 0.2);
-            animation: pulse 1.5s infinite;
-        }
-
-        .status-text {
-            font-weight: 500;
-            color: var(--dark);
-            font-size: 0.95rem;
-        }
-
-        .progress-text {
-            margin-left: auto;
-            font-size: 0.85rem;
-            color: var(--gray);
-        }
-
-        /* Live Clock */
-        #live-clock {
-            text-align: center;
-            margin-bottom: 18px;
-        }
-
-        #live-time {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            line-height: 1.2;
-        }
-
-        #live-date {
-            color: var(--gray);
-            margin-top: 4px;
-            font-size: 0.9rem;
-        }
-
-        /* Admin Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: white;
-            border-radius: 22px;
-            padding: 18px;
-            box-shadow: var(--shadow);
-        }
-
-        .stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-
-        .stat-value {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--dark);
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        /* Filter Section */
-        .filter-section {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 16px;
-        }
-
-        .filter-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--dark);
-            font-size: 0.85rem;
-        }
-
-        .filter-group input,
-        .filter-group select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 0.95rem;
-            background: #f8fafc;
-        }
-
-        .export-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .btn-filter {
-            padding: 12px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .btn-filter.success {
-            background: var(--success);
-        }
-
-        .btn-filter.warning {
-            background: #ff9800;
-        }
-
-        .btn-filter:active {
-            transform: scale(0.97);
-        }
-
-        /* Table */
-        .table-container {
-            background: white;
-            border-radius: 24px;
-            padding: 16px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }
-
-        th {
-            text-align: left;
-            padding: 14px 12px;
-            background: #f8fafc;
-            color: var(--dark);
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 0.9rem;
-        }
-
-        .badge-floor {
-            background: #e0e7ff;
-            color: #3730a3;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .task-link {
-            color: var(--primary);
-            cursor: pointer;
-            text-decoration: underline;
-            text-decoration-style: dotted;
-            padding: 6px 10px;
-            background: #f1f5f9;
-            border-radius: 16px;
-            display: inline-block;
-            font-size: 0.85rem;
-        }
-
-        .task-link:active {
-            background: #e2e8f0;
-        }
-
-        /* Photo Gallery */
-        .photo-gallery-single {
-            position: relative;
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-        }
-
-        .photo-thumb-single {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 2px solid #e2e8f0;
-        }
-
-        .photo-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: var(--primary);
-            color: white;
-            border-radius: 20px;
-            padding: 2px 6px;
-            font-size: 0.6rem;
-            font-weight: 600;
-        }
-
-        .no-photo {
-            width: 50px;
-            height: 50px;
-            border-radius: 10px;
-            background: #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gray);
-            font-size: 0.7rem;
-            border: 2px dashed #e2e8f0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 5px;
-            background: #e2e8f0;
-            border-radius: 3px;
-            margin-top: 4px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--success);
-            border-radius: 3px;
-            transition: width 0.2s;
-        }
-
-        /* Modal */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            display: none;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 24px;
-            padding: 20px;
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-photo {
-            width: 100%;
-            border-radius: 16px;
-            margin-bottom: 16px;
-        }
-
-        .modal-close {
-            padding: 12px 20px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-        }
-
-        /* Photo Slider Modal */
-        .photo-slider-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.98);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10001;
-            display: none;
-        }
-
-        .photo-slider-modal.active {
-            display: flex;
-        }
-
-        .slider-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .slider-main {
-            width: 100%;
-            height: 80vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .slider-image {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-
-        .slider-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-        }
-
-        .slider-btn.prev {
-            left: 10px;
-        }
-
-        .slider-btn.next {
-            right: 10px;
-        }
-
-        .slider-btn:active {
-            background: rgba(255,255,255,0.4);
-        }
-
-        .slider-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-            z-index: 10;
-        }
-
-        .slider-counter {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-        }
-
-        .slider-info {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 0.85rem;
-            max-width: 70%;
-            overflow: hidden;
-            text-overflow: ellipsis;
             white-space: nowrap;
         }
-
-        /* Task Popup */
-        .task-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10002;
-            display: none;
+        
+        .dashboard-grid { display: flex; flex-direction: column; gap: 20px; }
+        .card { background: white; border-radius: 28px; padding: 22px; box-shadow: var(--shadow); }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        
+        .camera-wrapper { background: #0f172a; border-radius: 20px; overflow: hidden; position: relative; aspect-ratio: 4/3; max-height: 350px; }
+        #video-feed { width: 100%; height: 100%; object-fit: cover; }
+        .btn-capture { position: absolute; bottom: 12px; right: 12px; background: white; border: none; padding: 12px 20px; border-radius: 40px; font-weight: 600; cursor: pointer; }
+        .btn-switch-camera { position: absolute; bottom: 12px; left: 12px; background: rgba(255,255,255,0.9); border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; }
+        
+        .location-card { background: #f8fafc; border-radius: 18px; padding: 18px; margin-bottom: 20px; }
+        .branch-selector, .floor-selector { margin-bottom: 16px; }
+        .branch-selector label, .floor-selector label { font-weight: 600; display: block; margin-bottom: 8px; }
+        .floor-selector select, .branch-selector select { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid #e2e8f0; background: white; }
+        .floor-locked-message { background: #fff3cd; border-radius: 14px; padding: 12px; color: #856404; margin-top: 12px; display: flex; align-items: center; gap: 8px; }
+        
+        .task-checklist { max-height: 400px; overflow-y: auto; margin-top: 20px; }
+        .task-item { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 2px solid #e2e8f0; transition: all 0.2s; }
+        .task-item.completed { border-color: var(--success); background: #f0fdf9; }
+        .task-header { display: flex; align-items: center; gap: 10px; }
+        .task-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
+        .task-name { flex: 1; font-weight: 500; }
+        .task-camera-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; }
+        .task-camera-btn.completed { background: var(--success); }
+        .task-photo-preview { margin-top: 10px; display: none; }
+        .task-photo-preview.active { display: block; }
+        .task-photo-preview img { width: 100%; border-radius: 12px; }
+        
+        .btn { padding: 14px; border-radius: 18px; font-weight: 600; border: none; cursor: pointer; color: white; }
+        .btn-start { background: linear-gradient(145deg, #06d6a0, #05b386); }
+        .btn-save { background: linear-gradient(145deg, #4361ee, #3a56d4); display: none; }
+        .button-group { display: flex; gap: 12px; margin: 16px 0; }
+        
+        .status-badge { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 14px; border-radius: 16px; }
+        .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
+        .status-badge.active .status-indicator { background: #06d6a0; animation: pulse 1.5s infinite; }
+        .progress-text { margin-left: auto; }
+        
+        #live-clock { text-align: center; margin-bottom: 18px; }
+        #live-time { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        #live-date { color: var(--gray); margin-top: 4px; }
+        
+        @media (min-width: 769px) {
+            .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+            .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
+            .filter-section { display: grid; grid-template-columns: repeat(4,1fr) auto auto; gap: 16px; align-items: end; }
+            .navbar { flex-wrap: nowrap; }
         }
-
-        .task-popup.active {
-            display: flex;
+        @media (max-width: 480px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .user-badge { max-width: none; }
         }
-
-        .task-popup-content {
-            background: white;
-            border-radius: 24px;
-            padding: 24px;
-            max-width: 90%;
-            width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .task-popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f1f5f9;
-        }
-
-        .task-popup-header h3 {
-            font-size: 1.2rem;
-            color: var(--dark);
-        }
-
-        .task-popup-close {
-            background: #f1f5f9;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-
-        .task-popup-item {
-            padding: 14px;
-            background: #f8fafc;
-            border-radius: 14px;
-            margin-bottom: 10px;
-            border-left: 4px solid;
-        }
-
-        .task-popup-item.completed {
-            border-left-color: var(--success);
-        }
-
-        .task-popup-item.pending {
-            border-left-color: var(--gray);
-        }
-
-        .task-popup-item .task-name {
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-
-        .task-popup-item .task-time {
-            font-size: 0.8rem;
-            color: var(--gray);
-        }
-
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            left: 16px;
-            background: white;
-            border-radius: 16px;
-            padding: 14px 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 10003;
-            transform: translateY(-100px);
-            transition: transform 0.3s;
-            border-left: 6px solid;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .notification.show {
-            transform: translateY(0);
-        }
-
+        .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 22px; padding: 18px; box-shadow: var(--shadow); }
+        .stat-icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; }
+        .filter-section { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
+        .btn-filter { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 16px; cursor: pointer; font-weight: 600; }
+        .btn-filter.success { background: var(--success); }
+        .btn-filter.warning { background: #ff9800; }
+        .table-container { background: white; border-radius: 24px; padding: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .badge-floor { background: #e0e7ff; padding: 4px 10px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; }
+        .photo-thumb-single { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; cursor: pointer; border: 2px solid #e2e8f0; }
+        .progress-bar { background: #e2e8f0; height: 4px; border-radius: 2px; margin-top: 4px; }
+        .progress-fill { background: var(--success); height: 4px; border-radius: 2px; }
+        .notification { position: fixed; top: 20px; left: 20px; right: 20px; background: white; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(-100px); transition: 0.3s; z-index: 10003; max-width: 400px; margin: auto; border-left: 6px solid; }
+        .notification.show { transform: translateY(0); }
         .notification.success { border-left-color: var(--success); }
         .notification.error { border-left-color: var(--danger); }
         .notification.warning { border-left-color: var(--warning); }
-        .notification.info { border-left-color: var(--primary); }
-
-        /* Hidden */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Animations */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* ========== MOBILE STICKY CAMERA ========== */
-        @media (max-width: 768px) {
-            /* Sticky Camera Card */
-            .dashboard-grid .card:first-child {
-                position: sticky;
-                top: 10px;
-                z-index: 100;
-                background: white;
-                margin-bottom: 20px;
-                box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
-                border: 2px solid var(--primary);
-                animation: pulse-border 2s infinite;
-            }
-
-            @keyframes pulse-border {
-                0% { border-color: var(--primary); }
-                50% { border-color: var(--success); }
-                100% { border-color: var(--primary); }
-            }
-
-            /* Sedikit kurangi ukuran kamera saat sticky */
-            .dashboard-grid .card:first-child .camera-wrapper {
-                max-height: 280px;
-            }
-
-            /* Tambah padding bottom untuk konten di bawah sticky */
-            .dashboard-grid .card:last-child {
-                margin-bottom: 20px;
-                scroll-margin-top: 380px;
-            }
-
-            /* Efek blur background saat scroll */
-            .dashboard-grid .card:first-child::before {
-                content: '';
-                position: absolute;
-                top: -10px;
-                left: 0;
-                right: 0;
-                height: 10px;
-                background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
-                pointer-events: none;
-                opacity: 0;
-                transition: opacity 0.3s;
-            }
-
-            .dashboard-grid .card:first-child.sticky-active::before {
-                opacity: 1;
-            }
-        }
-
-        /* Tablet and Desktop */
-        @media (min-width: 769px) {
-            body {
-                padding: 20px;
-            }
-
-            .dashboard-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 24px;
-            }
-
-            /* Tidak sticky di desktop */
-            .dashboard-grid .card:first-child {
-                position: relative;
-                top: auto;
-                z-index: auto;
-                border: none;
-                animation: none;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-
-            .filter-section {
-                grid-template-columns: repeat(5, 1fr) auto;
-                align-items: flex-end;
-            }
-
-            .export-buttons {
-                grid-template-columns: 1fr 1fr;
-                margin-top: 0;
-            }
-
-            .notification {
-                left: auto;
-                right: 24px;
-                min-width: 300px;
-            }
-        }
-
-        /* Landscape Mobile */
-        @media (max-width: 896px) and (orientation: landscape) {
-            .dashboard-grid .card:first-child {
-                position: relative;
-                top: auto;
-            }
-            
-            .dashboard-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 10001; display: none; }
+        .modal-content { background: white; border-radius: 24px; padding: 20px; max-width: 90%; max-height: 90vh; overflow: auto; }
+        .modal-content img { max-width: 100%; border-radius: 16px; }
+        .modal-close { margin-top: 16px; padding: 12px; background: var(--danger); color: white; border: none; border-radius: 12px; width: 100%; cursor: pointer; }
+        
+        .task-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002; display: none; }
+        .task-popup-content { background: white; border-radius: 24px; padding: 24px; max-width: 90%; width: 400px; max-height: 80vh; overflow: auto; }
+        .task-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; }
+        .task-popup-header button { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; }
+        .task-popup-item { padding: 12px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; border-left: 4px solid; }
+        .task-popup-item.completed { border-left-color: var(--success); }
+        .task-popup-item.pending { border-left-color: var(--gray); }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
     </style>
 </head>
 <body>
-    <!-- LOADING SCREEN -->
-    <div id="loading-screen" class="loading-screen">
-        <div class="loading-spinner"></div>
-    </div>
-
-    <!-- NOTIFICATION -->
-    <div id="notification" class="notification">
-        <span id="notification-icon">✅</span>
-        <span id="notification-message"></span>
-    </div>
+    <div id="loading-screen" class="loading-screen"><div class="loading-spinner"></div></div>
+    <div id="notification" class="notification"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page">
-        <div class="login-header">
-            <h1>✨ Genetek</h1>
-            <div class="login-sub">OB Task Management</div>
-        </div>
-        
-        <div class="form-group">
-            <label>📧 Email</label>
-            <input type="email" id="login-email" placeholder="email@genetek.co.id" value="admin@genetek.co.id">
-        </div>
-        
-        <div class="form-group">
-            <label>🔑 Password</label>
-            <input type="password" id="login-password" placeholder="Minimal 6 karakter" value="123456">
-        </div>
-        
-        <button id="btn-login" class="btn-login">
-            <span>🚀</span> Masuk
-        </button>
+        <div class="login-header"><h1>✨ Genetek</h1><div>OB Task Management</div></div>
+        <div class="form-group"><label>📧 Email</label><input type="email" id="login-email" placeholder="email@genetek.co.id" value="admin@genetek.co.id"></div>
+        <div class="form-group"><label>🔑 Password</label><input type="password" id="login-password" placeholder="Minimal 6 karakter" value="123456"></div>
+        <button id="btn-login" class="btn-login">🚀 Masuk</button>
     </div>
 
     <!-- MAIN APP (OB) -->
     <div id="app-container">
         <div class="navbar">
-            <div class="nav-brand">
-                <span style="font-size: 1.8rem;">🧹</span>
-                <h2>Task OB</h2>
-            </div>
+            <div class="nav-brand"><span style="font-size:1.8rem;">🧹</span><h2>Task OB</h2></div>
             <div class="nav-menu">
                 <span id="user-display" class="user-badge"></span>
-                <button id="btn-logout" class="btn-logout">
-                    <span>🚪</span>
-                    <span class="hide-mobile">Keluar</span>
-                </button>
+                <button id="btn-logout" class="btn-logout"><span>🚪</span> Keluar</button>
             </div>
         </div>
-
         <div class="dashboard-grid">
-            <!-- Camera Card - STICKY DI MOBILE -->
             <div class="card" id="camera-card">
-                <div class="card-title">
-                    <span>📸</span> Kamera
-                </div>
-                
-                <div class="camera-wrapper">
-                    <video id="video-feed" autoplay playsinline></video>
-                    <div class="camera-control">
-                        <button id="btn-capture" class="btn-capture">
-                            📷 Foto
-                        </button>
-                    </div>
-                    <button id="btn-switch-camera" class="btn-switch-camera">
-                        🔄
-                    </button>
-                </div>
-
-                <div id="current-task-info" style="display: none; padding: 12px; background: #f1f5f9; border-radius: 14px;">
-                    <div style="font-weight: 600; margin-bottom: 4px;">Tugas Saat Ini:</div>
-                    <div id="current-task-name" style="color: var(--primary);"></div>
-                </div>
+                <div class="card-title"><span>📸</span> Kamera</div>
+                <div class="camera-wrapper"><video id="video-feed" autoplay playsinline></video><button id="btn-capture" class="btn-capture">📷 Foto</button><button id="btn-switch-camera" class="btn-switch-camera">🔄</button></div>
+                <div id="current-task-info" style="display:none; padding:12px; background:#f1f5f9; border-radius:14px; margin-top:12px;"><div style="font-weight:600;">📌 Tugas Saat Ini:</div><div id="current-task-name" style="color:var(--primary);"></div></div>
             </div>
-
-            <!-- Task Card -->
             <div class="card">
-                <div class="card-title">
-                    <span>✅</span> Tugas Hari Ini
-                </div>
-                
-                <div id="live-clock">
-                    <div id="live-time">--:--:--</div>
-                    <div id="live-date">--, -- -- ----</div>
-                </div>
-                
+                <div class="card-title"><span>✅</span> Tugas Hari Ini</div>
+                <div id="live-clock"><div id="live-time">--:--:--</div><div id="live-date">--, -- -- ----</div></div>
                 <div class="location-card">
-                    <div class="location-icon">🏢</div>
-                    <div class="floor-selector">
-                        <select id="floor-select">
-                            <option value="">Pilih Lantai</option>
-                            <option value="Lantai 1">Lantai 1</option>
-                            <option value="Lantai 2">Lantai 2</option>
-                            <option value="Lantai 3">Lantai 3</option>
-                            <option value="Lantai 4">Lantai 4</option>
-                        </select>
-                    </div>
-
-                    <div id="floor-locked-message" class="floor-locked-message hidden">
-                        <i>🔒</i> Lantai ini sudah dikerjakan hari ini
-                    </div>
+                    <div class="branch-selector"><label>🏢 Pilih Kantor</label><select id="branch-select"><option value="">-- Pilih Kantor --</option><option value="PURI">PURI</option><option value="ARTERI">ARTERI</option></select></div>
+                    <div class="floor-selector"><label>📍 Pilih Lantai</label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
+                    <div id="floor-locked-message" class="floor-locked-message hidden"><i>🔒</i> Lantai ini sudah dikerjakan hari ini</div>
                 </div>
-
-                <div id="task-checklist-container" class="task-checklist">
-                    <p style="color: var(--gray); text-align: center;">Pilih lantai untuk melihat tugas</p>
-                </div>
-
-                <div class="button-group">
-                    <button id="employee-start" class="btn btn-start" disabled>
-                        🚀 Mulai
-                    </button>
-                    <button id="employee-save" class="btn btn-save" style="display: none;">
-                        💾 Simpan
-                    </button>
-                </div>
-
-                <div id="employee-status" class="status-badge">
-                    <span class="status-indicator"></span>
-                    <span class="status-text">Belum mulai</span>
-                    <span id="task-progress" class="progress-text">0/0</span>
-                </div>
+                <div id="task-checklist-container" class="task-checklist"><p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p></div>
+                <div class="button-group"><button id="employee-start" class="btn btn-start" disabled>🚀 Mulai</button><button id="employee-save" class="btn btn-save">💾 Simpan</button></div>
+                <div id="employee-status" class="status-badge"><span class="status-indicator"></span><span class="status-text">Belum mulai</span><span id="task-progress" class="progress-text">0/0</span></div>
             </div>
         </div>
     </div>
@@ -1306,142 +255,35 @@
     <!-- ADMIN PANEL -->
     <div id="admin-container">
         <div class="navbar">
-            <div class="nav-brand">
-                <span style="font-size: 1.8rem;">👑</span>
-                <h2>Admin OB</h2>
-            </div>
+            <div class="nav-brand"><span style="font-size:1.8rem;">👑</span><h2>Admin OB</h2></div>
             <div class="nav-menu">
                 <span id="admin-display" class="user-badge"></span>
-                <button id="admin-logout" class="btn-logout">
-                    <span>🚪</span>
-                    <span class="hide-mobile">Keluar</span>
-                </button>
+                <button id="admin-logout" class="btn-logout"><span>🚪</span> Keluar</button>
             </div>
         </div>
-
-        <!-- Statistics -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #e0f2fe;">👥</div>
-                <div class="stat-value" id="total-karyawan">0</div>
-                <div class="stat-label">Karyawan</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #dcfce7;">✅</div>
-                <div class="stat-value" id="hari-ini-tugas">0</div>
-                <div class="stat-label">Hari Ini</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #fff3cd;">📊</div>
-                <div class="stat-value" id="total-tugas">0</div>
-                <div class="stat-label">Total Tugas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon" style="background: #f1f0ff;">📍</div>
-                <div class="stat-value" id="aktif-hari-ini">0</div>
-                <div class="stat-label">Aktif</div>
-            </div>
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="total-karyawan">0</div><div>Karyawan</div></div>
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="hari-ini-tugas">0</div><div>Hari Ini</div></div>
+            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="total-tugas">0</div><div>Total Tugas</div></div>
+            <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-value" id="aktif-hari-ini">0</div><div>Aktif</div></div>
         </div>
-
-        <!-- Filter Section -->
         <div class="filter-section">
-            <div class="filter-group">
-                <label>Dari</label>
-                <input type="date" id="filter-start-date">
-            </div>
-            <div class="filter-group">
-                <label>Sampai</label>
-                <input type="date" id="filter-end-date">
-            </div>
-            <div class="filter-group">
-                <label>Karyawan</label>
-                <select id="filter-employee">
-                    <option value="all">Semua</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>Lantai</label>
-                <select id="filter-floor">
-                    <option value="all">Semua</option>
-                    <option value="Lantai 1">Lantai 1</option>
-                    <option value="Lantai 2">Lantai 2</option>
-                    <option value="Lantai 3">Lantai 3</option>
-                    <option value="Lantai 4">Lantai 4</option>
-                </select>
-            </div>
-            <button id="btn-apply-filter" class="btn-filter">
-                🔍 Filter
-            </button>
-            <div class="export-buttons">
-                <button id="btn-export-excel" class="btn-filter success">
-                    📥 Excel
-                </button>
-                <button id="btn-export-pdf" class="btn-filter warning">
-                    📄 PDF
-                </button>
-            </div>
+            <input type="date" id="filter-start-date" placeholder="Dari">
+            <input type="date" id="filter-end-date" placeholder="Sampai">
+            <select id="filter-employee"><option value="all">Semua Karyawan</option></select>
+            <select id="filter-floor"><option value="all">Semua Lantai</option><option value="Lantai 1">Lantai 1</option><option value="Lantai 2">Lantai 2</option><option value="Lantai 3">Lantai 3</option><option value="Lantai 4">Lantai 4</option></select>
+            <button id="btn-apply-filter" class="btn-filter">🔍 Filter</button>
+            <button id="btn-export-excel" class="btn-filter success">📥 Excel</button>
+            <button id="btn-export-pdf" class="btn-filter warning">📄 PDF</button>
         </div>
-
-        <!-- Table -->
         <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Karyawan</th>
-                        <th>Email</th>
-                        <th>Lantai</th>
-                        <th>Tugas</th>
-                        <th>Progress</th>
-                        <th>Foto</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 40px; color: var(--gray);">
-                            📭 Pilih filter untuk melihat data
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <table><thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead><tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat数据</td></tr></tbody>
         </div>
     </div>
 
     <!-- MODALS -->
-    <div id="task-popup" class="task-popup">
-        <div class="task-popup-content">
-            <div class="task-popup-header">
-                <h3 id="task-popup-title">📋 Detail Tugas</h3>
-                <button class="task-popup-close" onclick="document.getElementById('task-popup').classList.remove('active')">✕</button>
-            </div>
-            <div id="task-popup-body"></div>
-            <div class="task-popup-footer">
-                <div id="task-popup-progress" class="task-popup-progress"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="photo-slider-modal" class="photo-slider-modal">
-        <div class="slider-container">
-            <button class="slider-close" onclick="window.attendanceSystem.closePhotoSlider()">✕</button>
-            <button class="slider-btn prev" onclick="window.attendanceSystem.prevPhoto()">❮</button>
-            <div class="slider-main">
-                <img id="slider-image" class="slider-image" src="" alt="Photo">
-            </div>
-            <button class="slider-btn next" onclick="window.attendanceSystem.nextPhoto()">❯</button>
-            <div id="slider-counter" class="slider-counter"></div>
-            <div id="slider-info" class="slider-info"></div>
-        </div>
-    </div>
-
-    <div id="photo-modal" class="modal">
-        <div class="modal-content">
-            <img id="modal-photo-img" class="modal-photo" src="" alt="Full Photo">
-            <button class="modal-close" onclick="document.getElementById('photo-modal').classList.remove('active')">
-                Tutup
-            </button>
-        </div>
-    </div>
+    <div id="task-popup" class="task-popup"><div class="task-popup-content"><div class="task-popup-header"><h3 id="task-popup-title">📋 Detail Tugas</h3><button onclick="closeTaskPopup()">✕</button></div><div id="task-popup-body"></div><div id="task-popup-progress" style="margin-top:16px;font-weight:600;"></div></div></div>
+    <div id="photo-modal" class="modal-overlay"><div class="modal-content"><img id="modal-photo-img" src=""><button class="modal-close" onclick="document.getElementById('photo-modal').style.display='none'">Tutup</button></div></div>
 
     <script>
         // Firebase Config
@@ -1454,12 +296,74 @@
             appId: "1:63730633504:web:d1b07245bcd43a0df92545"
         };
 
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // Main Class
+        // MASTER TASKS
+        const MASTER_TASKS = {
+            PURI: {
+                'Lantai 1': [
+                    { id: 'puri_l1_1', name: 'Menyapu area Lantai 1' },
+                    { id: 'puri_l1_2', name: 'Mengepel area Lantai 1' },
+                    { id: 'puri_l1_3', name: 'Membersihkan Ruang Meeting Lantai 1' },
+                    { id: 'puri_l1_4', name: 'Membersihkan Kaca' },
+                    { id: 'puri_l1_5', name: 'Membersihkan Pintu Depan' },
+                    { id: 'puri_l1_6', name: 'Membersihkan Lemari APD' },
+                    { id: 'puri_l1_7', name: 'Membersihkan Langit-Langit' },
+                    { id: 'puri_l1_8', name: 'Membersihkan toilet' },
+                    { id: 'puri_l1_9', name: 'Membersihkan Area Pantry' }
+                ],
+                'Lantai 2': [
+                    { id: 'puri_l2_1', name: 'Menyapu dan Mengepel Lantai 2' },
+                    { id: 'puri_l2_2', name: 'Membersihkan Ruangan Direksi' },
+                    { id: 'puri_l2_3', name: 'Membersihkan Ruangan Komisaris' },
+                    { id: 'puri_l2_4', name: 'Membersihkan Langit-Langit' },
+                    { id: 'puri_l2_5', name: 'Membersihkan toilet' },
+                    { id: 'puri_l2_6', name: 'Membersihkan Ruang Accounting' }
+                ],
+                'Lantai 3': [
+                    { id: 'puri_l3_1', name: 'Menyapu dan Mengepel Area Lantai 3' },
+                    { id: 'puri_l3_2', name: 'Membersihkan Meja' },
+                    { id: 'puri_l3_3', name: 'Mengelap Kaca' },
+                    { id: 'puri_l3_4', name: 'Membersihkan Langit-Langit' },
+                    { id: 'puri_l3_5', name: 'Membersihkan toilet' }
+                ],
+                'Lantai 4': [
+                    { id: 'puri_l4_1', name: 'Menyapu dan Mengepel Area Lantai 4' },
+                    { id: 'puri_l4_2', name: 'Membersihkan Meja' },
+                    { id: 'puri_l4_3', name: 'Mengelap Kaca' },
+                    { id: 'puri_l4_4', name: 'Membersihkan Ruang Meeting' },
+                    { id: 'puri_l4_5', name: 'Membersihkan Mushollah' },
+                    { id: 'puri_l4_6', name: 'Membersihkan Ruang Arsip' },
+                    { id: 'puri_l4_7', name: 'Membersihkan Area Pantry' },
+                    { id: 'puri_l4_8', name: 'Membersihkan Area Outdoor Ruang AC' }
+                ]
+            },
+            ARTERI: {
+                'Lantai 1': [
+                    { id: 'art_l1_1', name: 'Menyapu area lantai 1' },
+                    { id: 'art_l1_2', name: 'Mengepel area lantai 1' }
+                ],
+                'Lantai 2': [
+                    { id: 'art_l2_1', name: 'Menyapu area kerja' },
+                    { id: 'art_l2_2', name: 'Mengepel area kerja' },
+                    { id: 'art_l2_3', name: 'Menyapu ruangan GM Tehnik' },
+                    { id: 'art_l2_4', name: 'Mengepel ruangan GM Tehnik' },
+                    { id: 'art_l2_5', name: 'Membersihkan Toilet' }
+                ],
+                'Lantai 3': [
+                    { id: 'art_l3_1', name: 'Menyapu area ruang kerja' },
+                    { id: 'art_l3_2', name: 'Mengepel area kerja' },
+                    { id: 'art_l3_3', name: 'Membersihkan mushollah' },
+                    { id: 'art_l3_4', name: 'Membersihkan Toilet' }
+                ]
+            }
+        };
+
+        function closeTaskPopup() { document.getElementById('task-popup').style.display = 'none'; }
+        window.closeTaskPopup = closeTaskPopup;
+
         class OBTaskSystem {
             constructor() {
                 this.currentUser = null;
@@ -1469,200 +373,85 @@
                 this.cameraStream = null;
                 this.isCameraReady = false;
                 this.clockInterval = null;
-                this.completedFloorsToday = new Set();
+                this.completedKeysToday = new Set();
                 this.currentFacingMode = 'environment';
-                this.currentPhotoList = [];
-                this.currentPhotoIndex = 0;
                 
-                // Task definitions
-                this.tasksByFloor = {
-                    'Lantai 1': [
-                        { id: 'l1_task1', name: 'Menyapu  dan Mengepel Area Lantai 1' },
-                        { id: 'l1_task2', name: 'Membersihkan Ruang Meeting Lantai 1' },
-                        { id: 'l1_task3', name: 'Membersihkan Kaca' },
-                        { id: 'l1_task4', name: 'Membersihkan Pintu Depan' },
-                        { id: 'l1_task5', name: 'Membersihkan Lemari APD' },
-                        { id: 'l1_task6', name: 'Membersihkan Langit-Langit' },
-                        { id: 'l1_task7', name: 'Membersihkan toilet' },
-                        { id: 'l1_task8', name: 'Membersihkan Area Pantry' }
-                    ],
-                    'Lantai 2': [
-                        { id: 'l2_task1', name: 'Menyapu dan Mengepel Lantai 2' },
-                        { id: 'l2_task2', name: 'Membersihkan Ruangan Direksi' },
-                        { id: 'l2_task3', name: 'Membersihkan Ruangan Komisaris' },
-                        { id: 'l2_task4', name: 'Membersihkan Langit-Langit' },
-                        { id: 'l2_task5', name: 'Membersihkan toilet' },
-                        { id: 'l2_task6', name: 'Membersihkan Ruang Accounting' }
-                    ],
-                    'Lantai 3': [
-                        { id: 'l3_task1', name: 'Menyapu dan Mengepel Area Lantai 3' },
-                        { id: 'l3_task2', name: 'Membersihkan Meja' },
-                        { id: 'l3_task3', name: 'Mengelap Kaca' },
-                        { id: 'l3_task4', name: 'Membersihkan Langit-Langit' },
-                        { id: 'l3_task5', name: 'Membersihkan toilet' }
-                    ],
-                    'Lantai 4': [
-                        { id: 'l4_task1', name: 'Menyapu dan Mengepel Area Lantai 4' },
-                        { id: 'l4_task2', name: 'Membersihkan Meja' },
-                        { id: 'l4_task3', name: 'Mengelap Kaca' },
-                        { id: 'l4_task4', name: 'Membersihkan Ruang Meeting' },
-                        { id: 'l4_task5', name: 'Membersihkan Mushollah' },
-                        { id: 'l4_task6', name: 'Membersihkan Ruang Arsip' },
-                        { id: 'l4_task7', name: 'Membersihkan Area Pantry' },
-                        { id: 'l4_task8', name: 'Membersihkan Area Outdoor Ruang AC' }
-                    ]
-                };
-                
-                // Current session
                 this.currentSession = {
-                    floor: null,
-                    tasks: [],
-                    completedTasks: [],
-                    taskDetails: {},
-                    taskPhotos: {},
-                    startTime: null,
-                    status: 'idle',
-                    sessionId: null
+                    branch: null, floor: null, tasks: [], completedTasks: [],
+                    taskDetails: {}, taskPhotos: {}, startTime: null, status: 'idle', sessionId: null
                 };
                 
                 document.addEventListener('DOMContentLoaded', () => this.initialize());
             }
 
             async initialize() {
-                console.log('🚀 Initializing...');
                 setTimeout(() => this.hideLoading(), 1000);
-                
                 auth.onAuthStateChanged((user) => {
-                    if (user) {
-                        this.handleAuthStateChange(user);
-                    } else {
-                        this.showLoginPage();
-                    }
+                    if (user) this.handleAuthStateChange(user);
+                    else this.showLoginPage();
                 });
-
                 this.setupEventListeners();
                 this.setDefaultFilterDates();
-                this.setupScrollEffect();
-            }
-
-            // Setup scroll effect untuk sticky camera
-            setupScrollEffect() {
-                window.addEventListener('scroll', () => {
-                    const cameraCard = document.getElementById('camera-card');
-                    if (!cameraCard) return;
-                    
-                    if (window.scrollY > 10) {
-                        cameraCard.classList.add('sticky-active');
-                    } else {
-                        cameraCard.classList.remove('sticky-active');
-                    }
-                });
             }
 
             async handleAuthStateChange(user) {
-                try {
-                    this.showLoading();
-                    
-                    const role = (user.email === 'admin@genetek.co.id') ? 'admin' : 'karyawan';
-                    
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    
-                    if (userDoc.exists) {
-                        this.currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            ...userDoc.data()
-                        };
-                    } else {
-                        const name = user.email.split('@')[0];
-                        const displayName = name.charAt(0).toUpperCase() + name.slice(1);
-                        
-                        this.currentUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            name: displayName,
-                            role: role,
-                            createdAt: new Date().toISOString(),
-                            lastActive: new Date().toISOString(),
-                            isActive: true
-                        };
-                        
-                        await db.collection('users').doc(user.uid).set(this.currentUser);
-                    }
-                    
-                    this.userRole = this.currentUser.role;
-                    
-                    if (this.userRole === 'admin') {
-                        this.showAdminPanel();
-                        await this.loadAdminData();
-                        this.showNotification('👑 Selamat datang Admin!', 'success');
-                    } else {
-                        this.showEmployeePanel();
-                        this.startEmployeeFeatures();
-                        this.showNotification(`👤 Selamat datang, ${this.currentUser.name || this.currentUser.email}!`, 'success');
-                    }
-                    
-                    this.updateUserDisplay();
-                    this.hideLoading();
-                    
-                } catch (error) {
-                    console.error('Auth error:', error);
-                    this.showNotification('Gagal memuat data: ' + error.message, 'error');
-                    this.hideLoading();
+                this.showLoading();
+                const role = (user.email === 'admin@genetek.co.id') ? 'admin' : 'karyawan';
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (!userDoc.exists) {
+                    const name = user.email.split('@')[0];
+                    await db.collection('users').doc(user.uid).set({
+                        uid: user.uid, email: user.email, name: name,
+                        role: role, createdAt: new Date().toISOString(), isActive: true
+                    });
                 }
+                
+                this.currentUser = (await db.collection('users').doc(user.uid).get()).data();
+                this.userRole = this.currentUser.role;
+                
+                if (this.userRole === 'admin') {
+                    this.showAdminPanel();
+                    await this.loadAdminData();
+                    this.showNotification('👑 Selamat datang Admin!', 'success');
+                } else {
+                    this.showEmployeePanel();
+                    this.startEmployeeFeatures();
+                    this.showNotification(`👤 Selamat datang, ${this.currentUser.name || this.currentUser.email.split('@')[0]}!`, 'success');
+                }
+                this.updateUserDisplay();
+                this.hideLoading();
             }
 
             async login(email, password) {
                 try {
                     this.showLoading();
-                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    await auth.signInWithEmailAndPassword(email, password);
                 } catch (error) {
                     if (error.code === 'auth/user-not-found') {
-                        try {
-                            this.showNotification('Membuat akun baru...', 'info');
-                            await auth.createUserWithEmailAndPassword(email, password);
-                        } catch (createError) {
-                            this.showNotification('Gagal membuat akun', 'error');
-                        }
-                    } else if (error.code === 'auth/wrong-password') {
-                        this.showNotification('Password salah!', 'error');
+                        await auth.createUserWithEmailAndPassword(email, password);
                     } else {
-                        this.showNotification('Login gagal', 'error');
+                        this.showNotification('Login gagal: ' + error.message, 'error');
+                        this.hideLoading();
                     }
-                    this.hideLoading();
                 }
             }
 
             logout() {
                 this.stopCamera();
                 if (this.clockInterval) clearInterval(this.clockInterval);
-                
                 auth.signOut().then(() => {
                     this.currentUser = null;
-                    this.userRole = null;
-                    this.currentSession = {
-                        floor: null, tasks: [], completedTasks: [], 
-                        taskDetails: {}, taskPhotos: {}, startTime: null, 
-                        status: 'idle', sessionId: null
-                    };
                     this.showLoginPage();
                     this.showNotification('Berhasil logout', 'success');
                 });
             }
 
-            // EMPLOYEE FEATURES
             startEmployeeFeatures() {
                 this.startRealTimeClock();
                 this.setupCamera();
-                this.setupFloorSelector();
-                this.loadTodaySession();
-                this.loadCompletedFloorsToday();
-                this.setupSaveButton();
-            }
-
-            setupSaveButton() {
-                const saveBtn = document.getElementById('employee-save');
-                if (saveBtn) saveBtn.addEventListener('click', () => this.saveProgress());
+                this.initBranchFloorSelector();
+                this.loadTodayCompletedKeys();
             }
 
             startRealTimeClock() {
@@ -1671,129 +460,116 @@
             }
 
             updateDateTime() {
+                const now = new Date();
                 const timeEl = document.getElementById('live-time');
                 const dateEl = document.getElementById('live-date');
-                if (!timeEl || !dateEl) return;
-                
-                const now = new Date();
-                timeEl.textContent = now.toLocaleTimeString('id-ID', {
-                    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-                });
-                dateEl.textContent = now.toLocaleDateString('id-ID', {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                });
+                if (timeEl) timeEl.textContent = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                if (dateEl) dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             }
 
-            setupFloorSelector() {
+            initBranchFloorSelector() {
+                const branchSelect = document.getElementById('branch-select');
                 const floorSelect = document.getElementById('floor-select');
-                if (!floorSelect) return;
+                
+                branchSelect.addEventListener('change', (e) => {
+                    const branch = e.target.value;
+                    this.currentSession.branch = branch;
+                    this.currentSession.floor = null;
+                    this.currentSession.status = 'idle';
+                    this.currentSession.completedTasks = [];
+                    this.currentSession.taskPhotos = {};
+                    this.currentSession.taskDetails = {};
+                    
+                    floorSelect.innerHTML = '<option value="">Pilih Lantai</option>';
+                    floorSelect.disabled = !branch;
+                    
+                    if (branch && MASTER_TASKS[branch]) {
+                        Object.keys(MASTER_TASKS[branch]).forEach(floor => {
+                            floorSelect.innerHTML += `<option value="${floor}">${floor}</option>`;
+                        });
+                    }
+                    
+                    document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih lantai</p>';
+                    document.getElementById('employee-start').disabled = true;
+                    document.getElementById('employee-save').style.display = 'none';
+                    document.getElementById('current-task-info').style.display = 'none';
+                    document.getElementById('floor-locked-message').classList.add('hidden');
+                });
                 
                 floorSelect.addEventListener('change', (e) => {
                     const floor = e.target.value;
-                    if (floor) {
-                        this.checkFloorAvailability(floor);
+                    if (floor && this.currentSession.branch) {
                         this.currentSession.floor = floor;
-                    } else {
-                        document.getElementById('task-checklist-container').innerHTML = 
-                            '<p style="color: var(--gray); text-align: center;">Pilih lantai</p>';
+                        this.checkFloorAvailability(this.currentSession.branch, floor);
                     }
                 });
             }
 
-            async loadCompletedFloorsToday() {
+            async loadTodayCompletedKeys() {
                 if (!this.currentUser) return;
-                
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(today);
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(todayStart);
                 tomorrow.setDate(tomorrow.getDate() + 1);
                 
                 try {
                     const snapshot = await db.collection('ob_tasks')
-                        .where('createdAt', '>=', today.toISOString())
+                        .where('createdAt', '>=', todayStart.toISOString())
                         .where('createdAt', '<', tomorrow.toISOString())
-                        .where('status', 'in', ['completed', 'partial'])
                         .get();
                     
-                    this.completedFloorsToday.clear();
+                    this.completedKeysToday.clear();
                     snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (data.floor) this.completedFloorsToday.add(data.floor);
+                        const d = doc.data();
+                        if (d.branch && d.floor) this.completedKeysToday.add(`${d.branch}|${d.floor}`);
                     });
-                    
-                    const currentFloor = document.getElementById('floor-select')?.value;
-                    if (currentFloor) this.checkFloorAvailability(currentFloor);
-                    
                 } catch (error) {
-                    console.error('Error loading completed floors:', error);
+                    console.error('Error loading completed keys:', error);
                 }
             }
 
-            checkFloorAvailability(floor) {
-                const floorSelect = document.getElementById('floor-select');
-                const lockedMessage = document.getElementById('floor-locked-message');
+            checkFloorAvailability(branch, floor) {
+                const key = `${branch}|${floor}`;
+                const isLocked = this.completedKeysToday.has(key);
+                const lockedMsg = document.getElementById('floor-locked-message');
                 const startBtn = document.getElementById('employee-start');
-                const saveBtn = document.getElementById('employee-save');
-                
-                if (!floorSelect || !lockedMessage || !startBtn) return;
-                
-                const isLocked = this.completedFloorsToday.has(floor);
                 
                 if (isLocked) {
-                    floorSelect.disabled = true;
-                    lockedMessage.classList.remove('hidden');
+                    lockedMsg.classList.remove('hidden');
                     startBtn.disabled = true;
-                    if (saveBtn) saveBtn.style.display = 'none';
-                    
                     const container = document.getElementById('task-checklist-container');
-                    if (container) {
-                        const tasks = this.tasksByFloor[floor] || [];
-                        let html = '<h4>🔒 Tugas Terkunci:</h4>';
-                        tasks.forEach(task => {
-                            html += `<div class="task-item locked"><div class="task-header"><span class="task-name">🔒 ${task.name}</span></div></div>`;
-                        });
-                        html += '<p style="color: #856404; background: #fff3cd; padding: 12px; border-radius: 12px;">⚠️ Sudah dikerjakan hari ini</p>';
-                        container.innerHTML = html;
-                    }
-                    this.showNotification('Lantai sudah dikerjakan', 'warning');
+                    const tasks = MASTER_TASKS[branch]?.[floor] || [];
+                    container.innerHTML = `<h4>🔒 Tugas Terkunci:</h4>${tasks.map(t => `<div class="task-item locked"><div class="task-header"><span class="task-name">🔒 ${t.name}</span></div></div>`).join('')}<p style="color:#856404;background:#fff3cd;padding:12px;border-radius:12px;margin-top:12px;">⚠️ Lantai ini sudah dikerjakan hari ini</p>`;
+                    // NOTIFICATION DIHAPUS - TIDAK ADA LAGI NOTIF POPUP
                 } else {
-                    floorSelect.disabled = false;
-                    lockedMessage.classList.add('hidden');
-                    this.loadTasksForFloor(floor);
-                    
-                    if (this.currentSession.status === 'idle') {
-                        startBtn.disabled = false;
-                        if (saveBtn) saveBtn.style.display = 'none';
-                    }
+                    lockedMsg.classList.add('hidden');
+                    startBtn.disabled = false;
+                    this.loadTasksForFloor(branch, floor);
                 }
+                this.updateStartButton();
             }
 
-            loadTasksForFloor(floor) {
-                const container = document.getElementById('task-checklist-container');
-                if (!container) return;
-                
-                const tasks = this.tasksByFloor[floor] || [];
-                let html = '<h4 style="margin-bottom: 16px;">📋 Daftar Tugas:</h4>';
+            loadTasksForFloor(branch, floor) {
+                const tasks = MASTER_TASKS[branch]?.[floor] || [];
+                this.currentSession.tasks = tasks;
+                let html = '<h4 style="margin-bottom:16px;">📋 Daftar Tugas:</h4>';
                 
                 tasks.forEach(task => {
                     const isCompleted = this.currentSession.completedTasks.includes(task.id);
                     const hasPhoto = this.currentSession.taskPhotos[task.id];
-                    
-                    html += `
-                        <div class="task-item ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
-                            <div class="task-header">
-                                <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''} ${!this.isCameraReady ? 'disabled' : ''}>
-                                <span class="task-name">${task.name}</span>
-                                <button class="task-camera-btn ${hasPhoto ? 'completed' : ''}" data-task-id="${task.id}" ${!this.isCameraReady ? 'disabled' : ''}>📸</button>
-                            </div>
-                            <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
-                                <img src="${hasPhoto || ''}" alt="Foto">
-                            </div>
+                    html += `<div class="task-item ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
+                        <div class="task-header">
+                            <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''} ${!this.isCameraReady ? 'disabled' : ''}>
+                            <span class="task-name">${task.name}</span>
+                            <button class="task-camera-btn ${hasPhoto ? 'completed' : ''}" data-task-id="${task.id}" ${!this.isCameraReady ? 'disabled' : ''}>📸</button>
                         </div>
-                    `;
+                        <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
+                            <img src="${hasPhoto || ''}" alt="Foto">
+                        </div>
+                    </div>`;
                 });
                 
-                container.innerHTML = html;
+                document.getElementById('task-checklist-container').innerHTML = html;
                 
                 tasks.forEach(task => {
                     const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${task.id}"]`);
@@ -1803,90 +579,34 @@
                             this.capturePhotoForTask(task.id, task.name);
                         });
                     }
-                    
                     const checkbox = document.querySelector(`.task-checkbox[data-task-id="${task.id}"]`);
                     if (checkbox) {
-                        checkbox.addEventListener('change', (e) => {
-                            this.toggleTaskCompletion(task.id, e.target.checked);
-                        });
+                        checkbox.addEventListener('change', (e) => this.toggleTaskCompletion(task.id, e.target.checked));
                     }
                 });
                 
-                this.updateStartButton();
                 this.updateProgress();
             }
 
             async setupCamera() {
                 try {
                     if (this.cameraStream) this.stopCamera();
-                    
-                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                    const defaultFacingMode = isMobile ? 'environment' : 'user';
-                    this.currentFacingMode = this.currentFacingMode || defaultFacingMode;
-                    
-                    const constraints = {
-                        video: {
-                            width: isMobile ? { ideal: 720 } : { ideal: 1024 },
-                            height: isMobile ? { ideal: 1280 } : { ideal: 768 },
-                            facingMode: this.currentFacingMode,
-                            frameRate: { ideal: 24 }
-                        },
-                        audio: false
-                    };
-                    
+                    const constraints = { video: { facingMode: this.currentFacingMode } };
                     this.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-                    
                     const video = document.getElementById('video-feed');
-                    if (video) {
-                        video.srcObject = this.cameraStream;
-                        
-                        if (isMobile) {
-                            video.style.transform = 'none';
-                        }
-                        
-                        video.onloadedmetadata = () => {
-                            video.play().then(() => {
-                                this.isCameraReady = true;
-                            }).catch(() => {
-                                video.play();
-                                this.isCameraReady = true;
-                            });
-                        };
-                        
-                        setTimeout(() => {
-                            if (!this.isCameraReady && video.readyState >= 2) {
-                                video.play();
-                                this.isCameraReady = true;
-                            }
-                        }, 1000);
-                    }
-                    
+                    video.srcObject = this.cameraStream;
+                    video.onloadedmetadata = () => { video.play(); this.isCameraReady = true; };
                 } catch (error) {
                     console.error('Camera error:', error);
-                    
-                    if (error.name === 'OverconstrainedError' && this.currentFacingMode === 'environment') {
-                        this.currentFacingMode = 'user';
-                        await this.setupCamera();
-                    } else {
-                        this.showNotification('❌ Tidak dapat mengakses kamera', 'error');
-                        
-                        const wrapper = document.querySelector('.camera-wrapper');
-                        if (wrapper) {
-                            wrapper.innerHTML = `
-                                <div style="background: #0f172a; color: white; padding: 40px 20px; text-align: center;">
-                                    <span style="font-size: 3rem;">📷</span>
-                                    <p style="margin-top: 12px;">Kamera tidak tersedia</p>
-                                </div>
-                            `;
-                        }
-                    }
+                    this.showNotification('❌ Tidak dapat mengakses kamera', 'error');
+                    this.isCameraReady = false;
                 }
             }
 
             async switchCamera() {
                 this.currentFacingMode = this.currentFacingMode === 'user' ? 'environment' : 'user';
-                this.showNotification('🔄 Ganti kamera...', 'info');
                 await this.setupCamera();
+                this.showNotification('🔄 Kamera diganti', 'info');
             }
 
             async capturePhotoForTask(taskId, taskName) {
@@ -1894,83 +614,43 @@
                     this.showNotification('Kamera belum siap', 'error');
                     return;
                 }
-
+                
                 const video = document.getElementById('video-feed');
                 if (!video || video.readyState !== 4) {
                     this.showNotification('Video belum siap', 'warning');
                     return;
                 }
-
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    
-                    const context = canvas.getContext('2d');
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    
-                    const rawPhoto = canvas.toDataURL('image/jpeg', 0.8);
-                    const compressedPhoto = await this.compressImage(rawPhoto, 640);
-                    
-                    this.currentSession.taskPhotos[taskId] = compressedPhoto;
-                    
-                    const now = new Date();
-                    this.currentSession.taskDetails[taskId] = {
-                        timestamp: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                        fullTimestamp: now.toISOString()
-                    };
-                    
-                    const preview = document.getElementById(`photo-preview-${taskId}`);
-                    const previewImg = preview?.querySelector('img');
-                    if (preview && previewImg) {
-                        previewImg.src = compressedPhoto;
-                        preview.classList.add('active');
-                    }
-                    
-                    const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
-                    if (cameraBtn) cameraBtn.classList.add('completed');
-                    
-                    const taskInfo = document.getElementById('current-task-info');
-                    const taskNameEl = document.getElementById('current-task-name');
-                    if (taskInfo && taskNameEl) {
-                        taskInfo.style.display = 'block';
-                        taskNameEl.textContent = taskName;
-                    }
-                    
-                    const saveBtn = document.getElementById('employee-save');
-                    if (saveBtn && (this.currentSession.status === 'active' || this.currentSession.status === 'partial')) {
-                        saveBtn.disabled = false;
-                    }
-                    
-                    this.showNotification(`📸 Foto "${taskName}" berhasil!`, 'success');
-                    
-                } catch (error) {
-                    console.error('Capture error:', error);
-                    this.showNotification('Gagal mengambil foto', 'error');
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                const photo = canvas.toDataURL('image/jpeg', 0.7);
+                
+                this.currentSession.taskPhotos[taskId] = photo;
+                this.currentSession.taskDetails[taskId] = {
+                    timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    fullTimestamp: new Date().toISOString()
+                };
+                
+                const previewDiv = document.getElementById(`photo-preview-${taskId}`);
+                if (previewDiv) {
+                    previewDiv.classList.add('active');
+                    const img = previewDiv.querySelector('img');
+                    if (img) img.src = photo;
                 }
-            }
-
-            compressImage(dataUrl, maxWidth = 640) {
-                return new Promise((resolve) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        if (width > maxWidth) {
-                            height = Math.round((height * maxWidth) / width);
-                            width = maxWidth;
-                        }
-                        
-                        const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', 0.7));
-                    };
-                    img.src = dataUrl;
-                });
+                
+                const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
+                if (cameraBtn) cameraBtn.classList.add('completed');
+                
+                document.getElementById('current-task-info').style.display = 'block';
+                document.getElementById('current-task-name').innerText = taskName;
+                
+                if (this.currentSession.status !== 'idle') {
+                    document.getElementById('employee-save').disabled = false;
+                }
+                
+                this.showNotification(`📸 Foto "${taskName}" berhasil!`, 'success');
             }
 
             toggleTaskCompletion(taskId, completed) {
@@ -1985,15 +665,12 @@
                         this.currentSession.completedTasks.push(taskId);
                     }
                 } else {
-                    const index = this.currentSession.completedTasks.indexOf(taskId);
-                    if (index > -1) this.currentSession.completedTasks.splice(index, 1);
+                    const idx = this.currentSession.completedTasks.indexOf(taskId);
+                    if (idx > -1) this.currentSession.completedTasks.splice(idx, 1);
                 }
                 
-                const taskItem = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
-                if (taskItem) {
-                    if (completed) taskItem.classList.add('completed');
-                    else taskItem.classList.remove('completed');
-                }
+                const taskDiv = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
+                if (taskDiv) taskDiv.classList.toggle('completed', completed);
                 
                 if (this.currentSession.completedTasks.length > 0 && this.currentSession.status === 'active') {
                     this.currentSession.status = 'partial';
@@ -2007,10 +684,8 @@
             }
 
             updateProgress() {
-                const tasks = this.tasksByFloor[this.currentSession.floor] || [];
+                const total = this.currentSession.tasks.length;
                 const completed = this.currentSession.completedTasks.length;
-                const total = tasks.length;
-                
                 const progressEl = document.getElementById('task-progress');
                 if (progressEl) progressEl.textContent = `${completed}/${total}`;
                 
@@ -2022,88 +697,72 @@
                     else statusText.textContent = 'Belum mulai';
                 }
                 
-                const statusContainer = document.getElementById('employee-status');
-                if (statusContainer) {
-                    if (this.currentSession.status === 'active' || this.currentSession.status === 'partial') {
-                        statusContainer.classList.add('active');
-                    } else {
-                        statusContainer.classList.remove('active');
-                    }
+                const statusDiv = document.getElementById('employee-status');
+                if (statusDiv && (this.currentSession.status === 'active' || this.currentSession.status === 'partial')) {
+                    statusDiv.classList.add('active');
+                } else if (statusDiv) {
+                    statusDiv.classList.remove('active');
                 }
             }
 
             updateStartButton() {
                 const startBtn = document.getElementById('employee-start');
                 const saveBtn = document.getElementById('employee-save');
-                if (!startBtn) return;
                 
-                const floor = document.getElementById('floor-select')?.value;
-                const tasks = this.tasksByFloor[floor] || [];
-                const completed = this.currentSession.completedTasks.length;
-                const total = tasks.length;
+                if (!this.currentSession.branch || !this.currentSession.floor) {
+                    if (startBtn) startBtn.disabled = true;
+                    return;
+                }
                 
-                if (floor && this.completedFloorsToday.has(floor)) {
+                const key = `${this.currentSession.branch}|${this.currentSession.floor}`;
+                if (this.completedKeysToday.has(key)) {
                     startBtn.disabled = true;
                     startBtn.textContent = '🔒 Terkunci';
-                    if (saveBtn) saveBtn.style.display = 'none';
-                    return;
-                }
-                
-                if (this.currentSession.status === 'idle' && floor) {
-                    startBtn.disabled = false;
-                    startBtn.textContent = '🚀 Mulai';
-                    if (saveBtn) saveBtn.style.display = 'none';
-                } else if (this.currentSession.status === 'active' || this.currentSession.status === 'partial') {
-                    startBtn.disabled = true;
-                    startBtn.textContent = '⏳ Berjalan';
-                    if (saveBtn) {
-                        saveBtn.style.display = 'block';
-                        saveBtn.textContent = completed === total ? '✅ Selesai' : '💾 Simpan';
-                        saveBtn.disabled = completed === 0;
-                    }
-                }
-            }
-
-            async startTaskSession() {
-                const floor = document.getElementById('floor-select')?.value;
-                
-                if (!floor) {
-                    this.showNotification('Pilih lantai!', 'warning');
-                    return;
-                }
-                
-                if (this.completedFloorsToday.has(floor)) {
-                    this.showNotification('Lantai sudah dikerjakan!', 'error');
+                    saveBtn.style.display = 'none';
                     return;
                 }
                 
                 if (this.currentSession.status === 'idle') {
-                    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                    
+                    startBtn.disabled = false;
+                    startBtn.textContent = '🚀 Mulai';
+                    saveBtn.style.display = 'none';
+                } else {
+                    startBtn.disabled = true;
+                    startBtn.textContent = '⏳ Berjalan';
+                    saveBtn.style.display = 'block';
+                    saveBtn.textContent = this.currentSession.completedTasks.length === this.currentSession.tasks.length ? '✅ Selesai' : '💾 Simpan';
+                    saveBtn.disabled = this.currentSession.completedTasks.length === 0;
+                }
+            }
+
+            async startTaskSession() {
+                if (!this.currentSession.branch || !this.currentSession.floor) {
+                    this.showNotification('Pilih kantor dan lantai!', 'warning');
+                    return;
+                }
+                
+                const key = `${this.currentSession.branch}|${this.currentSession.floor}`;
+                if (this.completedKeysToday.has(key)) {
+                    this.showNotification('Lantai sudah dikerjakan hari ini!', 'error');
+                    return;
+                }
+                
+                if (this.currentSession.status === 'idle') {
                     this.currentSession = {
-                        floor: floor,
-                        tasks: this.tasksByFloor[floor] || [],
+                        ...this.currentSession,
                         completedTasks: [],
                         taskDetails: {},
                         taskPhotos: {},
                         startTime: new Date().toISOString(),
                         status: 'active',
-                        sessionId: sessionId
+                        sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
                     };
                     
-                    this.loadTasksForFloor(floor);
-                    
-                    const saveBtn = document.getElementById('employee-save');
-                    if (saveBtn) {
-                        saveBtn.style.display = 'block';
-                        saveBtn.disabled = true;
-                    }
-                    
-                    this.showNotification('✅ Tugas dimulai!', 'success');
+                    this.loadTasksForFloor(this.currentSession.branch, this.currentSession.floor);
+                    this.updateProgress();
+                    this.updateStartButton();
+                    this.showNotification('✅ Tugas dimulai! Silakan kerjakan tugas dan foto setiap tugas', 'success');
                 }
-                
-                this.updateProgress();
-                this.updateStartButton();
             }
 
             async saveProgress() {
@@ -2111,13 +770,13 @@
                 const completed = this.currentSession.completedTasks.length;
                 
                 if (completed === 0) {
-                    this.showNotification('Belum ada tugas selesai', 'warning');
+                    this.showNotification('Belum ada tugas yang selesai', 'warning');
                     return;
                 }
                 
                 for (const taskId of this.currentSession.completedTasks) {
                     if (!this.currentSession.taskPhotos[taskId]) {
-                        this.showNotification(`Foto tugas belum lengkap`, 'error');
+                        this.showNotification('Foto untuk tugas yang dicentang belum lengkap', 'error');
                         return;
                     }
                 }
@@ -2131,6 +790,7 @@
                         userId: this.currentUser.uid,
                         userName: this.currentUser.name || this.currentUser.email.split('@')[0],
                         userEmail: this.currentUser.email,
+                        branch: this.currentSession.branch,
                         floor: this.currentSession.floor,
                         tasks: this.currentSession.tasks,
                         completedTasks: this.currentSession.completedTasks,
@@ -2152,85 +812,40 @@
                     
                     if (isComplete) {
                         this.currentSession.status = 'completed';
-                        this.completedFloorsToday.add(this.currentSession.floor);
-                        this.showNotification('✅ Tugas selesai!', 'success');
+                        this.completedKeysToday.add(`${this.currentSession.branch}|${this.currentSession.floor}`);
+                        this.showNotification('✅ Selamat! Semua tugas selesai. Terima kasih!', 'success');
                         
                         setTimeout(() => {
                             this.currentSession = {
-                                floor: null, tasks: [], completedTasks: [], 
-                                taskDetails: {}, taskPhotos: {}, startTime: null, 
-                                status: 'idle', sessionId: null
+                                branch: null, floor: null, tasks: [], completedTasks: [],
+                                taskDetails: {}, taskPhotos: {}, startTime: null, status: 'idle', sessionId: null
                             };
-                            
-                            const floorSelect = document.getElementById('floor-select');
-                            if (floorSelect) floorSelect.value = '';
-                            
-                            document.getElementById('task-checklist-container').innerHTML = 
-                                '<p style="color: var(--gray); text-align: center;">Pilih lantai</p>';
-                            
+                            document.getElementById('branch-select').value = '';
+                            document.getElementById('floor-select').innerHTML = '<option value="">Pilih kantor dulu</option>';
+                            document.getElementById('floor-select').disabled = true;
+                            document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p>';
                             document.getElementById('current-task-info').style.display = 'none';
-                            
-                            const saveBtn = document.getElementById('employee-save');
-                            if (saveBtn) saveBtn.style.display = 'none';
-                            
+                            document.getElementById('employee-save').style.display = 'none';
+                            document.getElementById('floor-locked-message').classList.add('hidden');
                             this.updateProgress();
                             this.updateStartButton();
-                            this.loadCompletedFloorsToday();
+                            this.loadTodayCompletedKeys();
                         }, 2000);
                     } else {
-                        this.showNotification(`📊 Progress tersimpan (${completed}/${total})`, 'success');
+                        this.showNotification(`📊 Progress tersimpan (${completed}/${total} tugas selesai)`, 'success');
                         this.currentSession.status = 'partial';
                         this.updateProgress();
                         this.updateStartButton();
-                        this.loadCompletedFloorsToday();
-                    }
-                    
-                } catch (error) {
-                    console.error('Save error:', error);
-                    this.showNotification('❌ Gagal menyimpan', 'error');
-                } finally {
-                    this.hideLoading();
-                }
-            }
-
-            async loadTodaySession() {
-                if (!this.currentUser) return;
-                
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                try {
-                    const snapshot = await db.collection('ob_tasks')
-                        .where('userId', '==', this.currentUser.uid)
-                        .where('createdAt', '>=', today.toISOString())
-                        .where('createdAt', '<', tomorrow.toISOString())
-                        .orderBy('createdAt', 'desc')
-                        .limit(1)
-                        .get();
-                    
-                    if (!snapshot.empty) {
-                        const todaySession = snapshot.docs[0].data();
-                        
-                        if (todaySession.status === 'completed') {
-                            this.currentSession.status = 'completed';
-                            
-                            const statusText = document.querySelector('.status-text');
-                            if (statusText) statusText.textContent = '✅ Selesai hari ini';
-                            
-                            const startBtn = document.getElementById('employee-start');
-                            if (startBtn) {
-                                startBtn.disabled = true;
-                                startBtn.textContent = '✨ Selesai';
-                            }
-                            
-                            const saveBtn = document.getElementById('employee-save');
-                            if (saveBtn) saveBtn.style.display = 'none';
+                        await this.loadTodayCompletedKeys();
+                        if (this.currentSession.branch && this.currentSession.floor) {
+                            this.checkFloorAvailability(this.currentSession.branch, this.currentSession.floor);
                         }
                     }
                 } catch (error) {
-                    console.error('Error loading today session:', error);
+                    console.error('Save error:', error);
+                    this.showNotification('❌ Gagal menyimpan data', 'error');
+                } finally {
+                    this.hideLoading();
                 }
             }
 
@@ -2238,323 +853,55 @@
             async loadAdminData() {
                 try {
                     this.showLoading();
-                    
-                    const usersSnapshot = await db.collection('users').get();
+                    const usersSnap = await db.collection('users').get();
                     this.employeesData = [];
-                    
-                    usersSnapshot.forEach(doc => {
-                        const userData = doc.data();
-                        if (userData.role !== 'admin') {
-                            this.employeesData.push({ id: doc.id, ...userData });
+                    usersSnap.forEach(doc => {
+                        if (doc.data().role !== 'admin') {
+                            this.employeesData.push({ id: doc.id, ...doc.data() });
                         }
                     });
                     
                     const thirtyDaysAgo = new Date();
                     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                    
-                    const taskSnapshot = await db.collection('ob_tasks')
+                    const tasksSnap = await db.collection('ob_tasks')
                         .where('createdAt', '>=', thirtyDaysAgo.toISOString())
                         .orderBy('createdAt', 'desc')
                         .get();
                     
                     this.taskData = [];
-                    taskSnapshot.forEach(doc => {
-                        this.taskData.push({ id: doc.id, ...doc.data() });
-                    });
+                    tasksSnap.forEach(doc => this.taskData.push({ id: doc.id, ...doc.data() }));
                     
                     this.updateStatistics();
                     this.populateEmployeeFilter();
                     this.renderTaskTable();
-                    
                 } catch (error) {
-                    console.error('Error loading admin data:', error);
-                    this.showNotification('❌ Gagal memuat data', 'error');
+                    console.error(error);
+                    this.showNotification('❌ Gagal memuat data admin', 'error');
                 } finally {
                     this.hideLoading();
                 }
             }
 
             updateStatistics() {
-                const totalKaryawan = document.getElementById('total-karyawan');
-                const totalTugas = document.getElementById('total-tugas');
-                const hariIniTugas = document.getElementById('hari-ini-tugas');
-                const aktifHariIni = document.getElementById('aktif-hari-ini');
-                
-                if (totalKaryawan) totalKaryawan.textContent = this.employeesData.length;
-                if (totalTugas) totalTugas.textContent = this.taskData.length;
-                
+                document.getElementById('total-karyawan').innerText = this.employeesData.length;
+                document.getElementById('total-tugas').innerText = this.taskData.length;
                 const today = new Date().toDateString();
-                const todayTasks = this.taskData.filter(record => 
-                    new Date(record.createdAt).toDateString() === today
-                ).length;
-                
-                if (hariIniTugas) hariIniTugas.textContent = todayTasks;
-                
-                const activeOB = new Set(
-                    this.taskData
-                        .filter(record => new Date(record.createdAt).toDateString() === today)
-                        .map(record => record.userId)
-                );
-                
-                if (aktifHariIni) aktifHariIni.textContent = activeOB.size;
+                const todayTasks = this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).length;
+                document.getElementById('hari-ini-tugas').innerText = todayTasks;
+                const activeSet = new Set(this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).map(r => r.userId));
+                document.getElementById('aktif-hari-ini').innerText = activeSet.size;
             }
 
             populateEmployeeFilter() {
                 const select = document.getElementById('filter-employee');
-                if (!select) return;
-                
-                select.innerHTML = '<option value="all">📋 Semua</option>';
-                
-                this.employeesData.sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
-                
+                select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
                 this.employeesData.forEach(emp => {
                     select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`;
                 });
             }
 
-            async renderTaskTable() {
-                const tbody = document.getElementById('table-body');
-                if (!tbody) return;
-                
-                let filteredData = [...this.taskData];
-                
-                const startDate = document.getElementById('filter-start-date')?.value;
-                const endDate = document.getElementById('filter-end-date')?.value;
-                const employeeId = document.getElementById('filter-employee')?.value;
-                const floor = document.getElementById('filter-floor')?.value;
-                
-                if (startDate) {
-                    filteredData = filteredData.filter(record => 
-                        record.createdAt && record.createdAt.split('T')[0] >= startDate
-                    );
-                }
-                
-                if (endDate) {
-                    filteredData = filteredData.filter(record => 
-                        record.createdAt && record.createdAt.split('T')[0] <= endDate
-                    );
-                }
-                
-                if (employeeId && employeeId !== 'all') {
-                    filteredData = filteredData.filter(record => record.userId === employeeId);
-                }
-                
-                if (floor && floor !== 'all') {
-                    filteredData = filteredData.filter(record => record.floor === floor);
-                }
-                
-                if (filteredData.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px;">📭 Tidak ada data</td></tr>';
-                    return;
-                }
-                
-                let html = '';
-                filteredData.slice(0, 100).forEach(record => {
-                    const date = new Date(record.createdAt);
-                    const timeStr = date.toLocaleString('id-ID', {
-                        day: '2-digit', month: '2-digit', year: 'numeric',
-                        hour: '2-digit', minute: '2-digit'
-                    });
-                    
-                    const progress = record.progress || '0/0';
-                    const [completed, total] = progress.split('/').map(Number);
-                    const progressPercent = total > 0 ? (completed / total) * 100 : 0;
-                    
-                    const photoCount = record.taskPhotos ? Object.keys(record.taskPhotos).length : 0;
-                    const firstPhoto = record.taskPhotos ? Object.values(record.taskPhotos)[0] : null;
-                    
-                    html += `
-                        <tr>
-                            <td>${timeStr}</td>
-                            <td><strong>${record.userName || 'Unknown'}</strong></td>
-                            <td>${record.userEmail || '-'}</td>
-                            <td><span class="badge-floor">${record.floor || '-'}</span></td>
-                            <td>
-                                <span class="task-link" onclick='window.attendanceSystem.showTaskDetailPopup(${JSON.stringify(record).replace(/'/g, "\\'")})'>
-                                    📋 ${record.completedTasks?.length || 0}/${record.tasks?.length || 0}
-                                </span>
-                            </td>
-                            <td>
-                                <div>${progress}</div>
-                                <div class="progress-bar"><div class="progress-fill" style="width: ${progressPercent}%"></div></div>
-                            </td>
-                            <td>
-                                ${firstPhoto ? `
-                                    <div class="photo-gallery-single" onclick='window.attendanceSystem.showPhotoSlider(${JSON.stringify(record.taskPhotos).replace(/'/g, "\\'")})'>
-                                        <img src="${firstPhoto}" class="photo-thumb-single" alt="Photo">
-                                        ${photoCount > 1 ? `<span class="photo-badge">+${photoCount-1}</span>` : ''}
-                                    </div>
-                                ` : '<div class="no-photo">📷</div>'}
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                tbody.innerHTML = html;
-            }
-
-            showTaskDetailPopup(record) {
-                const popup = document.getElementById('task-popup');
-                const body = document.getElementById('task-popup-body');
-                const progressEl = document.getElementById('task-popup-progress');
-                
-                if (!popup || !body) return;
-                
-                document.getElementById('task-popup-title').textContent = `📋 Tugas - ${record.floor || 'Unknown'}`;
-                
-                let html = '';
-                const completedTasks = record.completedTasks || [];
-                const allTasks = record.tasks || [];
-                const taskDetails = record.taskDetails || {};
-                
-                allTasks.forEach(task => {
-                    const isCompleted = completedTasks.includes(task.id);
-                    const detail = taskDetails[task.id] || {};
-                    
-                    html += `
-                        <div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}">
-                            <div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>
-                            ${isCompleted && detail.timestamp ? `
-                                <div class="task-time">⏱️ ${detail.timestamp}</div>
-                            ` : ''}
-                        </div>
-                    `;
-                });
-                
-                body.innerHTML = html;
-                progressEl.textContent = `Progress: ${record.progress || '0/0'}`;
-                popup.classList.add('active');
-            }
-
-            showPhotoSlider(photos) {
-                if (!photos || Object.keys(photos).length === 0) {
-                    this.showNotification('Tidak ada foto', 'warning');
-                    return;
-                }
-                
-                this.currentPhotoList = Object.entries(photos).map(([taskId, photo]) => ({
-                    taskId, photo,
-                    taskName: this.getTaskNameById(taskId) || 'Tugas'
-                }));
-                
-                this.currentPhotoIndex = 0;
-                this.updateSlider();
-                document.getElementById('photo-slider-modal').classList.add('active');
-            }
-
-            getTaskNameById(taskId) {
-                for (const floor in this.tasksByFloor) {
-                    const task = this.tasksByFloor[floor].find(t => t.id === taskId);
-                    if (task) return task.name;
-                }
-                return null;
-            }
-
-            updateSlider() {
-                const img = document.getElementById('slider-image');
-                const counter = document.getElementById('slider-counter');
-                const info = document.getElementById('slider-info');
-                
-                if (this.currentPhotoList.length > 0) {
-                    const current = this.currentPhotoList[this.currentPhotoIndex];
-                    img.src = current.photo;
-                    counter.textContent = `${this.currentPhotoIndex + 1} / ${this.currentPhotoList.length}`;
-                    info.textContent = current.taskName;
-                }
-            }
-
-            nextPhoto() {
-                if (this.currentPhotoIndex < this.currentPhotoList.length - 1) {
-                    this.currentPhotoIndex++;
-                    this.updateSlider();
-                }
-            }
-
-            prevPhoto() {
-                if (this.currentPhotoIndex > 0) {
-                    this.currentPhotoIndex--;
-                    this.updateSlider();
-                }
-            }
-
-            closePhotoSlider() {
-                document.getElementById('photo-slider-modal').classList.remove('active');
-                this.currentPhotoList = [];
-            }
-
-            async exportToExcel() {
-                try {
-                    this.showNotification('📊 Menyiapkan Excel...', 'info');
-                    
-                    const filteredData = this.getFilteredData();
-                    
-                    const worksheetData = filteredData.map(record => ({
-                        'Tanggal': new Date(record.createdAt).toLocaleString('id-ID'),
-                        'Karyawan': record.userName || '',
-                        'Email': record.userEmail || '',
-                        'Lantai': record.floor || '',
-                        'Progress': record.progress || '0/0',
-                        'Status': record.status === 'completed' ? 'Selesai' : 'Progress'
-                    }));
-                    
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.json_to_sheet(worksheetData);
-                    XLSX.utils.book_append_sheet(wb, ws, 'Tugas');
-                    XLSX.writeFile(wb, `tugas_${new Date().toISOString().split('T')[0]}.xlsx`);
-                    
-                    this.showNotification('✅ Export berhasil!', 'success');
-                    
-                } catch (error) {
-                    console.error('Export error:', error);
-                    this.showNotification('❌ Gagal export', 'error');
-                }
-            }
-
-            async exportToPDF() {
-                try {
-                    this.showNotification('📄 Menyiapkan PDF...', 'info');
-                    
-                    const filteredData = this.getFilteredData();
-                    
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF('landscape');
-                    
-                    doc.setFontSize(16);
-                    doc.text('Laporan Tugas OB - Genetek', 14, 15);
-                    
-                    const startDate = document.getElementById('filter-start-date')?.value || '-';
-                    const endDate = document.getElementById('filter-end-date')?.value || '-';
-                    doc.setFontSize(10);
-                    doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, 22);
-                    
-                    const tableData = filteredData.slice(0, 50).map(record => [
-                        new Date(record.createdAt).toLocaleDateString('id-ID'),
-                        record.userName || '-',
-                        record.floor || '-',
-                        record.progress || '0/0',
-                        record.status === 'completed' ? 'Selesai' : 'Progress'
-                    ]);
-                    
-                    doc.autoTable({
-                        startY: 25,
-                        head: [['Tanggal', 'Karyawan', 'Lantai', 'Progress', 'Status']],
-                        body: tableData,
-                        theme: 'striped',
-                        headStyles: { fillColor: [67, 97, 238] }
-                    });
-                    
-                    doc.save(`tugas_${new Date().toISOString().split('T')[0]}.pdf`);
-                    this.showNotification('✅ Export PDF berhasil!', 'success');
-                    
-                } catch (error) {
-                    console.error('PDF error:', error);
-                    this.showNotification('❌ Gagal export PDF', 'error');
-                }
-            }
-
-            getFilteredData() {
+            renderTaskTable() {
                 let filtered = [...this.taskData];
-                
                 const startDate = document.getElementById('filter-start-date')?.value;
                 const endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
@@ -2565,6 +912,123 @@
                 if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
                 if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
                 
+                const tbody = document.getElementById('table-body');
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada数据</td></tr>';
+                    return;
+                }
+                
+                let html = '';
+                filtered.slice(0, 100).forEach(record => {
+                    const date = new Date(record.createdAt).toLocaleString('id-ID');
+                    const progress = record.progress || '0/0';
+                    const [completed, total] = progress.split('/').map(Number);
+                    const percent = total > 0 ? (completed / total) * 100 : 0;
+                    const firstPhoto = record.taskPhotos ? Object.values(record.taskPhotos)[0] : null;
+                    
+                    html += `<tr>
+                        <td>${date}</td>
+                        <td><strong>${record.userName || '-'}</strong></td>
+                        <td>${record.userEmail || '-'}</td>
+                        <td><span class="badge-floor">${record.branch || '-'}</span></td>
+                        <td><span class="badge-floor">${record.floor || '-'}</span></td>
+                        <td>
+                            <span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                        </td>
+                        <td>${firstPhoto ? `<img src="${firstPhoto}" class="photo-thumb-single" onclick='window.attendanceSystem.showPhoto("${firstPhoto}")'>` : '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>'}</td>
+                    </tr>`;
+                });
+                tbody.innerHTML = html;
+            }
+
+            showTaskDetail(record) {
+                const popup = document.getElementById('task-popup');
+                const body = document.getElementById('task-popup-body');
+                document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`;
+                
+                let html = '';
+                const completedTasks = record.completedTasks || [];
+                const allTasks = record.tasks || [];
+                const taskDetails = record.taskDetails || {};
+                
+                allTasks.forEach(task => {
+                    const isCompleted = completedTasks.includes(task.id);
+                    const detail = taskDetails[task.id] || {};
+                    html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}">
+                        <div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>
+                        ${isCompleted && detail.timestamp ? `<div class="task-time">⏱️ Selesai: ${detail.timestamp}</div>` : ''}
+                    </div>`;
+                });
+                
+                body.innerHTML = html;
+                document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`;
+                popup.style.display = 'flex';
+            }
+
+            showPhoto(photo) {
+                const modal = document.getElementById('photo-modal');
+                const img = document.getElementById('modal-photo-img');
+                img.src = photo;
+                modal.style.display = 'flex';
+            }
+
+            async exportToExcel() {
+                const filtered = this.getFilteredData();
+                const wsData = filtered.map(r => ({
+                    'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'),
+                    'Karyawan': r.userName || '',
+                    'Email': r.userEmail || '',
+                    'Cabang': r.branch || '',
+                    'Lantai': r.floor || '',
+                    'Progress': r.progress || '0/0',
+                    'Status': r.status === 'completed' ? 'Selesai' : 'Progress'
+                }));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wsData), 'Tugas OB');
+                XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`);
+                this.showNotification('✅ Export Excel berhasil!', 'success');
+            }
+
+            async exportToPDF() {
+                const filtered = this.getFilteredData();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                doc.setFontSize(16);
+                doc.text('Laporan Tugas OB - Genetek', 14, 15);
+                doc.setFontSize(10);
+                doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
+                
+                const tableData = filtered.slice(0, 50).map(r => [
+                    new Date(r.createdAt).toLocaleDateString('id-ID'),
+                    r.userName || '-',
+                    r.branch || '-',
+                    r.floor || '-',
+                    r.progress || '0/0'
+                ]);
+                
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Tanggal', 'Karyawan', 'Cabang', 'Lantai', 'Progress']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [67, 97, 238] }
+                });
+                doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`);
+                this.showNotification('✅ Export PDF berhasil!', 'success');
+            }
+
+            getFilteredData() {
+                let filtered = [...this.taskData];
+                const startDate = document.getElementById('filter-start-date')?.value;
+                const endDate = document.getElementById('filter-end-date')?.value;
+                const employeeId = document.getElementById('filter-employee')?.value;
+                const floor = document.getElementById('filter-floor')?.value;
+                
+                if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
+                if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
+                if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
+                if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
                 return filtered;
             }
 
@@ -2572,12 +1036,10 @@
                 const today = new Date();
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
-                const startEl = document.getElementById('filter-start-date');
-                const endEl = document.getElementById('filter-end-date');
-                
-                if (startEl) startEl.value = thirtyDaysAgo.toISOString().split('T')[0];
-                if (endEl) endEl.value = today.toISOString().split('T')[0];
+                if (document.getElementById('filter-start-date')) {
+                    document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0];
+                    document.getElementById('filter-end-date').value = today.toISOString().split('T')[0];
+                }
             }
 
             stopCamera() {
@@ -2588,12 +1050,10 @@
                 }
             }
 
-            // UI Helpers
             showLoginPage() {
                 document.getElementById('login-page').classList.remove('hidden');
                 document.getElementById('app-container').classList.remove('active');
                 document.getElementById('admin-container').classList.remove('active');
-                document.getElementById('login-email').value = 'admin@genetek.co.id';
             }
 
             showEmployeePanel() {
@@ -2609,84 +1069,53 @@
             }
 
             updateUserDisplay() {
+                const name = this.currentUser?.name || this.currentUser?.email?.split('@')[0];
                 const userDisplay = document.getElementById('user-display');
                 const adminDisplay = document.getElementById('admin-display');
-                
-                if (userDisplay && this.currentUser) {
-                    userDisplay.textContent = `👤 ${this.currentUser.name || this.currentUser.email.split('@')[0]}`;
-                }
-                
-                if (adminDisplay && this.currentUser) {
-                    adminDisplay.textContent = `👑 ${this.currentUser.name || 'Admin'}`;
-                }
+                if (userDisplay) userDisplay.textContent = `👤 ${name}`;
+                if (adminDisplay) adminDisplay.textContent = `👑 ${name || 'Admin'}`;
             }
 
             showNotification(message, type = 'info') {
                 const notification = document.getElementById('notification');
                 const icon = document.getElementById('notification-icon');
                 const msg = document.getElementById('notification-message');
-                
-                if (!notification || !msg) return;
-                
                 const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-                
                 icon.textContent = icons[type] || 'ℹ️';
                 notification.className = `notification ${type}`;
                 msg.textContent = message;
                 notification.classList.add('show');
-                
                 setTimeout(() => notification.classList.remove('show'), 3000);
             }
 
             showLoading() {
-                document.getElementById('loading-screen')?.classList.remove('hidden');
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.classList.remove('hidden');
             }
 
             hideLoading() {
-                document.getElementById('loading-screen')?.classList.add('hidden');
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.classList.add('hidden');
             }
 
             setupEventListeners() {
-                // Login
-                document.getElementById('btn-login')?.addEventListener('click', (e) => {
-                    e.preventDefault();
+                document.getElementById('btn-login')?.addEventListener('click', () => {
                     const email = document.getElementById('login-email').value.trim();
                     const password = document.getElementById('login-password').value;
-                    
-                    if (!email || !password) {
-                        this.showNotification('Isi email dan password!', 'warning');
-                        return;
-                    }
-                    
-                    this.login(email, password);
+                    if (email && password) this.login(email, password);
+                    else this.showNotification('Isi email dan password!', 'warning');
                 });
-
-                // Logout
+                
                 document.getElementById('btn-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('admin-logout')?.addEventListener('click', () => this.logout());
-
-                // Employee buttons
                 document.getElementById('employee-start')?.addEventListener('click', () => this.startTaskSession());
-                document.getElementById('btn-capture')?.addEventListener('click', () => {
-                    this.showNotification('Pilih tugas yang ingin difoto!', 'info');
-                });
+                document.getElementById('employee-save')?.addEventListener('click', () => this.saveProgress());
+                document.getElementById('btn-capture')?.addEventListener('click', () => this.showNotification('Pilih tugas terlebih dahulu, lalu klik ikon kamera di samping tugas', 'info'));
                 document.getElementById('btn-switch-camera')?.addEventListener('click', () => this.switchCamera());
-
-                // Admin buttons
                 document.getElementById('btn-apply-filter')?.addEventListener('click', () => this.renderTaskTable());
                 document.getElementById('btn-export-excel')?.addEventListener('click', () => this.exportToExcel());
                 document.getElementById('btn-export-pdf')?.addEventListener('click', () => this.exportToPDF());
-
-                // Keyboard
-                document.addEventListener('keydown', (e) => {
-                    if (document.getElementById('photo-slider-modal').classList.contains('active')) {
-                        if (e.key === 'ArrowLeft') this.prevPhoto();
-                        else if (e.key === 'ArrowRight') this.nextPhoto();
-                        else if (e.key === 'Escape') this.closePhotoSlider();
-                    }
-                });
-
-                // Cleanup
+                
                 window.addEventListener('beforeunload', () => {
                     this.stopCamera();
                     if (this.clockInterval) clearInterval(this.clockInterval);
@@ -2694,11 +1123,9 @@
             }
         }
 
-        // Initialize
         window.attendanceSystem = new OBTaskSystem();
-
-        // Global functions
-        window.showPhotoBase64 = (photo) => window.attendanceSystem?.showPhotoBase64(photo);
+        window.showPhoto = (photo) => window.attendanceSystem.showPhoto(photo);
+        window.showTaskDetail = (record) => window.attendanceSystem.showTaskDetail(record);
     </script>
 </body>
 </html>
