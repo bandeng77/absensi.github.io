@@ -133,7 +133,6 @@
         .branch-selector, .floor-selector { margin-bottom: 16px; }
         .branch-selector label, .floor-selector label { font-weight: 600; display: block; margin-bottom: 8px; }
         .floor-selector select, .branch-selector select { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid #e2e8f0; background: white; }
-        .floor-locked-message { background: #fff3cd; border-radius: 14px; padding: 12px; color: #856404; margin-top: 12px; display: flex; align-items: center; gap: 8px; }
         
         .task-checklist { max-height: 400px; overflow-y: auto; margin-top: 20px; }
         .task-item { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 2px solid #e2e8f0; transition: all 0.2s; }
@@ -163,7 +162,6 @@
         
         /* ========== STICKY CAMERA UNTUK MOBILE ========== */
         @media (max-width: 768px) {
-            /* Sticky Camera Card - akan tetap di atas saat scroll */
             .dashboard-grid .card:first-child {
                 position: sticky;
                 top: 10px;
@@ -174,18 +172,12 @@
                 border: 2px solid var(--primary);
                 transition: all 0.3s ease;
             }
-            
-            /* Efek shadow saat sticky aktif */
             .dashboard-grid .card:first-child.sticky-active {
                 box-shadow: 0 15px 35px -8px rgba(0,0,0,0.3);
             }
-            
-            /* Kurangi sedikit ukuran kamera di mobile */
             .dashboard-grid .card:first-child .camera-wrapper {
                 max-height: 250px;
             }
-            
-            /* Padding tambahan agar konten di bawah tidak tertutup sticky */
             .dashboard-grid .card:last-child {
                 margin-bottom: 20px;
                 scroll-margin-top: 300px;
@@ -197,8 +189,6 @@
             .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
             .filter-section { display: grid; grid-template-columns: repeat(4,1fr) auto auto; gap: 16px; align-items: end; }
             .navbar { flex-wrap: nowrap; }
-            
-            /* Di desktop tidak sticky */
             .dashboard-grid .card:first-child {
                 position: relative;
                 top: auto;
@@ -284,7 +274,6 @@
                 <div class="location-card">
                     <div class="branch-selector"><label>🏢 Pilih Kantor</label><select id="branch-select"><option value="">-- Pilih Kantor --</option><option value="PURI">PURI</option><option value="ARTERI">ARTERI</option></select></div>
                     <div class="floor-selector"><label>📍 Pilih Lantai</label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
-                    <div id="floor-locked-message" class="floor-locked-message hidden"><i>🔒</i> Lantai ini sudah dikerjakan hari ini</div>
                 </div>
                 <div id="task-checklist-container" class="task-checklist"><p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p></div>
                 <div class="button-group"><button id="employee-start" class="btn btn-start" disabled>🚀 Mulai</button><button id="employee-save" class="btn btn-save">💾 Simpan</button></div>
@@ -318,7 +307,10 @@
             <button id="btn-export-pdf" class="btn-filter warning">📄 PDF</button>
         </div>
         <div class="table-container">
-            <table><thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead><tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr></tbody>
+            <table>
+                <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead>
+                <tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr></tbody>
+            </table>
         </div>
     </div>
 
@@ -341,7 +333,7 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // MASTER TASKS
+        // MASTER TASKS - UPDATED ARTERI sesuai permintaan (NO LOCK)
         const MASTER_TASKS = {
             PURI: {
                 'Lantai 1': [
@@ -383,21 +375,17 @@
             },
             ARTERI: {
                 'Lantai 1': [
-                    { id: 'art_l1_1', name: 'Menyapu area lantai 1' },
-                    { id: 'art_l1_2', name: 'Mengepel area lantai 1' }
+                    { id: 'art_l1_1', name: 'Membersihkan area lantai 1' }
                 ],
                 'Lantai 2': [
-                    { id: 'art_l2_1', name: 'Menyapu area kerja' },
-                    { id: 'art_l2_2', name: 'Mengepel area kerja' },
-                    { id: 'art_l2_3', name: 'Menyapu ruangan GM Tehnik' },
-                    { id: 'art_l2_4', name: 'Mengepel ruangan GM Tehnik' },
-                    { id: 'art_l2_5', name: 'Membersihkan Toilet' }
+                    { id: 'art_l2_1', name: 'Membersihkan area kerja' },
+                    { id: 'art_l2_2', name: 'Membersihkan ruangan GM Tehnik' },
+                    { id: 'art_l2_3', name: 'Membersihkan Toilet' }
                 ],
                 'Lantai 3': [
-                    { id: 'art_l3_1', name: 'Menyapu area ruang kerja' },
-                    { id: 'art_l3_2', name: 'Mengepel area kerja' },
-                    { id: 'art_l3_3', name: 'Membersihkan mushollah' },
-                    { id: 'art_l3_4', name: 'Membersihkan Toilet' }
+                    { id: 'art_l3_1', name: 'Membersihkan area kerja' },
+                    { id: 'art_l3_2', name: 'Membersihkan mushollah' },
+                    { id: 'art_l3_3', name: 'Membersihkan Toilet' }
                 ]
             }
         };
@@ -414,7 +402,6 @@
                 this.cameraStream = null;
                 this.isCameraReady = false;
                 this.clockInterval = null;
-                this.completedKeysToday = new Set();
                 this.currentFacingMode = 'environment';
                 
                 this.currentSession = {
@@ -436,18 +423,13 @@
                 this.setupStickyEffect();
             }
 
-            // Setup efek sticky untuk kamera di mobile
             setupStickyEffect() {
                 const cameraCard = document.getElementById('camera-card');
                 if (!cameraCard) return;
-                
                 window.addEventListener('scroll', () => {
                     if (window.innerWidth <= 768) {
-                        if (window.scrollY > 5) {
-                            cameraCard.classList.add('sticky-active');
-                        } else {
-                            cameraCard.classList.remove('sticky-active');
-                        }
+                        if (window.scrollY > 5) cameraCard.classList.add('sticky-active');
+                        else cameraCard.classList.remove('sticky-active');
                     }
                 });
             }
@@ -509,7 +491,6 @@
                 this.startRealTimeClock();
                 this.setupCamera();
                 this.initBranchFloorSelector();
-                this.loadTodayCompletedKeys();
             }
 
             startRealTimeClock() {
@@ -533,10 +514,7 @@
                     const branch = e.target.value;
                     this.currentSession.branch = branch;
                     this.currentSession.floor = null;
-                    this.currentSession.status = 'idle';
-                    this.currentSession.completedTasks = [];
-                    this.currentSession.taskPhotos = {};
-                    this.currentSession.taskDetails = {};
+                    this.resetSession();
                     
                     floorSelect.innerHTML = '<option value="">Pilih Lantai</option>';
                     floorSelect.disabled = !branch;
@@ -551,59 +529,26 @@
                     document.getElementById('employee-start').disabled = true;
                     document.getElementById('employee-save').style.display = 'none';
                     document.getElementById('current-task-info').style.display = 'none';
-                    document.getElementById('floor-locked-message').classList.add('hidden');
                 });
                 
                 floorSelect.addEventListener('change', (e) => {
                     const floor = e.target.value;
                     if (floor && this.currentSession.branch) {
                         this.currentSession.floor = floor;
-                        this.checkFloorAvailability(this.currentSession.branch, floor);
+                        this.resetSession(); // reset progress saat ganti lantai
+                        this.loadTasksForFloor(this.currentSession.branch, floor);
+                        document.getElementById('employee-start').disabled = false;
                     }
                 });
             }
 
-            async loadTodayCompletedKeys() {
-                if (!this.currentUser) return;
-                const todayStart = new Date();
-                todayStart.setHours(0, 0, 0, 0);
-                const tomorrow = new Date(todayStart);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                try {
-                    const snapshot = await db.collection('ob_tasks')
-                        .where('createdAt', '>=', todayStart.toISOString())
-                        .where('createdAt', '<', tomorrow.toISOString())
-                        .get();
-                    
-                    this.completedKeysToday.clear();
-                    snapshot.forEach(doc => {
-                        const d = doc.data();
-                        if (d.branch && d.floor) this.completedKeysToday.add(`${d.branch}|${d.floor}`);
-                    });
-                } catch (error) {
-                    console.error('Error loading completed keys:', error);
-                }
-            }
-
-            checkFloorAvailability(branch, floor) {
-                const key = `${branch}|${floor}`;
-                const isLocked = this.completedKeysToday.has(key);
-                const lockedMsg = document.getElementById('floor-locked-message');
-                const startBtn = document.getElementById('employee-start');
-                
-                if (isLocked) {
-                    lockedMsg.classList.remove('hidden');
-                    startBtn.disabled = true;
-                    const container = document.getElementById('task-checklist-container');
-                    const tasks = MASTER_TASKS[branch]?.[floor] || [];
-                    container.innerHTML = `<h4>🔒 Tugas Terkunci:</h4>${tasks.map(t => `<div class="task-item locked"><div class="task-header"><span class="task-name">🔒 ${t.name}</span></div></div>`).join('')}<p style="color:#856404;background:#fff3cd;padding:12px;border-radius:12px;margin-top:12px;">⚠️ Lantai ini sudah dikerjakan hari ini</p>`;
-                } else {
-                    lockedMsg.classList.add('hidden');
-                    startBtn.disabled = false;
-                    this.loadTasksForFloor(branch, floor);
-                }
-                this.updateStartButton();
+            resetSession() {
+                this.currentSession.completedTasks = [];
+                this.currentSession.taskPhotos = {};
+                this.currentSession.taskDetails = {};
+                this.currentSession.startTime = null;
+                this.currentSession.status = 'idle';
+                this.currentSession.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             }
 
             loadTasksForFloor(branch, floor) {
@@ -621,7 +566,7 @@
                             <button class="task-camera-btn ${hasPhoto ? 'completed' : ''}" data-task-id="${task.id}" ${!this.isCameraReady ? 'disabled' : ''}>📸</button>
                         </div>
                         <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
-                            <img src="${hasPhoto || ''}" alt="Foto">
+                            ${hasPhoto ? `<img src="${hasPhoto}" alt="Foto">` : ''}
                         </div>
                     </div>`;
                 });
@@ -630,19 +575,13 @@
                 
                 tasks.forEach(task => {
                     const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${task.id}"]`);
-                    if (cameraBtn) {
-                        cameraBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            this.capturePhotoForTask(task.id, task.name);
-                        });
-                    }
+                    if (cameraBtn) cameraBtn.addEventListener('click', (e) => this.capturePhotoForTask(task.id, task.name));
                     const checkbox = document.querySelector(`.task-checkbox[data-task-id="${task.id}"]`);
-                    if (checkbox) {
-                        checkbox.addEventListener('change', (e) => this.toggleTaskCompletion(task.id, e.target.checked));
-                    }
+                    if (checkbox) checkbox.addEventListener('change', (e) => this.toggleTaskCompletion(task.id, e.target.checked));
                 });
                 
                 this.updateProgress();
+                this.updateStartButton();
             }
 
             async setupCamera() {
@@ -667,16 +606,9 @@
             }
 
             async capturePhotoForTask(taskId, taskName) {
-                if (!this.isCameraReady) {
-                    this.showNotification('Kamera belum siap', 'error');
-                    return;
-                }
-                
+                if (!this.isCameraReady) { this.showNotification('Kamera belum siap', 'error'); return; }
                 const video = document.getElementById('video-feed');
-                if (!video || video.readyState !== 4) {
-                    this.showNotification('Video belum siap', 'warning');
-                    return;
-                }
+                if (!video || video.readyState !== 4) { this.showNotification('Video belum siap', 'warning'); return; }
                 
                 const canvas = document.createElement('canvas');
                 canvas.width = video.videoWidth;
@@ -693,20 +625,14 @@
                 const previewDiv = document.getElementById(`photo-preview-${taskId}`);
                 if (previewDiv) {
                     previewDiv.classList.add('active');
-                    const img = previewDiv.querySelector('img');
-                    if (img) img.src = photo;
+                    previewDiv.innerHTML = `<img src="${photo}" alt="Foto">`;
                 }
-                
                 const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
                 if (cameraBtn) cameraBtn.classList.add('completed');
                 
                 document.getElementById('current-task-info').style.display = 'block';
                 document.getElementById('current-task-name').innerText = taskName;
-                
-                if (this.currentSession.status !== 'idle') {
-                    document.getElementById('employee-save').disabled = false;
-                }
-                
+                if (this.currentSession.status !== 'idle') document.getElementById('employee-save').disabled = false;
                 this.showNotification(`📸 Foto "${taskName}" berhasil!`, 'success');
             }
 
@@ -718,9 +644,7 @@
                 }
                 
                 if (completed) {
-                    if (!this.currentSession.completedTasks.includes(taskId)) {
-                        this.currentSession.completedTasks.push(taskId);
-                    }
+                    if (!this.currentSession.completedTasks.includes(taskId)) this.currentSession.completedTasks.push(taskId);
                 } else {
                     const idx = this.currentSession.completedTasks.indexOf(taskId);
                     if (idx > -1) this.currentSession.completedTasks.splice(idx, 1);
@@ -728,14 +652,10 @@
                 
                 const taskDiv = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
                 if (taskDiv) taskDiv.classList.toggle('completed', completed);
-                
-                if (this.currentSession.completedTasks.length > 0 && this.currentSession.status === 'active') {
-                    this.currentSession.status = 'partial';
-                }
+                if (this.currentSession.completedTasks.length > 0 && this.currentSession.status === 'active') this.currentSession.status = 'partial';
                 
                 const saveBtn = document.getElementById('employee-save');
                 if (saveBtn) saveBtn.disabled = this.currentSession.completedTasks.length === 0;
-                
                 this.updateProgress();
                 this.updateStartButton();
             }
@@ -745,7 +665,6 @@
                 const completed = this.currentSession.completedTasks.length;
                 const progressEl = document.getElementById('task-progress');
                 if (progressEl) progressEl.textContent = `${completed}/${total}`;
-                
                 const statusText = document.querySelector('.status-text');
                 if (statusText) {
                     if (this.currentSession.status === 'active') statusText.textContent = 'Mengerjakan';
@@ -753,31 +672,15 @@
                     else if (this.currentSession.status === 'completed') statusText.textContent = 'Selesai';
                     else statusText.textContent = 'Belum mulai';
                 }
-                
                 const statusDiv = document.getElementById('employee-status');
-                if (statusDiv && (this.currentSession.status === 'active' || this.currentSession.status === 'partial')) {
-                    statusDiv.classList.add('active');
-                } else if (statusDiv) {
-                    statusDiv.classList.remove('active');
-                }
+                if (statusDiv && (this.currentSession.status === 'active' || this.currentSession.status === 'partial')) statusDiv.classList.add('active');
+                else if (statusDiv) statusDiv.classList.remove('active');
             }
 
             updateStartButton() {
                 const startBtn = document.getElementById('employee-start');
                 const saveBtn = document.getElementById('employee-save');
-                
-                if (!this.currentSession.branch || !this.currentSession.floor) {
-                    if (startBtn) startBtn.disabled = true;
-                    return;
-                }
-                
-                const key = `${this.currentSession.branch}|${this.currentSession.floor}`;
-                if (this.completedKeysToday.has(key)) {
-                    startBtn.disabled = true;
-                    startBtn.textContent = '🔒 Terkunci';
-                    saveBtn.style.display = 'none';
-                    return;
-                }
+                if (!this.currentSession.branch || !this.currentSession.floor) { if (startBtn) startBtn.disabled = true; return; }
                 
                 if (this.currentSession.status === 'idle') {
                     startBtn.disabled = false;
@@ -793,29 +696,11 @@
             }
 
             async startTaskSession() {
-                if (!this.currentSession.branch || !this.currentSession.floor) {
-                    this.showNotification('Pilih kantor dan lantai!', 'warning');
-                    return;
-                }
-                
-                const key = `${this.currentSession.branch}|${this.currentSession.floor}`;
-                if (this.completedKeysToday.has(key)) {
-                    this.showNotification('Lantai sudah dikerjakan hari ini!', 'error');
-                    return;
-                }
-                
+                if (!this.currentSession.branch || !this.currentSession.floor) { this.showNotification('Pilih kantor dan lantai!', 'warning'); return; }
                 if (this.currentSession.status === 'idle') {
-                    this.currentSession = {
-                        ...this.currentSession,
-                        completedTasks: [],
-                        taskDetails: {},
-                        taskPhotos: {},
-                        startTime: new Date().toISOString(),
-                        status: 'active',
-                        sessionId: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-                    };
-                    
-                    this.loadTasksForFloor(this.currentSession.branch, this.currentSession.floor);
+                    this.currentSession.startTime = new Date().toISOString();
+                    this.currentSession.status = 'active';
+                    this.currentSession.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                     this.updateProgress();
                     this.updateStartButton();
                     this.showNotification('✅ Tugas dimulai! Silakan kerjakan tugas dan foto setiap tugas', 'success');
@@ -825,24 +710,13 @@
             async saveProgress() {
                 const total = this.currentSession.tasks.length;
                 const completed = this.currentSession.completedTasks.length;
-                
-                if (completed === 0) {
-                    this.showNotification('Belum ada tugas yang selesai', 'warning');
-                    return;
-                }
-                
+                if (completed === 0) { this.showNotification('Belum ada tugas yang selesai', 'warning'); return; }
                 for (const taskId of this.currentSession.completedTasks) {
-                    if (!this.currentSession.taskPhotos[taskId]) {
-                        this.showNotification('Foto untuk tugas yang dicentang belum lengkap', 'error');
-                        return;
-                    }
+                    if (!this.currentSession.taskPhotos[taskId]) { this.showNotification('Foto untuk tugas yang dicentang belum lengkap', 'error'); return; }
                 }
-                
                 const isComplete = completed === total;
-                
                 try {
                     this.showLoading();
-                    
                     const taskRecord = {
                         userId: this.currentUser.uid,
                         userName: this.currentUser.name || this.currentUser.email.split('@')[0],
@@ -861,42 +735,28 @@
                         sessionId: this.currentSession.sessionId,
                         createdAt: new Date().toISOString()
                     };
-                    
                     await db.collection('ob_tasks').add(taskRecord);
-                    await db.collection('users').doc(this.currentUser.uid).update({
-                        lastActive: new Date().toISOString()
-                    });
+                    await db.collection('users').doc(this.currentUser.uid).update({ lastActive: new Date().toISOString() });
                     
                     if (isComplete) {
                         this.currentSession.status = 'completed';
-                        this.completedKeysToday.add(`${this.currentSession.branch}|${this.currentSession.floor}`);
                         this.showNotification('✅ Selamat! Semua tugas selesai. Terima kasih!', 'success');
-                        
                         setTimeout(() => {
-                            this.currentSession = {
-                                branch: null, floor: null, tasks: [], completedTasks: [],
-                                taskDetails: {}, taskPhotos: {}, startTime: null, status: 'idle', sessionId: null
-                            };
+                            this.resetSession();
                             document.getElementById('branch-select').value = '';
                             document.getElementById('floor-select').innerHTML = '<option value="">Pilih kantor dulu</option>';
                             document.getElementById('floor-select').disabled = true;
                             document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p>';
                             document.getElementById('current-task-info').style.display = 'none';
                             document.getElementById('employee-save').style.display = 'none';
-                            document.getElementById('floor-locked-message').classList.add('hidden');
                             this.updateProgress();
                             this.updateStartButton();
-                            this.loadTodayCompletedKeys();
                         }, 2000);
                     } else {
                         this.showNotification(`📊 Progress tersimpan (${completed}/${total} tugas selesai)`, 'success');
                         this.currentSession.status = 'partial';
                         this.updateProgress();
                         this.updateStartButton();
-                        await this.loadTodayCompletedKeys();
-                        if (this.currentSession.branch && this.currentSession.floor) {
-                            this.checkFloorAvailability(this.currentSession.branch, this.currentSession.floor);
-                        }
                     }
                 } catch (error) {
                     console.error('Save error:', error);
@@ -906,39 +766,22 @@
                 }
             }
 
-            // ADMIN FEATURES
+            // ADMIN FEATURES (same as before, unchanged)
             async loadAdminData() {
                 try {
                     this.showLoading();
                     const usersSnap = await db.collection('users').get();
                     this.employeesData = [];
-                    usersSnap.forEach(doc => {
-                        if (doc.data().role !== 'admin') {
-                            this.employeesData.push({ id: doc.id, ...doc.data() });
-                        }
-                    });
-                    
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                    const tasksSnap = await db.collection('ob_tasks')
-                        .where('createdAt', '>=', thirtyDaysAgo.toISOString())
-                        .orderBy('createdAt', 'desc')
-                        .get();
-                    
+                    usersSnap.forEach(doc => { if (doc.data().role !== 'admin') this.employeesData.push({ id: doc.id, ...doc.data() }); });
+                    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                    const tasksSnap = await db.collection('ob_tasks').where('createdAt', '>=', thirtyDaysAgo.toISOString()).orderBy('createdAt', 'desc').get();
                     this.taskData = [];
                     tasksSnap.forEach(doc => this.taskData.push({ id: doc.id, ...doc.data() }));
-                    
                     this.updateStatistics();
                     this.populateEmployeeFilter();
                     this.renderTaskTable();
-                } catch (error) {
-                    console.error(error);
-                    this.showNotification('❌ Gagal memuat data admin', 'error');
-                } finally {
-                    this.hideLoading();
-                }
+                } catch (error) { this.showNotification('❌ Gagal memuat data admin', 'error'); } finally { this.hideLoading(); }
             }
-
             updateStatistics() {
                 document.getElementById('total-karyawan').innerText = this.employeesData.length;
                 document.getElementById('total-tugas').innerText = this.taskData.length;
@@ -948,33 +791,23 @@
                 const activeSet = new Set(this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).map(r => r.userId));
                 document.getElementById('aktif-hari-ini').innerText = activeSet.size;
             }
-
             populateEmployeeFilter() {
                 const select = document.getElementById('filter-employee');
                 select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
-                this.employeesData.forEach(emp => {
-                    select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`;
-                });
+                this.employeesData.forEach(emp => select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`);
             }
-
             renderTaskTable() {
                 let filtered = [...this.taskData];
                 const startDate = document.getElementById('filter-start-date')?.value;
                 const endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
                 const floor = document.getElementById('filter-floor')?.value;
-                
                 if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
                 if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
                 if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
                 if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
-                
                 const tbody = document.getElementById('table-body');
-                if (filtered.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada data</td></tr>';
-                    return;
-                }
-                
+                if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada数据</td></tr>'; return; }
                 let html = '';
                 filtered.slice(0, 100).forEach(record => {
                     const date = new Date(record.createdAt).toLocaleString('id-ID');
@@ -982,187 +815,34 @@
                     const [completed, total] = progress.split('/').map(Number);
                     const percent = total > 0 ? (completed / total) * 100 : 0;
                     const firstPhoto = record.taskPhotos ? Object.values(record.taskPhotos)[0] : null;
-                    
                     html += `<tr>
                         <td>${date}</td>
                         <td><strong>${record.userName || '-'}</strong></td>
                         <td>${record.userEmail || '-'}</td>
                         <td><span class="badge-floor">${record.branch || '-'}</span></td>
                         <td><span class="badge-floor">${record.floor || '-'}</span></td>
-                        <td>
-                            <span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span>
-                            <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
-                         </td>
+                        <td><span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div></td>
                         <td>${firstPhoto ? `<img src="${firstPhoto}" class="photo-thumb-single" onclick='window.attendanceSystem.showPhoto("${firstPhoto}")'>` : '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>'}</td>
                     </tr>`;
                 });
                 tbody.innerHTML = html;
             }
-
-            showTaskDetail(record) {
-                const popup = document.getElementById('task-popup');
-                const body = document.getElementById('task-popup-body');
-                document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`;
-                
-                let html = '';
-                const completedTasks = record.completedTasks || [];
-                const allTasks = record.tasks || [];
-                const taskDetails = record.taskDetails || {};
-                
-                allTasks.forEach(task => {
-                    const isCompleted = completedTasks.includes(task.id);
-                    const detail = taskDetails[task.id] || {};
-                    html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}">
-                        <div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>
-                        ${isCompleted && detail.timestamp ? `<div class="task-time">⏱️ Selesai: ${detail.timestamp}</div>` : ''}
-                    </div>`;
-                });
-                
-                body.innerHTML = html;
-                document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`;
-                popup.style.display = 'flex';
-            }
-
-            showPhoto(photo) {
-                const modal = document.getElementById('photo-modal');
-                const img = document.getElementById('modal-photo-img');
-                img.src = photo;
-                modal.style.display = 'flex';
-            }
-
-            async exportToExcel() {
-                const filtered = this.getFilteredData();
-                const wsData = filtered.map(r => ({
-                    'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'),
-                    'Karyawan': r.userName || '',
-                    'Email': r.userEmail || '',
-                    'Cabang': r.branch || '',
-                    'Lantai': r.floor || '',
-                    'Progress': r.progress || '0/0',
-                    'Status': r.status === 'completed' ? 'Selesai' : 'Progress'
-                }));
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wsData), 'Tugas OB');
-                XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`);
-                this.showNotification('✅ Export Excel berhasil!', 'success');
-            }
-
-            async exportToPDF() {
-                const filtered = this.getFilteredData();
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('landscape');
-                doc.setFontSize(16);
-                doc.text('Laporan Tugas OB - Genetek', 14, 15);
-                doc.setFontSize(10);
-                doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
-                
-                const tableData = filtered.slice(0, 50).map(r => [
-                    new Date(r.createdAt).toLocaleDateString('id-ID'),
-                    r.userName || '-',
-                    r.branch || '-',
-                    r.floor || '-',
-                    r.progress || '0/0'
-                ]);
-                
-                doc.autoTable({
-                    startY: 30,
-                    head: [['Tanggal', 'Karyawan', 'Cabang', 'Lantai', 'Progress']],
-                    body: tableData,
-                    theme: 'striped',
-                    headStyles: { fillColor: [67, 97, 238] }
-                });
-                doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`);
-                this.showNotification('✅ Export PDF berhasil!', 'success');
-            }
-
-            getFilteredData() {
-                let filtered = [...this.taskData];
-                const startDate = document.getElementById('filter-start-date')?.value;
-                const endDate = document.getElementById('filter-end-date')?.value;
-                const employeeId = document.getElementById('filter-employee')?.value;
-                const floor = document.getElementById('filter-floor')?.value;
-                
-                if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
-                if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
-                if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
-                if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
-                return filtered;
-            }
-
-            setDefaultFilterDates() {
-                const today = new Date();
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                if (document.getElementById('filter-start-date')) {
-                    document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0];
-                    document.getElementById('filter-end-date').value = today.toISOString().split('T')[0];
-                }
-            }
-
-            stopCamera() {
-                if (this.cameraStream) {
-                    this.cameraStream.getTracks().forEach(track => track.stop());
-                    this.cameraStream = null;
-                    this.isCameraReady = false;
-                }
-            }
-
-            showLoginPage() {
-                document.getElementById('login-page').classList.remove('hidden');
-                document.getElementById('app-container').classList.remove('active');
-                document.getElementById('admin-container').classList.remove('active');
-            }
-
-            showEmployeePanel() {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('app-container').classList.add('active');
-                document.getElementById('admin-container').classList.remove('active');
-            }
-
-            showAdminPanel() {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('active');
-                document.getElementById('admin-container').classList.add('active');
-            }
-
-            updateUserDisplay() {
-                const name = this.currentUser?.name || this.currentUser?.email?.split('@')[0];
-                const userDisplay = document.getElementById('user-display');
-                const adminDisplay = document.getElementById('admin-display');
-                if (userDisplay) userDisplay.textContent = `👤 ${name}`;
-                if (adminDisplay) adminDisplay.textContent = `👑 ${name || 'Admin'}`;
-            }
-
-            showNotification(message, type = 'info') {
-                const notification = document.getElementById('notification');
-                const icon = document.getElementById('notification-icon');
-                const msg = document.getElementById('notification-message');
-                const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-                icon.textContent = icons[type] || 'ℹ️';
-                notification.className = `notification ${type}`;
-                msg.textContent = message;
-                notification.classList.add('show');
-                setTimeout(() => notification.classList.remove('show'), 3000);
-            }
-
-            showLoading() {
-                const loader = document.getElementById('loading-screen');
-                if (loader) loader.classList.remove('hidden');
-            }
-
-            hideLoading() {
-                const loader = document.getElementById('loading-screen');
-                if (loader) loader.classList.add('hidden');
-            }
-
+            showTaskDetail(record) { /* same detail modal */ const popup = document.getElementById('task-popup'); const body = document.getElementById('task-popup-body'); document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`; let html = ''; const completedTasks = record.completedTasks || []; const allTasks = record.tasks || []; const taskDetails = record.taskDetails || {}; allTasks.forEach(task => { const isCompleted = completedTasks.includes(task.id); const detail = taskDetails[task.id] || {}; html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}"><div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>${isCompleted && detail.timestamp ? `<div class="task-time">⏱️ Selesai: ${detail.timestamp}</div>` : ''}</div>`; }); body.innerHTML = html; document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`; popup.style.display = 'flex'; }
+            showPhoto(photo) { const modal = document.getElementById('photo-modal'); document.getElementById('modal-photo-img').src = photo; modal.style.display = 'flex'; }
+            async exportToExcel() { const filtered = this.getFilteredData(); const wsData = filtered.map(r => ({ 'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'), 'Karyawan': r.userName || '', 'Email': r.userEmail || '', 'Cabang': r.branch || '', 'Lantai': r.floor || '', 'Progress': r.progress || '0/0', 'Status': r.status === 'completed' ? 'Selesai' : 'Progress' })); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wsData), 'Tugas OB'); XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`); this.showNotification('✅ Export Excel berhasil!', 'success'); }
+            async exportToPDF() { const filtered = this.getFilteredData(); const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape'); doc.setFontSize(16); doc.text('Laporan Tugas OB - Genetek', 14, 15); doc.setFontSize(10); doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22); const tableData = filtered.slice(0, 50).map(r => [new Date(r.createdAt).toLocaleDateString('id-ID'), r.userName || '-', r.branch || '-', r.floor || '-', r.progress || '0/0']); doc.autoTable({ startY: 30, head: [['Tanggal','Karyawan','Cabang','Lantai','Progress']], body: tableData, theme: 'striped', headStyles: { fillColor: [67,97,238] } }); doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`); this.showNotification('✅ Export PDF berhasil!', 'success'); }
+            getFilteredData() { let filtered = [...this.taskData]; const startDate = document.getElementById('filter-start-date')?.value; const endDate = document.getElementById('filter-end-date')?.value; const employeeId = document.getElementById('filter-employee')?.value; const floor = document.getElementById('filter-floor')?.value; if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate); if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate); if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId); if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor); return filtered; }
+            setDefaultFilterDates() { const today = new Date(); const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); if (document.getElementById('filter-start-date')) { document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0]; document.getElementById('filter-end-date').value = today.toISOString().split('T')[0]; } }
+            stopCamera() { if (this.cameraStream) { this.cameraStream.getTracks().forEach(track => track.stop()); this.cameraStream = null; this.isCameraReady = false; } }
+            showLoginPage() { document.getElementById('login-page').classList.remove('hidden'); document.getElementById('app-container').classList.remove('active'); document.getElementById('admin-container').classList.remove('active'); }
+            showEmployeePanel() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('app-container').classList.add('active'); document.getElementById('admin-container').classList.remove('active'); }
+            showAdminPanel() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('app-container').classList.remove('active'); document.getElementById('admin-container').classList.add('active'); }
+            updateUserDisplay() { const name = this.currentUser?.name || this.currentUser?.email?.split('@')[0]; const userDisplay = document.getElementById('user-display'); const adminDisplay = document.getElementById('admin-display'); if (userDisplay) userDisplay.textContent = `👤 ${name}`; if (adminDisplay) adminDisplay.textContent = `👑 ${name || 'Admin'}`; }
+            showNotification(message, type = 'info') { const notification = document.getElementById('notification'); const icon = document.getElementById('notification-icon'); const msg = document.getElementById('notification-message'); const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }; icon.textContent = icons[type] || 'ℹ️'; notification.className = `notification ${type}`; msg.textContent = message; notification.classList.add('show'); setTimeout(() => notification.classList.remove('show'), 3000); }
+            showLoading() { const loader = document.getElementById('loading-screen'); if (loader) loader.classList.remove('hidden'); }
+            hideLoading() { const loader = document.getElementById('loading-screen'); if (loader) loader.classList.add('hidden'); }
             setupEventListeners() {
-                document.getElementById('btn-login')?.addEventListener('click', () => {
-                    const email = document.getElementById('login-email').value.trim();
-                    const password = document.getElementById('login-password').value;
-                    if (email && password) this.login(email, password);
-                    else this.showNotification('Isi email dan password!', 'warning');
-                });
-                
+                document.getElementById('btn-login')?.addEventListener('click', () => { const email = document.getElementById('login-email').value.trim(); const password = document.getElementById('login-password').value; if (email && password) this.login(email, password); else this.showNotification('Isi email dan password!', 'warning'); });
                 document.getElementById('btn-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('admin-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('employee-start')?.addEventListener('click', () => this.startTaskSession());
@@ -1172,11 +852,7 @@
                 document.getElementById('btn-apply-filter')?.addEventListener('click', () => this.renderTaskTable());
                 document.getElementById('btn-export-excel')?.addEventListener('click', () => this.exportToExcel());
                 document.getElementById('btn-export-pdf')?.addEventListener('click', () => this.exportToPDF());
-                
-                window.addEventListener('beforeunload', () => {
-                    this.stopCamera();
-                    if (this.clockInterval) clearInterval(this.clockInterval);
-                });
+                window.addEventListener('beforeunload', () => { this.stopCamera(); if (this.clockInterval) clearInterval(this.clockInterval); });
             }
         }
 
