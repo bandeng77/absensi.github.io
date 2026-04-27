@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Genetek OB • Multi Cabang</title>
+    <title>Genetek OB • Multi Cabang + Slide Foto</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -160,90 +160,123 @@
         #live-time { font-size: 2rem; font-weight: 700; color: var(--primary); }
         #live-date { color: var(--gray); margin-top: 4px; }
         
-        /* ========== STICKY CAMERA UNTUK MOBILE ========== */
-        @media (max-width: 768px) {
-            .dashboard-grid .card:first-child {
-                position: sticky;
-                top: 10px;
-                z-index: 100;
-                background: white;
-                margin-bottom: 20px;
-                box-shadow: 0 10px 30px -5px rgba(0,0,0,0.2);
-                border: 2px solid var(--primary);
-                transition: all 0.3s ease;
-            }
-            .dashboard-grid .card:first-child.sticky-active {
-                box-shadow: 0 15px 35px -8px rgba(0,0,0,0.3);
-            }
-            .dashboard-grid .card:first-child .camera-wrapper {
-                max-height: 250px;
-            }
-            .dashboard-grid .card:last-child {
-                margin-bottom: 20px;
-                scroll-margin-top: 300px;
-            }
-        }
-        
-        @media (min-width: 769px) {
-            .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-            .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
-            .filter-section { display: grid; grid-template-columns: repeat(4,1fr) auto auto; gap: 16px; align-items: end; }
-            .navbar { flex-wrap: nowrap; }
-            .dashboard-grid .card:first-child {
-                position: relative;
-                top: auto;
-                z-index: auto;
-                border: none;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .navbar { flex-direction: column; text-align: center; }
-            .user-badge { max-width: none; }
-        }
-        
+        /* Stats & Filter */
         .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 20px; }
+        @media (min-width: 769px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
         .stat-card { background: white; border-radius: 22px; padding: 18px; box-shadow: var(--shadow); }
         .stat-icon { font-size: 28px; margin-bottom: 8px; }
         .stat-value { font-size: 1.8rem; font-weight: 700; }
-        .filter-section { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; }
-        .btn-filter { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 16px; cursor: pointer; font-weight: 600; }
+        
+        .filter-section { background: white; border-radius: 24px; padding: 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+        .filter-section select, .filter-section input { padding: 10px 14px; border-radius: 12px; border: 2px solid #e2e8f0; background: white; flex: 1; min-width: 120px; }
+        .btn-filter { padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 600; }
         .btn-filter.success { background: var(--success); }
         .btn-filter.warning { background: #ff9800; }
+        
         .table-container { background: white; border-radius: 24px; padding: 16px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
         .badge-floor { background: #e0e7ff; padding: 4px 10px; border-radius: 30px; font-size: 0.75rem; font-weight: 600; }
-        .photo-thumb-single { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; cursor: pointer; border: 2px solid #e2e8f0; }
+        .photo-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; cursor: pointer; border: 2px solid #e2e8f0; margin: 2px; }
+        .photo-thumb:hover { transform: scale(1.05); border-color: var(--primary); }
+        .photo-gallery { display: flex; flex-wrap: wrap; gap: 6px; max-width: 180px; }
         .progress-bar { background: #e2e8f0; height: 4px; border-radius: 2px; margin-top: 4px; }
         .progress-fill { background: var(--success); height: 4px; border-radius: 2px; }
-        .notification { position: fixed; top: 20px; left: 20px; right: 20px; background: white; border-radius: 16px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transform: translateY(-100px); transition: 0.3s; z-index: 10003; max-width: 400px; margin: auto; border-left: 6px solid; }
-        .notification.show { transform: translateY(0); }
-        .notification.success { border-left-color: var(--success); }
-        .notification.error { border-left-color: var(--danger); }
-        .notification.warning { border-left-color: var(--warning); }
         
-        /* Modal */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 10001; display: none; }
-        .modal-content { background: white; border-radius: 24px; padding: 20px; max-width: 90%; max-height: 90vh; overflow: auto; }
-        .modal-content img { max-width: 100%; border-radius: 16px; }
-        .modal-close { margin-top: 16px; padding: 12px; background: var(--danger); color: white; border: none; border-radius: 12px; width: 100%; cursor: pointer; }
+        /* SLIDE MODAL UNTUK FOTO */
+        .slideshow-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 20000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .slideshow-modal.active { display: flex; }
+        .slideshow-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+        }
+        .slideshow-image {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+        .slideshow-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s;
+        }
+        .slideshow-nav:hover { background: rgba(255,255,255,0.6); color: black; }
+        .nav-prev { left: 10px; }
+        .nav-next { right: 10px; }
+        .slideshow-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            color: white;
+        }
+        .slideshow-caption {
+            color: white;
+            text-align: center;
+            padding: 16px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 30px;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+        .slideshow-counter {
+            position: absolute;
+            bottom: -40px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 14px;
+        }
         
+        /* Task Detail Modal */
         .task-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002; display: none; }
         .task-popup-content { background: white; border-radius: 24px; padding: 24px; max-width: 90%; width: 400px; max-height: 80vh; overflow: auto; }
-        .task-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f1f5f9; }
-        .task-popup-header button { background: #f1f5f9; border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; font-size: 1.2rem; }
-        .task-popup-item { padding: 12px; background: #f8fafc; border-radius: 12px; margin-bottom: 8px; border-left: 4px solid; }
-        .task-popup-item.completed { border-left-color: var(--success); }
-        .task-popup-item.pending { border-left-color: var(--gray); }
+        .task-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
+        
+        @media (max-width: 768px) {
+            .slideshow-nav { width: 40px; height: 40px; font-size: 18px; }
+            .photo-gallery { max-width: 120px; }
+        }
     </style>
 </head>
 <body>
     <div id="loading-screen" class="loading-screen"><div class="loading-spinner"></div></div>
-    <div id="notification" class="notification"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
+    <div id="notification" class="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page">
@@ -308,15 +341,30 @@
         </div>
         <div class="table-container">
             <table>
-                <thead><tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto</th></tr></thead>
-                <tbody id="table-body"><tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr></tbody>
+                <thead>
+                    <tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto (Klik untuk Slide)</th></tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
-    <!-- MODALS -->
+    <!-- SLIDESHOW MODAL -->
+    <div id="slideshow-modal" class="slideshow-modal">
+        <button class="slideshow-close" id="slideshow-close">✕</button>
+        <div class="slideshow-container">
+            <button class="slideshow-nav nav-prev" id="slideshow-prev">‹</button>
+            <img id="slideshow-image" class="slideshow-image" src="">
+            <button class="slideshow-nav nav-next" id="slideshow-next">›</button>
+        </div>
+        <div class="slideshow-caption" id="slideshow-caption">-</div>
+        <div class="slideshow-counter" id="slideshow-counter">1 / 1</div>
+    </div>
+
+    <!-- TASK POPUP -->
     <div id="task-popup" class="task-popup"><div class="task-popup-content"><div class="task-popup-header"><h3 id="task-popup-title">📋 Detail Tugas</h3><button onclick="closeTaskPopup()">✕</button></div><div id="task-popup-body"></div><div id="task-popup-progress" style="margin-top:16px;font-weight:600;"></div></div></div>
-    <div id="photo-modal" class="modal-overlay"><div class="modal-content"><img id="modal-photo-img" src=""><button class="modal-close" onclick="document.getElementById('photo-modal').style.display='none'">Tutup</button></div></div>
 
     <script>
         // Firebase Config
@@ -333,7 +381,7 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // MASTER TASKS - UPDATED ARTERI sesuai permintaan (NO LOCK)
+        // MASTER TASKS
         const MASTER_TASKS = {
             PURI: {
                 'Lantai 1': [
@@ -403,6 +451,11 @@
                 this.clockInterval = null;
                 this.currentFacingMode = 'environment';
                 
+                // Slideshow state
+                this.currentSlideImages = [];
+                this.currentSlideIndex = 0;
+                this.currentSlideTitle = '';
+                
                 this.currentSession = {
                     branch: null, floor: null, tasks: [], completedTasks: [],
                     taskDetails: {}, taskPhotos: {}, startTime: null, status: 'idle', sessionId: null
@@ -419,18 +472,53 @@
                 });
                 this.setupEventListeners();
                 this.setDefaultFilterDates();
-                this.setupStickyEffect();
+                this.setupSlideshowEvents();
             }
 
-            setupStickyEffect() {
-                const cameraCard = document.getElementById('camera-card');
-                if (!cameraCard) return;
-                window.addEventListener('scroll', () => {
-                    if (window.innerWidth <= 768) {
-                        if (window.scrollY > 5) cameraCard.classList.add('sticky-active');
-                        else cameraCard.classList.remove('sticky-active');
+            setupSlideshowEvents() {
+                document.getElementById('slideshow-close')?.addEventListener('click', () => {
+                    document.getElementById('slideshow-modal').classList.remove('active');
+                });
+                document.getElementById('slideshow-prev')?.addEventListener('click', () => {
+                    if (this.currentSlideImages.length > 0) {
+                        this.currentSlideIndex = (this.currentSlideIndex - 1 + this.currentSlideImages.length) % this.currentSlideImages.length;
+                        this.updateSlideImage();
                     }
                 });
+                document.getElementById('slideshow-next')?.addEventListener('click', () => {
+                    if (this.currentSlideImages.length > 0) {
+                        this.currentSlideIndex = (this.currentSlideIndex + 1) % this.currentSlideImages.length;
+                        this.updateSlideImage();
+                    }
+                });
+                document.getElementById('slideshow-modal')?.addEventListener('click', (e) => {
+                    if (e.target === document.getElementById('slideshow-modal')) {
+                        document.getElementById('slideshow-modal').classList.remove('active');
+                    }
+                });
+            }
+
+            updateSlideImage() {
+                const img = document.getElementById('slideshow-image');
+                const counter = document.getElementById('slideshow-counter');
+                const caption = document.getElementById('slideshow-caption');
+                if (this.currentSlideImages[this.currentSlideIndex]) {
+                    img.src = this.currentSlideImages[this.currentSlideIndex];
+                    counter.textContent = `${this.currentSlideIndex + 1} / ${this.currentSlideImages.length}`;
+                    caption.textContent = `${this.currentSlideTitle} - Foto ${this.currentSlideIndex + 1}`;
+                }
+            }
+
+            showSlideshow(images, title) {
+                this.currentSlideImages = images;
+                this.currentSlideIndex = 0;
+                this.currentSlideTitle = title;
+                if (images.length > 0) {
+                    this.updateSlideImage();
+                    document.getElementById('slideshow-modal').classList.add('active');
+                } else {
+                    this.showNotification('Tidak ada foto untuk ditampilkan', 'warning');
+                }
             }
 
             async handleAuthStateChange(user) {
@@ -534,7 +622,7 @@
                     const floor = e.target.value;
                     if (floor && this.currentSession.branch) {
                         this.currentSession.floor = floor;
-                        this.resetSession(); // reset progress saat ganti lantai
+                        this.resetSession();
                         this.loadTasksForFloor(this.currentSession.branch, floor);
                         document.getElementById('employee-start').disabled = false;
                     }
@@ -765,7 +853,7 @@
                 }
             }
 
-            // ADMIN FEATURES (same as before, unchanged)
+            // ========== ADMIN FEATURES WITH SLIDESHOW ==========
             async loadAdminData() {
                 try {
                     this.showLoading();
@@ -781,6 +869,7 @@
                     this.renderTaskTable();
                 } catch (error) { this.showNotification('❌ Gagal memuat data admin', 'error'); } finally { this.hideLoading(); }
             }
+
             updateStatistics() {
                 document.getElementById('total-karyawan').innerText = this.employeesData.length;
                 document.getElementById('total-tugas').innerText = this.taskData.length;
@@ -790,11 +879,31 @@
                 const activeSet = new Set(this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).map(r => r.userId));
                 document.getElementById('aktif-hari-ini').innerText = activeSet.size;
             }
+
             populateEmployeeFilter() {
                 const select = document.getElementById('filter-employee');
                 select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
                 this.employeesData.forEach(emp => select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`);
             }
+
+            getAllPhotosFromRecord(record) {
+                const photos = [];
+                const taskPhotos = record.taskPhotos || {};
+                const tasks = record.tasks || [];
+                
+                // Urutkan foto berdasarkan urutan tugas
+                for (const task of tasks) {
+                    if (taskPhotos[task.id]) {
+                        photos.push({
+                            url: taskPhotos[task.id],
+                            taskName: task.name,
+                            taskId: task.id
+                        });
+                    }
+                }
+                return photos;
+            }
+
             renderTaskTable() {
                 let filtered = [...this.taskData];
                 const startDate = document.getElementById('filter-start-date')?.value;
@@ -805,43 +914,234 @@
                 if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
                 if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
                 if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
+                
                 const tbody = document.getElementById('table-body');
-                if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada数据</td></tr>'; return; }
+                if (filtered.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada data</td></tr>'; 
+                    return; 
+                }
+                
                 let html = '';
                 filtered.slice(0, 100).forEach(record => {
                     const date = new Date(record.createdAt).toLocaleString('id-ID');
                     const progress = record.progress || '0/0';
                     const [completed, total] = progress.split('/').map(Number);
                     const percent = total > 0 ? (completed / total) * 100 : 0;
-                    const firstPhoto = record.taskPhotos ? Object.values(record.taskPhotos)[0] : null;
+                    const allPhotos = this.getAllPhotosFromRecord(record);
+                    const photoThumbs = allPhotos.slice(0, 4); // Tampilkan max 4 thumbnail
+                    const moreCount = allPhotos.length - 4;
+                    
+                    // Generate gallery HTML
+                    let galleryHtml = '<div class="photo-gallery">';
+                    photoThumbs.forEach((photo, idx) => {
+                        galleryHtml += `<img src="${photo.url}" class="photo-thumb" onclick="event.stopPropagation(); window.attendanceSystem.showSlideshowForRecord('${record.id}')" title="${photo.taskName}">`;
+                    });
+                    if (moreCount > 0) {
+                        galleryHtml += `<div class="photo-thumb" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;" onclick="event.stopPropagation(); window.attendanceSystem.showSlideshowForRecord('${record.id}')">+${moreCount}</div>`;
+                    }
+                    if (allPhotos.length === 0) {
+                        galleryHtml += '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>';
+                    }
+                    galleryHtml += '</div>';
+                    
                     html += `<tr>
                         <td>${date}</td>
                         <td><strong>${record.userName || '-'}</strong></td>
                         <td>${record.userEmail || '-'}</td>
                         <td><span class="badge-floor">${record.branch || '-'}</span></td>
                         <td><span class="badge-floor">${record.floor || '-'}</span></td>
-                        <td><span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span><div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div></td>
-                        <td>${firstPhoto ? `<img src="${firstPhoto}" class="photo-thumb-single" onclick='window.attendanceSystem.showPhoto("${firstPhoto}")'>` : '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>'}</td>
+                        <td>
+                            <span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
+                        </td>
+                        <td>${galleryHtml}</td>
                     </tr>`;
                 });
                 tbody.innerHTML = html;
             }
-            showTaskDetail(record) { /* same detail modal */ const popup = document.getElementById('task-popup'); const body = document.getElementById('task-popup-body'); document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`; let html = ''; const completedTasks = record.completedTasks || []; const allTasks = record.tasks || []; const taskDetails = record.taskDetails || {}; allTasks.forEach(task => { const isCompleted = completedTasks.includes(task.id); const detail = taskDetails[task.id] || {}; html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}"><div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>${isCompleted && detail.timestamp ? `<div class="task-time">⏱️ Selesai: ${detail.timestamp}</div>` : ''}</div>`; }); body.innerHTML = html; document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`; popup.style.display = 'flex'; }
-            showPhoto(photo) { const modal = document.getElementById('photo-modal'); document.getElementById('modal-photo-img').src = photo; modal.style.display = 'flex'; }
-            async exportToExcel() { const filtered = this.getFilteredData(); const wsData = filtered.map(r => ({ 'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'), 'Karyawan': r.userName || '', 'Email': r.userEmail || '', 'Cabang': r.branch || '', 'Lantai': r.floor || '', 'Progress': r.progress || '0/0', 'Status': r.status === 'completed' ? 'Selesai' : 'Progress' })); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wsData), 'Tugas OB'); XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`); this.showNotification('✅ Export Excel berhasil!', 'success'); }
-            async exportToPDF() { const filtered = this.getFilteredData(); const { jsPDF } = window.jspdf; const doc = new jsPDF('landscape'); doc.setFontSize(16); doc.text('Laporan Tugas OB - Genetek', 14, 15); doc.setFontSize(10); doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22); const tableData = filtered.slice(0, 50).map(r => [new Date(r.createdAt).toLocaleDateString('id-ID'), r.userName || '-', r.branch || '-', r.floor || '-', r.progress || '0/0']); doc.autoTable({ startY: 30, head: [['Tanggal','Karyawan','Cabang','Lantai','Progress']], body: tableData, theme: 'striped', headStyles: { fillColor: [67,97,238] } }); doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`); this.showNotification('✅ Export PDF berhasil!', 'success'); }
-            getFilteredData() { let filtered = [...this.taskData]; const startDate = document.getElementById('filter-start-date')?.value; const endDate = document.getElementById('filter-end-date')?.value; const employeeId = document.getElementById('filter-employee')?.value; const floor = document.getElementById('filter-floor')?.value; if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate); if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate); if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId); if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor); return filtered; }
-            setDefaultFilterDates() { const today = new Date(); const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30); if (document.getElementById('filter-start-date')) { document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0]; document.getElementById('filter-end-date').value = today.toISOString().split('T')[0]; } }
-            stopCamera() { if (this.cameraStream) { this.cameraStream.getTracks().forEach(track => track.stop()); this.cameraStream = null; this.isCameraReady = false; } }
-            showLoginPage() { document.getElementById('login-page').classList.remove('hidden'); document.getElementById('app-container').classList.remove('active'); document.getElementById('admin-container').classList.remove('active'); }
-            showEmployeePanel() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('app-container').classList.add('active'); document.getElementById('admin-container').classList.remove('active'); }
-            showAdminPanel() { document.getElementById('login-page').classList.add('hidden'); document.getElementById('app-container').classList.remove('active'); document.getElementById('admin-container').classList.add('active'); }
-            updateUserDisplay() { const name = this.currentUser?.name || this.currentUser?.email?.split('@')[0]; const userDisplay = document.getElementById('user-display'); const adminDisplay = document.getElementById('admin-display'); if (userDisplay) userDisplay.textContent = `👤 ${name}`; if (adminDisplay) adminDisplay.textContent = `👑 ${name || 'Admin'}`; }
-            showNotification(message, type = 'info') { const notification = document.getElementById('notification'); const icon = document.getElementById('notification-icon'); const msg = document.getElementById('notification-message'); const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }; icon.textContent = icons[type] || 'ℹ️'; notification.className = `notification ${type}`; msg.textContent = message; notification.classList.add('show'); setTimeout(() => notification.classList.remove('show'), 3000); }
-            showLoading() { const loader = document.getElementById('loading-screen'); if (loader) loader.classList.remove('hidden'); }
-            hideLoading() { const loader = document.getElementById('loading-screen'); if (loader) loader.classList.add('hidden'); }
+
+            showSlideshowForRecord(recordId) {
+                const record = this.taskData.find(r => r.id === recordId);
+                if (!record) return;
+                
+                const allPhotos = this.getAllPhotosFromRecord(record);
+                const photoUrls = allPhotos.map(p => p.url);
+                const title = `${record.userName || '-'} - ${record.branch || ''} ${record.floor || ''}`;
+                this.showSlideshow(photoUrls, title);
+            }
+
+            showSlideshow(images, title) {
+                this.currentSlideImages = images;
+                this.currentSlideIndex = 0;
+                this.currentSlideTitle = title;
+                if (images.length > 0) {
+                    this.updateSlideImage();
+                    document.getElementById('slideshow-modal').classList.add('active');
+                } else {
+                    this.showNotification('Tidak ada foto untuk ditampilkan', 'warning');
+                }
+            }
+
+            showTaskDetail(record) {
+                const popup = document.getElementById('task-popup');
+                const body = document.getElementById('task-popup-body');
+                document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`;
+                let html = '';
+                const completedTasks = record.completedTasks || [];
+                const allTasks = record.tasks || [];
+                const taskDetails = record.taskDetails || {};
+                const taskPhotos = record.taskPhotos || {};
+                
+                allTasks.forEach(task => {
+                    const isCompleted = completedTasks.includes(task.id);
+                    const detail = taskDetails[task.id] || {};
+                    const hasPhoto = taskPhotos[task.id];
+                    html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}" style="padding:12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;border-left:4px solid ${isCompleted ? '#06d6a0' : '#64748b'}">
+                        <div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>
+                        ${isCompleted && detail.timestamp ? `<div class="task-time" style="font-size:12px;color:gray;">⏱️ Selesai: ${detail.timestamp}</div>` : ''}
+                        ${hasPhoto ? `<div style="margin-top:8px;"><img src="${hasPhoto}" style="width:100%;max-height:150px;object-fit:cover;border-radius:12px;cursor:pointer;" onclick="window.attendanceSystem.showSlideshow([${JSON.stringify(hasPhoto)}], '${task.name}')"></div>` : ''}
+                    </div>`;
+                });
+                body.innerHTML = html;
+                document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`;
+                popup.style.display = 'flex';
+            }
+
+            async exportToExcel() {
+                const filtered = this.getFilteredData();
+                const wsData = filtered.map(r => ({ 
+                    'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'), 
+                    'Karyawan': r.userName || '', 
+                    'Email': r.userEmail || '', 
+                    'Cabang': r.branch || '', 
+                    'Lantai': r.floor || '', 
+                    'Progress': r.progress || '0/0', 
+                    'Status': r.status === 'completed' ? 'Selesai' : 'Progress',
+                    'Jumlah Foto': Object.keys(r.taskPhotos || {}).length
+                }));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(wsData), 'Tugas OB');
+                XLSX.writeFile(wb, `tugas_ob_${new Date().toISOString().split('T')[0]}.xlsx`);
+                this.showNotification('✅ Export Excel berhasil!', 'success');
+            }
+
+            async exportToPDF() {
+                const filtered = this.getFilteredData();
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                doc.setFontSize(16);
+                doc.text('Laporan Tugas OB - Genetek', 14, 15);
+                doc.setFontSize(10);
+                doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
+                const tableData = filtered.slice(0, 50).map(r => [
+                    new Date(r.createdAt).toLocaleDateString('id-ID'), 
+                    r.userName || '-', 
+                    r.branch || '-', 
+                    r.floor || '-', 
+                    r.progress || '0/0',
+                    Object.keys(r.taskPhotos || {}).length + ' foto'
+                ]);
+                doc.autoTable({ 
+                    startY: 30, 
+                    head: [['Tanggal','Karyawan','Cabang','Lantai','Progress','Foto']], 
+                    body: tableData, 
+                    theme: 'striped', 
+                    headStyles: { fillColor: [67,97,238] } 
+                });
+                doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`);
+                this.showNotification('✅ Export PDF berhasil!', 'success');
+            }
+
+            getFilteredData() {
+                let filtered = [...this.taskData];
+                const startDate = document.getElementById('filter-start-date')?.value;
+                const endDate = document.getElementById('filter-end-date')?.value;
+                const employeeId = document.getElementById('filter-employee')?.value;
+                const floor = document.getElementById('filter-floor')?.value;
+                if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
+                if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
+                if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
+                if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
+                return filtered;
+            }
+
+            setDefaultFilterDates() {
+                const today = new Date();
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                if (document.getElementById('filter-start-date')) {
+                    document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0];
+                    document.getElementById('filter-end-date').value = today.toISOString().split('T')[0];
+                }
+            }
+
+            stopCamera() {
+                if (this.cameraStream) {
+                    this.cameraStream.getTracks().forEach(track => track.stop());
+                    this.cameraStream = null;
+                    this.isCameraReady = false;
+                }
+            }
+
+            showLoginPage() {
+                document.getElementById('login-page').classList.remove('hidden');
+                document.getElementById('app-container').classList.remove('active');
+                document.getElementById('admin-container').classList.remove('active');
+            }
+
+            showEmployeePanel() {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('app-container').classList.add('active');
+                document.getElementById('admin-container').classList.remove('active');
+            }
+
+            showAdminPanel() {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('active');
+                document.getElementById('admin-container').classList.add('active');
+            }
+
+            updateUserDisplay() {
+                const name = this.currentUser?.name || this.currentUser?.email?.split('@')[0];
+                const userDisplay = document.getElementById('user-display');
+                const adminDisplay = document.getElementById('admin-display');
+                if (userDisplay) userDisplay.textContent = `👤 ${name}`;
+                if (adminDisplay) adminDisplay.textContent = `👑 ${name || 'Admin'}`;
+            }
+
+            showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                const icon = document.getElementById('notification-icon');
+                const msg = document.getElementById('notification-message');
+                const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+                icon.textContent = icons[type] || 'ℹ️';
+                notification.style.borderLeftColor = type === 'success' ? '#06d6a0' : type === 'error' ? '#ef476f' : type === 'warning' ? '#ffd166' : '#4361ee';
+                msg.textContent = message;
+                notification.style.display = 'flex';
+                notification.style.transform = 'translateY(0)';
+                setTimeout(() => {
+                    notification.style.transform = 'translateY(-100px)';
+                    setTimeout(() => notification.style.display = 'none', 300);
+                }, 3000);
+            }
+
+            showLoading() {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.classList.remove('hidden');
+            }
+
+            hideLoading() {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.classList.add('hidden');
+            }
+
             setupEventListeners() {
-                document.getElementById('btn-login')?.addEventListener('click', () => { const email = document.getElementById('login-email').value.trim(); const password = document.getElementById('login-password').value; if (email && password) this.login(email, password); else this.showNotification('Isi email dan password!', 'warning'); });
+                document.getElementById('btn-login')?.addEventListener('click', () => { 
+                    const email = document.getElementById('login-email').value.trim(); 
+                    const password = document.getElementById('login-password').value; 
+                    if (email && password) this.login(email, password); 
+                    else this.showNotification('Isi email dan password!', 'warning'); 
+                });
                 document.getElementById('btn-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('admin-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('employee-start')?.addEventListener('click', () => this.startTaskSession());
@@ -856,7 +1156,7 @@
         }
 
         window.attendanceSystem = new OBTaskSystem();
-        window.showPhoto = (photo) => window.attendanceSystem.showPhoto(photo);
+        window.showSlideshowForRecord = (recordId) => window.attendanceSystem.showSlideshowForRecord(recordId);
         window.showTaskDetail = (record) => window.attendanceSystem.showTaskDetail(record);
     </script>
 </body>
