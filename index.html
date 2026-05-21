@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Genetek OB • Multi Cabang + Slide Foto</title>
+    <title>Genetek OB • Multi Lantai + Shared Tasks</title>
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -129,38 +129,63 @@
         .btn-capture { position: absolute; bottom: 12px; right: 12px; background: white; border: none; padding: 12px 20px; border-radius: 40px; font-weight: 600; cursor: pointer; }
         .btn-switch-camera { position: absolute; bottom: 12px; left: 12px; background: rgba(255,255,255,0.9); border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; }
         
-        .location-card { background: #f8fafc; border-radius: 18px; padding: 18px; margin-bottom: 20px; }
-        .branch-selector, .floor-selector { margin-bottom: 16px; }
-        .branch-selector label, .floor-selector label { font-weight: 600; display: block; margin-bottom: 8px; }
-        .floor-selector select, .branch-selector select { width: 100%; padding: 14px; border-radius: 16px; border: 2px solid #e2e8f0; background: white; }
+        .branch-selector, .floor-multi-selector { margin-bottom: 20px; }
+        .floor-multi-selector label { font-weight: 600; display: block; margin-bottom: 8px; }
+        .floor-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .floor-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 10px 18px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .floor-checkbox-item.selected {
+            background: var(--primary);
+            color: white;
+        }
+        .floor-checkbox-item input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
         
-        .task-checklist { max-height: 400px; overflow-y: auto; margin-top: 20px; }
+        .task-checklist { max-height: 500px; overflow-y: auto; margin-top: 20px; }
         .task-item { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 2px solid #e2e8f0; transition: all 0.2s; }
         .task-item.completed { border-color: var(--success); background: #f0fdf9; }
-        .task-header { display: flex; align-items: center; gap: 10px; }
+        .task-item.locked { opacity: 0.6; background: #f8fafc; }
+        .task-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .task-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
         .task-name { flex: 1; font-weight: 500; }
         .task-camera-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; }
         .task-camera-btn.completed { background: var(--success); }
+        .task-camera-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .task-photo-preview { margin-top: 10px; display: none; }
         .task-photo-preview.active { display: block; }
-        .task-photo-preview img { width: 100%; border-radius: 12px; }
+        .task-photo-preview img { width: 100%; border-radius: 12px; max-height: 200px; object-fit: cover; }
         
         .btn { padding: 14px; border-radius: 18px; font-weight: 600; border: none; cursor: pointer; color: white; }
         .btn-start { background: linear-gradient(145deg, #06d6a0, #05b386); }
         .btn-save { background: linear-gradient(145deg, #4361ee, #3a56d4); display: none; }
         .button-group { display: flex; gap: 12px; margin: 16px 0; }
         
-        .status-badge { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 14px; border-radius: 16px; }
+        .status-badge { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 14px; border-radius: 16px; margin-top: 12px; }
         .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
         .status-badge.active .status-indicator { background: #06d6a0; animation: pulse 1.5s infinite; }
-        .progress-text { margin-left: auto; }
+        .progress-text { margin-left: auto; font-weight: 600; }
         
         #live-clock { text-align: center; margin-bottom: 18px; }
         #live-time { font-size: 2rem; font-weight: 700; color: var(--primary); }
         #live-date { color: var(--gray); margin-top: 4px; }
         
-        /* Stats & Filter */
         .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 16px; margin-bottom: 20px; }
         @media (min-width: 769px) { .stats-grid { grid-template-columns: repeat(4,1fr); } }
         .stat-card { background: white; border-radius: 22px; padding: 18px; box-shadow: var(--shadow); }
@@ -183,7 +208,6 @@
         .progress-bar { background: #e2e8f0; height: 4px; border-radius: 2px; margin-top: 4px; }
         .progress-fill { background: var(--success); height: 4px; border-radius: 2px; }
         
-        /* SLIDE MODAL UNTUK FOTO */
         .slideshow-modal {
             position: fixed;
             top: 0;
@@ -198,90 +222,40 @@
             flex-direction: column;
         }
         .slideshow-modal.active { display: flex; }
-        .slideshow-container {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin: auto;
-        }
-        .slideshow-image {
-            width: 100%;
-            max-height: 70vh;
-            object-fit: contain;
-            border-radius: 16px;
-        }
-        .slideshow-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            border: none;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            color: white;
-            transition: all 0.3s;
-        }
-        .slideshow-nav:hover { background: rgba(255,255,255,0.6); color: black; }
+        .slideshow-container { position: relative; width: 100%; max-width: 500px; }
+        .slideshow-image { width: 100%; max-height: 70vh; object-fit: contain; border-radius: 16px; }
+        .slideshow-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); backdrop-filter: blur(10px); border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px; cursor: pointer; color: white; }
         .nav-prev { left: 10px; }
         .nav-next { right: 10px; }
-        .slideshow-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            color: white;
-        }
-        .slideshow-caption {
-            color: white;
-            text-align: center;
-            padding: 16px;
-            background: rgba(0,0,0,0.5);
-            border-radius: 30px;
-            margin-top: 16px;
-            font-size: 14px;
-        }
-        .slideshow-counter {
-            position: absolute;
-            bottom: -40px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            color: white;
-            font-size: 14px;
-        }
+        .slideshow-close { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.2); border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 24px; cursor: pointer; color: white; }
+        .slideshow-caption { color: white; text-align: center; padding: 16px; background: rgba(0,0,0,0.5); border-radius: 30px; margin-top: 16px; }
         
-        /* Task Detail Modal */
-        .task-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002; display: none; }
-        .task-popup-content { background: white; border-radius: 24px; padding: 24px; max-width: 90%; width: 400px; max-height: 80vh; overflow: auto; }
-        .task-popup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .floor-header {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 16px;
+            margin: 16px 0 12px 0;
+            font-weight: 700;
+            color: var(--primary);
+            border-left: 4px solid var(--primary);
+        }
         
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
         
         @media (max-width: 768px) {
             .slideshow-nav { width: 40px; height: 40px; font-size: 18px; }
-            .photo-gallery { max-width: 120px; }
         }
     </style>
 </head>
 <body>
     <div id="loading-screen" class="loading-screen"><div class="loading-spinner"></div></div>
-    <div id="notification" class="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
+    <div id="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
 
     <!-- LOGIN PAGE -->
     <div id="login-page">
-        <div class="login-header"><h1>✨ Genetek</h1><div>OB Task Management</div></div>
-        <div class="form-group"><label>📧 Email</label><input type="email" id="login-email" placeholder="email@genetek.co.id" value="admin@genetek.co.id"></div>
+        <div class="login-header"><h1>✨ Genetek OB</h1><div>Multi Lantai + Shared Tasks</div></div>
+        <div class="form-group"><label>📧 Email</label><input type="email" id="login-email" placeholder="email@genetek.co.id" value="ob1@genetek.co.id"></div>
         <div class="form-group"><label>🔑 Password</label><input type="password" id="login-password" placeholder="Minimal 6 karakter" value="123456"></div>
         <button id="btn-login" class="btn-login">🚀 Masuk</button>
     </div>
@@ -289,7 +263,7 @@
     <!-- MAIN APP (OB) -->
     <div id="app-container">
         <div class="navbar">
-            <div class="nav-brand"><span style="font-size:1.8rem;">🧹</span><h2>Task OB</h2></div>
+            <div class="nav-brand"><span style="font-size:1.8rem;">🧹</span><h2>Task OB - Shared Floors</h2></div>
             <div class="nav-menu">
                 <span id="user-display" class="user-badge"></span>
                 <button id="btn-logout" class="btn-logout"><span>🚪</span> Keluar</button>
@@ -298,19 +272,40 @@
         <div class="dashboard-grid">
             <div class="card" id="camera-card">
                 <div class="card-title"><span>📸</span> Kamera</div>
-                <div class="camera-wrapper"><video id="video-feed" autoplay playsinline></video><button id="btn-capture" class="btn-capture">📷 Foto</button><button id="btn-switch-camera" class="btn-switch-camera">🔄</button></div>
-                <div id="current-task-info" style="display:none; padding:12px; background:#f1f5f9; border-radius:14px; margin-top:12px;"><div style="font-weight:600;">📌 Tugas Saat Ini:</div><div id="current-task-name" style="color:var(--primary);"></div></div>
+                <div class="camera-wrapper">
+                    <video id="video-feed" autoplay playsinline></video>
+                    <button id="btn-capture" class="btn-capture">📷 Foto</button>
+                    <button id="btn-switch-camera" class="btn-switch-camera">🔄</button>
+                </div>
             </div>
             <div class="card">
                 <div class="card-title"><span>✅</span> Tugas Hari Ini</div>
-                <div id="live-clock"><div id="live-time">--:--:--</div><div id="live-date">--, -- -- ----</div></div>
-                <div class="location-card">
-                    <div class="branch-selector"><label>🏢 Pilih Kantor</label><select id="branch-select"><option value="">-- Pilih Kantor --</option><option value="PURI">PURI</option><option value="ARTERI">ARTERI</option></select></div>
-                    <div class="floor-selector"><label>📍 Pilih Lantai</label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
+                <div id="live-clock">
+                    <div id="live-time">--:--:--</div>
+                    <div id="live-date">--, -- -- ----</div>
                 </div>
-                <div id="task-checklist-container" class="task-checklist"><p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p></div>
-                <div class="button-group"><button id="employee-start" class="btn btn-start" disabled>🚀 Mulai</button><button id="employee-save" class="btn btn-save">💾 Simpan</button></div>
-                <div id="employee-status" class="status-badge"><span class="status-indicator"></span><span class="status-text">Belum mulai</span><span id="task-progress" class="progress-text">0/0</span></div>
+                <div class="branch-selector">
+                    <label>🏢 Pilih Kantor</label>
+                    <select id="branch-select">
+                        <option value="">-- Pilih Kantor --</option>
+                        <option value="PURI">PURI</option>
+                        <option value="ARTERI">ARTERI</option>
+                    </select>
+                </div>
+                <div class="floor-multi-selector" id="floor-multi-container" style="display:none;">
+                    <label>📍 Pilih Lantai (Bisa pilih lebih dari satu)</label>
+                    <div id="floor-checkboxes" class="floor-checkbox-group"></div>
+                </div>
+                <div id="multi-floor-tasks-container" class="task-checklist"></div>
+                <div class="button-group">
+                    <button id="employee-start" class="btn btn-start" disabled>🚀 Mulai Sesi</button>
+                    <button id="employee-save" class="btn btn-save">💾 Simpan Progress</button>
+                </div>
+                <div id="employee-status" class="status-badge">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Belum mulai</span>
+                    <span id="task-progress" class="progress-text">0/0</span>
+                </div>
             </div>
         </div>
     </div>
@@ -318,7 +313,7 @@
     <!-- ADMIN PANEL -->
     <div id="admin-container">
         <div class="navbar">
-            <div class="nav-brand"><span style="font-size:1.8rem;">👑</span><h2>Admin OB</h2></div>
+            <div class="nav-brand"><span style="font-size:1.8rem;">👑</span><h2>Admin OB - Laporan Shared Tasks</h2></div>
             <div class="nav-menu">
                 <span id="admin-display" class="user-badge"></span>
                 <button id="admin-logout" class="btn-logout"><span>🚪</span> Keluar</button>
@@ -327,14 +322,14 @@
         <div class="stats-grid">
             <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value" id="total-karyawan">0</div><div>Karyawan</div></div>
             <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value" id="hari-ini-tugas">0</div><div>Hari Ini</div></div>
-            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="total-tugas">0</div><div>Total Tugas</div></div>
-            <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-value" id="aktif-hari-ini">0</div><div>Aktif</div></div>
+            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value" id="total-tugas">0</div><div>Total Submissions</div></div>
+            <div class="stat-card"><div class="stat-icon">📍</div><div class="stat-value" id="aktif-hari-ini">0</div><div>Aktif Hari Ini</div></div>
         </div>
         <div class="filter-section">
             <input type="date" id="filter-start-date" placeholder="Dari">
             <input type="date" id="filter-end-date" placeholder="Sampai">
             <select id="filter-employee"><option value="all">Semua Karyawan</option></select>
-            <select id="filter-floor"><option value="all">Semua Lantai</option><option value="Lantai 1">Lantai 1</option><option value="Lantai 2">Lantai 2</option><option value="Lantai 3">Lantai 3</option><option value="Lantai 4">Lantai 4</option></select>
+            <select id="filter-floor"><option value="all">Semua Lantai</option></select>
             <button id="btn-apply-filter" class="btn-filter">🔍 Filter</button>
             <button id="btn-export-excel" class="btn-filter success">📥 Excel</button>
             <button id="btn-export-pdf" class="btn-filter warning">📄 PDF</button>
@@ -342,10 +337,10 @@
         <div class="table-container">
             <table>
                 <thead>
-                    <tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress</th><th>Foto (Klik untuk Slide)</th></tr>
+                    <tr><th>Tanggal</th><th>Karyawan</th><th>Email</th><th>Cabang</th><th>Lantai</th><th>Progress (Selesai/Total)</th><th>Foto Tugas</th></tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat data</td></tr>
+                    <tr><td colspan="7" style="text-align:center;padding:40px;">📭 Pilih filter untuk melihat数据</td></tr>
                 </tbody>
             </table>
         </div>
@@ -360,11 +355,7 @@
             <button class="slideshow-nav nav-next" id="slideshow-next">›</button>
         </div>
         <div class="slideshow-caption" id="slideshow-caption">-</div>
-        <div class="slideshow-counter" id="slideshow-counter">1 / 1</div>
     </div>
-
-    <!-- TASK POPUP -->
-    <div id="task-popup" class="task-popup"><div class="task-popup-content"><div class="task-popup-header"><h3 id="task-popup-title">📋 Detail Tugas</h3><button onclick="closeTaskPopup()">✕</button></div><div id="task-popup-body"></div><div id="task-popup-progress" style="margin-top:16px;font-weight:600;"></div></div></div>
 
     <script>
         // Firebase Config
@@ -381,64 +372,61 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
-        // MASTER TASKS
+        // MASTER TASKS - Daftar tugas per cabang dan lantai
         const MASTER_TASKS = {
             PURI: {
                 'Lantai 1': [
-                    { id: 'puri_l1_1', name: 'Membersihkan area Lantai 1' },
-                    { id: 'puri_l1_3', name: 'Membersihkan Ruang Meeting Lantai 1' },
-                    { id: 'puri_l1_4', name: 'Membersihkan Kaca' },
-                    { id: 'puri_l1_5', name: 'Membersihkan Pintu Depan' },
-                    { id: 'puri_l1_6', name: 'Membersihkan Lemari APD' },
-                    { id: 'puri_l1_7', name: 'Membersihkan Langit-Langit' },
-                    { id: 'puri_l1_8', name: 'Membersihkan toilet' },
-                    { id: 'puri_l1_9', name: 'Membersihkan Area Pantry' }
+                    'Membersihkan area Lantai 1',
+                    'Membersihkan Ruang Meeting Lantai 1',
+                    'Membersihkan Kaca',
+                    'Membersihkan Pintu Depan',
+                    'Membersihkan Lemari APD',
+                    'Membersihkan Langit-Langit',
+                    'Membersihkan toilet',
+                    'Membersihkan Area Pantry'
                 ],
                 'Lantai 2': [
-                    { id: 'puri_l2_1', name: 'Menyapu dan Mengepel Lantai 2' },
-                    { id: 'puri_l2_2', name: 'Membersihkan Ruangan Direksi' },
-                    { id: 'puri_l2_3', name: 'Membersihkan Ruangan Komisaris' },
-                    { id: 'puri_l2_4', name: 'Membersihkan Langit-Langit' },
-                    { id: 'puri_l2_5', name: 'Membersihkan toilet' },
-                    { id: 'puri_l2_6', name: 'Membersihkan Ruang Accounting' }
+                    'Menyapu dan Mengepel Lantai 2',
+                    'Membersihkan Ruangan Direksi',
+                    'Membersihkan Ruangan Komisaris',
+                    'Membersihkan Langit-Langit',
+                    'Membersihkan toilet',
+                    'Membersihkan Ruang Accounting'
                 ],
                 'Lantai 3': [
-                    { id: 'puri_l3_1', name: 'Menyapu dan Mengepel Area Lantai 3' },
-                    { id: 'puri_l3_2', name: 'Membersihkan Meja' },
-                    { id: 'puri_l3_3', name: 'Mengelap Kaca' },
-                    { id: 'puri_l3_4', name: 'Membersihkan Langit-Langit' },
-                    { id: 'puri_l3_5', name: 'Membersihkan toilet' }
+                    'Menyapu dan Mengepel Area Lantai 3',
+                    'Membersihkan Meja',
+                    'Mengelap Kaca',
+                    'Membersihkan Langit-Langit',
+                    'Membersihkan toilet'
                 ],
                 'Lantai 4': [
-                    { id: 'puri_l4_1', name: 'Menyapu dan Mengepel Area Lantai 4' },
-                    { id: 'puri_l4_2', name: 'Membersihkan Meja' },
-                    { id: 'puri_l4_3', name: 'Mengelap Kaca' },
-                    { id: 'puri_l4_4', name: 'Membersihkan Ruang Meeting' },
-                    { id: 'puri_l4_5', name: 'Membersihkan Mushollah' },
-                    { id: 'puri_l4_6', name: 'Membersihkan Ruang Arsip' },
-                    { id: 'puri_l4_7', name: 'Membersihkan Area Pantry' },
-                    { id: 'puri_l4_8', name: 'Membersihkan Area Outdoor Ruang AC' }
+                    'Menyapu dan Mengepel Area Lantai 4',
+                    'Membersihkan Meja',
+                    'Mengelap Kaca',
+                    'Membersihkan Ruang Meeting',
+                    'Membersihkan Mushollah',
+                    'Membersihkan Ruang Arsip',
+                    'Membersihkan Area Pantry',
+                    'Membersihkan Area Outdoor Ruang AC'
                 ]
             },
             ARTERI: {
                 'Lantai 1': [
-                    { id: 'art_l1_1', name: 'Membersihkan area lantai 1' }
+                    'Membersihkan area lantai 1'
                 ],
                 'Lantai 2': [
-                    { id: 'art_l2_1', name: 'Membersihkan area kerja' },
-                    { id: 'art_l2_2', name: 'Membersihkan ruangan GM Tehnik' },
-                    { id: 'art_l2_3', name: 'Membersihkan Toilet' }
+                    'Membersihkan area kerja',
+                    'Membersihkan ruangan GM Tehnik',
+                    'Membersihkan Toilet'
                 ],
                 'Lantai 3': [
-                    { id: 'art_l3_1', name: 'Membersihkan area kerja' },
-                    { id: 'art_l3_2', name: 'Membersihkan mushollah' },
-                    { id: 'art_l3_3', name: 'Membersihkan Toilet' }
+                    'Membersihkan area kerja',
+                    'Membersihkan mushollah',
+                    'Membersihkan Toilet'
                 ]
             }
         };
-
-        function closeTaskPopup() { document.getElementById('task-popup').style.display = 'none'; }
-        window.closeTaskPopup = closeTaskPopup;
 
         class OBTaskSystem {
             constructor() {
@@ -454,12 +442,14 @@
                 // Slideshow state
                 this.currentSlideImages = [];
                 this.currentSlideIndex = 0;
-                this.currentSlideTitle = '';
                 
-                this.currentSession = {
-                    branch: null, floor: null, tasks: [], completedTasks: [],
-                    taskDetails: {}, taskPhotos: {}, startTime: null, status: 'idle', sessionId: null
-                };
+                // Session data untuk multi lantai
+                this.selectedBranch = '';
+                this.selectedFloors = [];
+                this.sessionActive = false;
+                this.sessionId = null;
+                this.sessionStartTime = null;
+                this.myProgress = {}; // { floorKey: { completedTaskIds: [], taskPhotos: {} } }
                 
                 document.addEventListener('DOMContentLoaded', () => this.initialize());
             }
@@ -491,33 +481,23 @@
                         this.updateSlideImage();
                     }
                 });
-                document.getElementById('slideshow-modal')?.addEventListener('click', (e) => {
-                    if (e.target === document.getElementById('slideshow-modal')) {
-                        document.getElementById('slideshow-modal').classList.remove('active');
-                    }
-                });
             }
 
             updateSlideImage() {
                 const img = document.getElementById('slideshow-image');
-                const counter = document.getElementById('slideshow-counter');
                 const caption = document.getElementById('slideshow-caption');
                 if (this.currentSlideImages[this.currentSlideIndex]) {
                     img.src = this.currentSlideImages[this.currentSlideIndex];
-                    counter.textContent = `${this.currentSlideIndex + 1} / ${this.currentSlideImages.length}`;
-                    caption.textContent = `${this.currentSlideTitle} - Foto ${this.currentSlideIndex + 1}`;
+                    caption.textContent = `Foto ${this.currentSlideIndex + 1} / ${this.currentSlideImages.length}`;
                 }
             }
 
-            showSlideshow(images, title) {
+            showSlideshow(images) {
                 this.currentSlideImages = images;
                 this.currentSlideIndex = 0;
-                this.currentSlideTitle = title;
                 if (images.length > 0) {
                     this.updateSlideImage();
                     document.getElementById('slideshow-modal').classList.add('active');
-                } else {
-                    this.showNotification('Tidak ada foto untuk ditampilkan', 'warning');
                 }
             }
 
@@ -577,7 +557,7 @@
             startEmployeeFeatures() {
                 this.startRealTimeClock();
                 this.setupCamera();
-                this.initBranchFloorSelector();
+                this.initMultiFloorUI();
             }
 
             startRealTimeClock() {
@@ -593,82 +573,351 @@
                 if (dateEl) dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             }
 
-            initBranchFloorSelector() {
+            initMultiFloorUI() {
                 const branchSelect = document.getElementById('branch-select');
-                const floorSelect = document.getElementById('floor-select');
-                
-                branchSelect.addEventListener('change', (e) => {
-                    const branch = e.target.value;
-                    this.currentSession.branch = branch;
-                    this.currentSession.floor = null;
+                branchSelect.addEventListener('change', async (e) => {
+                    this.selectedBranch = e.target.value;
+                    this.selectedFloors = [];
                     this.resetSession();
                     
-                    floorSelect.innerHTML = '<option value="">Pilih Lantai</option>';
-                    floorSelect.disabled = !branch;
+                    const container = document.getElementById('floor-multi-container');
+                    const checkDiv = document.getElementById('floor-checkboxes');
                     
-                    if (branch && MASTER_TASKS[branch]) {
-                        Object.keys(MASTER_TASKS[branch]).forEach(floor => {
-                            floorSelect.innerHTML += `<option value="${floor}">${floor}</option>`;
+                    if (this.selectedBranch && MASTER_TASKS[this.selectedBranch]) {
+                        container.style.display = 'block';
+                        checkDiv.innerHTML = '';
+                        const floors = Object.keys(MASTER_TASKS[this.selectedBranch]);
+                        floors.forEach(floor => {
+                            const div = document.createElement('div');
+                            div.className = 'floor-checkbox-item';
+                            div.innerHTML = `
+                                <input type="checkbox" value="${floor}" id="floor_${floor.replace(/ /g, '_')}">
+                                <label for="floor_${floor.replace(/ /g, '_')}">${floor}</label>
+                            `;
+                            div.querySelector('input').addEventListener('change', (ev) => {
+                                this.toggleFloor(floor, ev.target.checked);
+                                if (ev.target.checked) div.classList.add('selected');
+                                else div.classList.remove('selected');
+                            });
+                            checkDiv.appendChild(div);
+                        });
+                    } else {
+                        container.style.display = 'none';
+                    }
+                    
+                    document.getElementById('multi-floor-tasks-container').innerHTML = '';
+                    document.getElementById('employee-start').disabled = true;
+                });
+            }
+
+            async toggleFloor(floor, isChecked) {
+                if (isChecked) {
+                    if (!this.selectedFloors.includes(floor)) this.selectedFloors.push(floor);
+                } else {
+                    this.selectedFloors = this.selectedFloors.filter(f => f !== floor);
+                }
+                await this.renderAllFloorsTasks();
+            }
+
+            async getCompletedTasksFromDatabase(floorKey) {
+                const today = new Date().toISOString().split('T')[0];
+                const snapshot = await db.collection('ob_tasks')
+                    .where('branch', '==', this.selectedBranch)
+                    .where('floorKey', '==', floorKey)
+                    .where('date', '==', today)
+                    .get();
+                
+                const allCompletedIds = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.completedTaskIds) {
+                        allCompletedIds.push(...data.completedTaskIds);
+                    }
+                });
+                return [...new Set(allCompletedIds)];
+            }
+
+            async renderAllFloorsTasks() {
+                if (!this.selectedBranch || this.selectedFloors.length === 0) {
+                    document.getElementById('multi-floor-tasks-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih minimal 1 lantai</p>';
+                    return;
+                }
+
+                let html = '';
+                
+                for (const floor of this.selectedFloors) {
+                    const floorKey = `${this.selectedBranch}_${floor}`;
+                    const tasks = MASTER_TASKS[this.selectedBranch][floor] || [];
+                    
+                    // Ambil tugas yang sudah selesai oleh OB lain hari ini
+                    const globalCompleted = await this.getCompletedTasksFromDatabase(floorKey);
+                    
+                    // Tugas yang sudah diselesaikan oleh OB ini di sesi saat ini
+                    const myCompleted = this.myProgress[floorKey]?.completedTaskIds || [];
+                    
+                    // Gabungkan: tugas yang sudah selesai secara global (tidak bisa dikerjakan lagi)
+                    const allCompleted = [...new Set([...globalCompleted, ...myCompleted])];
+                    
+                    html += `<div class="floor-header">📍 ${floor} (${tasks.length} tugas)</div>`;
+                    
+                    tasks.forEach((taskName, idx) => {
+                        const taskId = `${floorKey}_task_${idx}`;
+                        const isCompleted = allCompleted.includes(taskId);
+                        const myPhoto = this.myProgress[floorKey]?.taskPhotos?.[taskId];
+                        const isLocked = isCompleted && !myPhoto; // Tugas selesai oleh OB lain, tidak bisa diubah
+                        
+                        html += `<div class="task-item ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''}" data-floor="${floorKey}" data-task-id="${taskId}">
+                            <div class="task-header">
+                                <input type="checkbox" class="task-checkbox" data-task-id="${taskId}" 
+                                    ${isCompleted ? 'checked disabled' : ''} 
+                                    ${(!this.sessionActive || isLocked) ? 'disabled' : ''}>
+                                <span class="task-name">${taskName}</span>
+                                <button class="task-camera-btn ${myPhoto ? 'completed' : ''}" data-task-id="${taskId}" 
+                                    ${(!this.sessionActive || isCompleted) ? 'disabled' : ''}>📸</button>
+                            </div>
+                            <div id="preview-${taskId}" class="task-photo-preview ${myPhoto ? 'active' : ''}">
+                                ${myPhoto ? `<img src="${myPhoto}" alt="Foto">` : ''}
+                            </div>
+                        </div>`;
+                    });
+                }
+                
+                document.getElementById('multi-floor-tasks-container').innerHTML = html;
+                
+                // Attach event listeners
+                document.querySelectorAll('.task-checkbox').forEach(cb => {
+                    cb.addEventListener('change', (e) => this.toggleTaskCompletion(e.target.dataset.taskId, e.target.checked));
+                });
+                document.querySelectorAll('.task-camera-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => this.capturePhotoForTask(btn.dataset.taskId));
+                });
+                
+                this.updateOverallProgress();
+                
+                const startBtn = document.getElementById('employee-start');
+                if (startBtn && this.selectedFloors.length > 0) startBtn.disabled = false;
+            }
+
+            updateOverallProgress() {
+                let totalAll = 0;
+                let completedAll = 0;
+                
+                for (const floor of this.selectedFloors) {
+                    const floorKey = `${this.selectedBranch}_${floor}`;
+                    const tasks = MASTER_TASKS[this.selectedBranch][floor] || [];
+                    totalAll += tasks.length;
+                    const myCompleted = this.myProgress[floorKey]?.completedTaskIds || [];
+                    completedAll += myCompleted.length;
+                }
+                
+                const progressEl = document.getElementById('task-progress');
+                if (progressEl) progressEl.textContent = `${completedAll}/${totalAll}`;
+                
+                const saveBtn = document.getElementById('employee-save');
+                if (saveBtn) saveBtn.disabled = (completedAll === 0);
+            }
+
+            toggleTaskCompletion(taskId, isChecked) {
+                if (!isChecked) return;
+                
+                // Parse taskId: PURI_Lantai 1_task_0
+                const parts = taskId.split('_');
+                const floor = parts.slice(0, -2).join('_');
+                const floorKey = floor;
+                
+                if (!this.myProgress[floorKey]) {
+                    this.myProgress[floorKey] = { completedTaskIds: [], taskPhotos: {} };
+                }
+                
+                // Cek apakah sudah ada foto
+                if (!this.myProgress[floorKey].taskPhotos[taskId]) {
+                    this.showNotification('📸 Ambil foto terlebih dahulu!', 'warning');
+                    document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`).checked = false;
+                    return;
+                }
+                
+                if (!this.myProgress[floorKey].completedTaskIds.includes(taskId)) {
+                    this.myProgress[floorKey].completedTaskIds.push(taskId);
+                }
+                
+                // Update UI
+                const taskDiv = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
+                if (taskDiv) taskDiv.classList.add('completed');
+                const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
+                if (checkbox) checkbox.disabled = true;
+                const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
+                if (cameraBtn) cameraBtn.disabled = true;
+                
+                this.updateOverallProgress();
+                this.showNotification('✅ Tugas ditandai selesai!', 'success');
+            }
+
+            async capturePhotoForTask(taskId) {
+                if (!this.isCameraReady) {
+                    this.showNotification('Kamera belum siap', 'error');
+                    return;
+                }
+                
+                const video = document.getElementById('video-feed');
+                if (!video || video.readyState !== 4) {
+                    this.showNotification('Video belum siap', 'warning');
+                    return;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                const photo = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // Parse floor key from taskId
+                const parts = taskId.split('_');
+                const floorKey = parts.slice(0, -2).join('_');
+                
+                if (!this.myProgress[floorKey]) {
+                    this.myProgress[floorKey] = { completedTaskIds: [], taskPhotos: {} };
+                }
+                
+                this.myProgress[floorKey].taskPhotos[taskId] = photo;
+                
+                // Update preview
+                const previewDiv = document.getElementById(`preview-${taskId}`);
+                if (previewDiv) {
+                    previewDiv.innerHTML = `<img src="${photo}" alt="Foto">`;
+                    previewDiv.classList.add('active');
+                }
+                
+                const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
+                if (cameraBtn) cameraBtn.classList.add('completed');
+                
+                this.showNotification(`📸 Foto berhasil diambil!`, 'success');
+                
+                // Jika sudah ada checklist otomatis centang (optional)
+                const checkbox = document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`);
+                if (checkbox && !checkbox.checked && !checkbox.disabled && this.sessionActive) {
+                    checkbox.checked = true;
+                    this.toggleTaskCompletion(taskId, true);
+                }
+            }
+
+            async startTaskSession() {
+                if (this.selectedFloors.length === 0) {
+                    this.showNotification('Pilih minimal 1 lantai!', 'warning');
+                    return;
+                }
+                
+                if (!this.sessionActive) {
+                    this.sessionActive = true;
+                    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    this.sessionStartTime = new Date().toISOString();
+                    
+                    // Reset progress untuk sesi baru
+                    this.myProgress = {};
+                    
+                    await this.renderAllFloorsTasks();
+                    
+                    document.getElementById('employee-start').disabled = true;
+                    document.getElementById('employee-save').style.display = 'block';
+                    
+                    const statusDiv = document.getElementById('employee-status');
+                    if (statusDiv) statusDiv.classList.add('active');
+                    document.querySelector('.status-text').textContent = 'Mengerjakan';
+                    
+                    this.showNotification('✅ Sesi dimulai! Silakan kerjakan tugas dan foto setiap tugas', 'success');
+                }
+            }
+
+            async saveProgress() {
+                if (!this.sessionActive) {
+                    this.showNotification('Sesi belum dimulai', 'warning');
+                    return;
+                }
+                
+                // Kumpulkan data per lantai
+                const submissions = [];
+                
+                for (const floor of this.selectedFloors) {
+                    const floorKey = `${this.selectedBranch}_${floor}`;
+                    const progress = this.myProgress[floorKey];
+                    
+                    if (!progress || progress.completedTaskIds.length === 0) continue;
+                    
+                    const tasks = MASTER_TASKS[this.selectedBranch][floor] || [];
+                    const taskNames = {};
+                    tasks.forEach((name, idx) => {
+                        taskNames[`${floorKey}_task_${idx}`] = name;
+                    });
+                    
+                    submissions.push({
+                        branch: this.selectedBranch,
+                        floor: floor,
+                        floorKey: floorKey,
+                        completedTaskIds: progress.completedTaskIds,
+                        taskPhotos: progress.taskPhotos,
+                        taskDetails: this.buildTaskDetails(progress.completedTaskIds, progress.taskPhotos),
+                        progress: `${progress.completedTaskIds.length}/${tasks.length}`
+                    });
+                }
+                
+                if (submissions.length === 0) {
+                    this.showNotification('Belum ada tugas yang selesai', 'warning');
+                    return;
+                }
+                
+                try {
+                    this.showLoading();
+                    
+                    for (const sub of submissions) {
+                        await db.collection('ob_tasks').add({
+                            userId: this.currentUser.uid,
+                            userName: this.currentUser.name || this.currentUser.email.split('@')[0],
+                            userEmail: this.currentUser.email,
+                            branch: sub.branch,
+                            floor: sub.floor,
+                            floorKey: sub.floorKey,
+                            completedTaskIds: sub.completedTaskIds,
+                            taskPhotos: sub.taskPhotos,
+                            taskDetails: sub.taskDetails,
+                            date: new Date().toISOString().split('T')[0],
+                            createdAt: new Date().toISOString(),
+                            sessionId: this.sessionId,
+                            startTime: this.sessionStartTime,
+                            endTime: new Date().toISOString(),
+                            progress: sub.progress
                         });
                     }
                     
-                    document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih lantai</p>';
-                    document.getElementById('employee-start').disabled = true;
+                    this.showNotification(`✅ Progress tersimpan untuk ${submissions.length} lantai!`, 'success');
+                    
+                    // Reset session
+                    this.sessionActive = false;
+                    this.myProgress = {};
                     document.getElementById('employee-save').style.display = 'none';
-                    document.getElementById('current-task-info').style.display = 'none';
-                });
-                
-                floorSelect.addEventListener('change', (e) => {
-                    const floor = e.target.value;
-                    if (floor && this.currentSession.branch) {
-                        this.currentSession.floor = floor;
-                        this.resetSession();
-                        this.loadTasksForFloor(this.currentSession.branch, floor);
-                        document.getElementById('employee-start').disabled = false;
-                    }
-                });
+                    document.getElementById('employee-start').disabled = false;
+                    document.querySelector('.status-text').textContent = 'Belum mulai';
+                    document.getElementById('employee-status').classList.remove('active');
+                    
+                    // Refresh tampilan tugas
+                    await this.renderAllFloorsTasks();
+                    
+                } catch (error) {
+                    console.error('Save error:', error);
+                    this.showNotification('❌ Gagal menyimpan data', 'error');
+                } finally {
+                    this.hideLoading();
+                }
             }
-
-            resetSession() {
-                this.currentSession.completedTasks = [];
-                this.currentSession.taskPhotos = {};
-                this.currentSession.taskDetails = {};
-                this.currentSession.startTime = null;
-                this.currentSession.status = 'idle';
-                this.currentSession.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            }
-
-            loadTasksForFloor(branch, floor) {
-                const tasks = MASTER_TASKS[branch]?.[floor] || [];
-                this.currentSession.tasks = tasks;
-                let html = '<h4 style="margin-bottom:16px;">📋 Daftar Tugas:</h4>';
-                
-                tasks.forEach(task => {
-                    const isCompleted = this.currentSession.completedTasks.includes(task.id);
-                    const hasPhoto = this.currentSession.taskPhotos[task.id];
-                    html += `<div class="task-item ${isCompleted ? 'completed' : ''}" data-task-id="${task.id}">
-                        <div class="task-header">
-                            <input type="checkbox" class="task-checkbox" data-task-id="${task.id}" ${isCompleted ? 'checked' : ''} ${!this.isCameraReady ? 'disabled' : ''}>
-                            <span class="task-name">${task.name}</span>
-                            <button class="task-camera-btn ${hasPhoto ? 'completed' : ''}" data-task-id="${task.id}" ${!this.isCameraReady ? 'disabled' : ''}>📸</button>
-                        </div>
-                        <div id="photo-preview-${task.id}" class="task-photo-preview ${hasPhoto ? 'active' : ''}">
-                            ${hasPhoto ? `<img src="${hasPhoto}" alt="Foto">` : ''}
-                        </div>
-                    </div>`;
+            
+            buildTaskDetails(completedIds, photos) {
+                const details = {};
+                completedIds.forEach(id => {
+                    details[id] = {
+                        timestamp: new Date().toLocaleTimeString('id-ID'),
+                        fullTimestamp: new Date().toISOString(),
+                        hasPhoto: !!photos[id]
+                    };
                 });
-                
-                document.getElementById('task-checklist-container').innerHTML = html;
-                
-                tasks.forEach(task => {
-                    const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${task.id}"]`);
-                    if (cameraBtn) cameraBtn.addEventListener('click', (e) => this.capturePhotoForTask(task.id, task.name));
-                    const checkbox = document.querySelector(`.task-checkbox[data-task-id="${task.id}"]`);
-                    if (checkbox) checkbox.addEventListener('change', (e) => this.toggleTaskCompletion(task.id, e.target.checked));
-                });
-                
-                this.updateProgress();
-                this.updateStartButton();
+                return details;
             }
 
             async setupCamera() {
@@ -692,213 +941,83 @@
                 this.showNotification('🔄 Kamera diganti', 'info');
             }
 
-            async capturePhotoForTask(taskId, taskName) {
-                if (!this.isCameraReady) { this.showNotification('Kamera belum siap', 'error'); return; }
-                const video = document.getElementById('video-feed');
-                if (!video || video.readyState !== 4) { this.showNotification('Video belum siap', 'warning'); return; }
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                const photo = canvas.toDataURL('image/jpeg', 0.7);
-                
-                this.currentSession.taskPhotos[taskId] = photo;
-                this.currentSession.taskDetails[taskId] = {
-                    timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                    fullTimestamp: new Date().toISOString()
-                };
-                
-                const previewDiv = document.getElementById(`photo-preview-${taskId}`);
-                if (previewDiv) {
-                    previewDiv.classList.add('active');
-                    previewDiv.innerHTML = `<img src="${photo}" alt="Foto">`;
-                }
-                const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
-                if (cameraBtn) cameraBtn.classList.add('completed');
-                
-                document.getElementById('current-task-info').style.display = 'block';
-                document.getElementById('current-task-name').innerText = taskName;
-                if (this.currentSession.status !== 'idle') document.getElementById('employee-save').disabled = false;
-                this.showNotification(`📸 Foto "${taskName}" berhasil!`, 'success');
-            }
-
-            toggleTaskCompletion(taskId, completed) {
-                if (completed && !this.currentSession.taskPhotos[taskId]) {
-                    this.showNotification('📸 Ambil foto dulu!', 'warning');
-                    document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`).checked = false;
-                    return;
-                }
-                
-                if (completed) {
-                    if (!this.currentSession.completedTasks.includes(taskId)) this.currentSession.completedTasks.push(taskId);
-                } else {
-                    const idx = this.currentSession.completedTasks.indexOf(taskId);
-                    if (idx > -1) this.currentSession.completedTasks.splice(idx, 1);
-                }
-                
-                const taskDiv = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
-                if (taskDiv) taskDiv.classList.toggle('completed', completed);
-                if (this.currentSession.completedTasks.length > 0 && this.currentSession.status === 'active') this.currentSession.status = 'partial';
-                
-                const saveBtn = document.getElementById('employee-save');
-                if (saveBtn) saveBtn.disabled = this.currentSession.completedTasks.length === 0;
-                this.updateProgress();
-                this.updateStartButton();
-            }
-
-            updateProgress() {
-                const total = this.currentSession.tasks.length;
-                const completed = this.currentSession.completedTasks.length;
-                const progressEl = document.getElementById('task-progress');
-                if (progressEl) progressEl.textContent = `${completed}/${total}`;
-                const statusText = document.querySelector('.status-text');
-                if (statusText) {
-                    if (this.currentSession.status === 'active') statusText.textContent = 'Mengerjakan';
-                    else if (this.currentSession.status === 'partial') statusText.textContent = 'Progress';
-                    else if (this.currentSession.status === 'completed') statusText.textContent = 'Selesai';
-                    else statusText.textContent = 'Belum mulai';
-                }
-                const statusDiv = document.getElementById('employee-status');
-                if (statusDiv && (this.currentSession.status === 'active' || this.currentSession.status === 'partial')) statusDiv.classList.add('active');
-                else if (statusDiv) statusDiv.classList.remove('active');
-            }
-
-            updateStartButton() {
-                const startBtn = document.getElementById('employee-start');
-                const saveBtn = document.getElementById('employee-save');
-                if (!this.currentSession.branch || !this.currentSession.floor) { if (startBtn) startBtn.disabled = true; return; }
-                
-                if (this.currentSession.status === 'idle') {
-                    startBtn.disabled = false;
-                    startBtn.textContent = '🚀 Mulai';
-                    saveBtn.style.display = 'none';
-                } else {
-                    startBtn.disabled = true;
-                    startBtn.textContent = '⏳ Berjalan';
-                    saveBtn.style.display = 'block';
-                    saveBtn.textContent = this.currentSession.completedTasks.length === this.currentSession.tasks.length ? '✅ Selesai' : '💾 Simpan';
-                    saveBtn.disabled = this.currentSession.completedTasks.length === 0;
+            stopCamera() {
+                if (this.cameraStream) {
+                    this.cameraStream.getTracks().forEach(track => track.stop());
+                    this.cameraStream = null;
+                    this.isCameraReady = false;
                 }
             }
 
-            async startTaskSession() {
-                if (!this.currentSession.branch || !this.currentSession.floor) { this.showNotification('Pilih kantor dan lantai!', 'warning'); return; }
-                if (this.currentSession.status === 'idle') {
-                    this.currentSession.startTime = new Date().toISOString();
-                    this.currentSession.status = 'active';
-                    this.currentSession.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                    this.updateProgress();
-                    this.updateStartButton();
-                    this.showNotification('✅ Tugas dimulai! Silakan kerjakan tugas dan foto setiap tugas', 'success');
-                }
+            resetSession() {
+                this.sessionActive = false;
+                this.myProgress = {};
+                this.selectedFloors = [];
+                this.sessionId = null;
+                document.getElementById('employee-save').style.display = 'none';
+                document.getElementById('employee-start').disabled = true;
+                document.querySelector('.status-text').textContent = 'Belum mulai';
+                document.getElementById('employee-status').classList.remove('active');
+                document.getElementById('task-progress').textContent = '0/0';
             }
 
-            async saveProgress() {
-                const total = this.currentSession.tasks.length;
-                const completed = this.currentSession.completedTasks.length;
-                if (completed === 0) { this.showNotification('Belum ada tugas yang selesai', 'warning'); return; }
-                for (const taskId of this.currentSession.completedTasks) {
-                    if (!this.currentSession.taskPhotos[taskId]) { this.showNotification('Foto untuk tugas yang dicentang belum lengkap', 'error'); return; }
-                }
-                const isComplete = completed === total;
+            // ========== ADMIN FEATURES ==========
+            async loadAdminData() {
                 try {
                     this.showLoading();
-                    const taskRecord = {
-                        userId: this.currentUser.uid,
-                        userName: this.currentUser.name || this.currentUser.email.split('@')[0],
-                        userEmail: this.currentUser.email,
-                        branch: this.currentSession.branch,
-                        floor: this.currentSession.floor,
-                        tasks: this.currentSession.tasks,
-                        completedTasks: this.currentSession.completedTasks,
-                        taskDetails: this.currentSession.taskDetails,
-                        taskPhotos: this.currentSession.taskPhotos,
-                        startTime: this.currentSession.startTime,
-                        endTime: new Date().toISOString(),
-                        date: new Date().toISOString().split('T')[0],
-                        status: isComplete ? 'completed' : 'partial',
-                        progress: `${completed}/${total}`,
-                        sessionId: this.currentSession.sessionId,
-                        createdAt: new Date().toISOString()
-                    };
-                    await db.collection('ob_tasks').add(taskRecord);
-                    await db.collection('users').doc(this.currentUser.uid).update({ lastActive: new Date().toISOString() });
                     
-                    if (isComplete) {
-                        this.currentSession.status = 'completed';
-                        this.showNotification('✅ Selamat! Semua tugas selesai. Terima kasih!', 'success');
-                        setTimeout(() => {
-                            this.resetSession();
-                            document.getElementById('branch-select').value = '';
-                            document.getElementById('floor-select').innerHTML = '<option value="">Pilih kantor dulu</option>';
-                            document.getElementById('floor-select').disabled = true;
-                            document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p>';
-                            document.getElementById('current-task-info').style.display = 'none';
-                            document.getElementById('employee-save').style.display = 'none';
-                            this.updateProgress();
-                            this.updateStartButton();
-                        }, 2000);
-                    } else {
-                        this.showNotification(`📊 Progress tersimpan (${completed}/${total} tugas selesai)`, 'success');
-                        this.currentSession.status = 'partial';
-                        this.updateProgress();
-                        this.updateStartButton();
-                    }
+                    const usersSnap = await db.collection('users').get();
+                    this.employeesData = [];
+                    usersSnap.forEach(doc => {
+                        if (doc.data().role !== 'admin') {
+                            this.employeesData.push({ id: doc.id, ...doc.data() });
+                        }
+                    });
+                    
+                    const tasksSnap = await db.collection('ob_tasks').orderBy('createdAt', 'desc').get();
+                    this.taskData = [];
+                    tasksSnap.forEach(doc => {
+                        this.taskData.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    this.updateStatistics();
+                    this.populateEmployeeFilter();
+                    this.renderTaskTable();
+                    
                 } catch (error) {
-                    console.error('Save error:', error);
-                    this.showNotification('❌ Gagal menyimpan data', 'error');
+                    console.error(error);
+                    this.showNotification('❌ Gagal memuat data admin', 'error');
                 } finally {
                     this.hideLoading();
                 }
             }
 
-            // ========== ADMIN FEATURES WITH SLIDESHOW ==========
-            async loadAdminData() {
-                try {
-                    this.showLoading();
-                    const usersSnap = await db.collection('users').get();
-                    this.employeesData = [];
-                    usersSnap.forEach(doc => { if (doc.data().role !== 'admin') this.employeesData.push({ id: doc.id, ...doc.data() }); });
-                    const thirtyDaysAgo = new Date(); thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                    const tasksSnap = await db.collection('ob_tasks').where('createdAt', '>=', thirtyDaysAgo.toISOString()).orderBy('createdAt', 'desc').get();
-                    this.taskData = [];
-                    tasksSnap.forEach(doc => this.taskData.push({ id: doc.id, ...doc.data() }));
-                    this.updateStatistics();
-                    this.populateEmployeeFilter();
-                    this.renderTaskTable();
-                } catch (error) { this.showNotification('❌ Gagal memuat data admin', 'error'); } finally { this.hideLoading(); }
-            }
-
             updateStatistics() {
                 document.getElementById('total-karyawan').innerText = this.employeesData.length;
                 document.getElementById('total-tugas').innerText = this.taskData.length;
-                const today = new Date().toDateString();
-                const todayTasks = this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).length;
+                
+                const today = new Date().toISOString().split('T')[0];
+                const todayTasks = this.taskData.filter(r => r.date === today).length;
                 document.getElementById('hari-ini-tugas').innerText = todayTasks;
-                const activeSet = new Set(this.taskData.filter(r => new Date(r.createdAt).toDateString() === today).map(r => r.userId));
-                document.getElementById('aktif-hari-ini').innerText = activeSet.size;
+                
+                const activeUsers = new Set(this.taskData.filter(r => r.date === today).map(r => r.userId)).size;
+                document.getElementById('aktif-hari-ini').innerText = activeUsers;
             }
 
             populateEmployeeFilter() {
                 const select = document.getElementById('filter-employee');
                 select.innerHTML = '<option value="all">📋 Semua Karyawan</option>';
-                this.employeesData.forEach(emp => select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`);
+                this.employeesData.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.id}">${emp.name || emp.email}</option>`;
+                });
             }
 
             getAllPhotosFromRecord(record) {
                 const photos = [];
                 const taskPhotos = record.taskPhotos || {};
-                const tasks = record.tasks || [];
-                
-                // Urutkan foto berdasarkan urutan tugas
-                for (const task of tasks) {
-                    if (taskPhotos[task.id]) {
-                        photos.push({
-                            url: taskPhotos[task.id],
-                            taskName: task.name,
-                            taskId: task.id
-                        });
+                for (const key in taskPhotos) {
+                    if (taskPhotos[key]) {
+                        photos.push(taskPhotos[key]);
                     }
                 }
                 return photos;
@@ -906,41 +1025,41 @@
 
             renderTaskTable() {
                 let filtered = [...this.taskData];
+                
                 const startDate = document.getElementById('filter-start-date')?.value;
                 const endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
-                const floor = document.getElementById('filter-floor')?.value;
-                if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
-                if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
+                const floorFilter = document.getElementById('filter-floor')?.value;
+                
+                if (startDate) filtered = filtered.filter(r => r.date >= startDate);
+                if (endDate) filtered = filtered.filter(r => r.date <= endDate);
                 if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
-                if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
+                if (floorFilter && floorFilter !== 'all') filtered = filtered.filter(r => r.floor === floorFilter);
                 
                 const tbody = document.getElementById('table-body');
-                if (filtered.length === 0) { 
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada data</td></tr>'; 
-                    return; 
+                if (filtered.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;">📭 Tidak ada数据</td></tr>';
+                    return;
                 }
                 
                 let html = '';
-                filtered.slice(0, 100).forEach(record => {
+                filtered.slice(0, 200).forEach(record => {
                     const date = new Date(record.createdAt).toLocaleString('id-ID');
                     const progress = record.progress || '0/0';
                     const [completed, total] = progress.split('/').map(Number);
                     const percent = total > 0 ? (completed / total) * 100 : 0;
                     const allPhotos = this.getAllPhotosFromRecord(record);
-                    const photoThumbs = allPhotos.slice(0, 4); // Tampilkan max 4 thumbnail
-                    const moreCount = allPhotos.length - 4;
+                    const photoThumbs = allPhotos.slice(0, 4);
                     
-                    // Generate gallery HTML
                     let galleryHtml = '<div class="photo-gallery">';
                     photoThumbs.forEach((photo, idx) => {
-                        galleryHtml += `<img src="${photo.url}" class="photo-thumb" onclick="event.stopPropagation(); window.attendanceSystem.showSlideshowForRecord('${record.id}')" title="${photo.taskName}">`;
+                        galleryHtml += `<img src="${photo}" class="photo-thumb" onclick="event.stopPropagation(); window.attendanceSystem.showSlideshow([${JSON.stringify(photo)}])">`;
                     });
-                    if (moreCount > 0) {
-                        galleryHtml += `<div class="photo-thumb" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;" onclick="event.stopPropagation(); window.attendanceSystem.showSlideshowForRecord('${record.id}')">+${moreCount}</div>`;
+                    if (allPhotos.length > 4) {
+                        galleryHtml += `<div class="photo-thumb" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;">+${allPhotos.length-4}</div>`;
                     }
                     if (allPhotos.length === 0) {
-                        galleryHtml += '<div style="width:50px;height:50px;background:#f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:center;">📷</div>';
+                        galleryHtml += '<span style="color:gray;">Tidak ada foto</span>';
                     }
                     galleryHtml += '</div>';
                     
@@ -951,7 +1070,7 @@
                         <td><span class="badge-floor">${record.branch || '-'}</span></td>
                         <td><span class="badge-floor">${record.floor || '-'}</span></td>
                         <td>
-                            <span style="cursor:pointer;color:var(--primary);" onclick='window.attendanceSystem.showTaskDetail(${JSON.stringify(record).replace(/'/g, "\\'")})'>📋 ${progress}</span>
+                            ${progress}
                             <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
                         </td>
                         <td>${galleryHtml}</td>
@@ -960,63 +1079,15 @@
                 tbody.innerHTML = html;
             }
 
-            showSlideshowForRecord(recordId) {
-                const record = this.taskData.find(r => r.id === recordId);
-                if (!record) return;
-                
-                const allPhotos = this.getAllPhotosFromRecord(record);
-                const photoUrls = allPhotos.map(p => p.url);
-                const title = `${record.userName || '-'} - ${record.branch || ''} ${record.floor || ''}`;
-                this.showSlideshow(photoUrls, title);
-            }
-
-            showSlideshow(images, title) {
-                this.currentSlideImages = images;
-                this.currentSlideIndex = 0;
-                this.currentSlideTitle = title;
-                if (images.length > 0) {
-                    this.updateSlideImage();
-                    document.getElementById('slideshow-modal').classList.add('active');
-                } else {
-                    this.showNotification('Tidak ada foto untuk ditampilkan', 'warning');
-                }
-            }
-
-            showTaskDetail(record) {
-                const popup = document.getElementById('task-popup');
-                const body = document.getElementById('task-popup-body');
-                document.getElementById('task-popup-title').innerHTML = `📋 Tugas - ${record.branch || ''} ${record.floor || ''}`;
-                let html = '';
-                const completedTasks = record.completedTasks || [];
-                const allTasks = record.tasks || [];
-                const taskDetails = record.taskDetails || {};
-                const taskPhotos = record.taskPhotos || {};
-                
-                allTasks.forEach(task => {
-                    const isCompleted = completedTasks.includes(task.id);
-                    const detail = taskDetails[task.id] || {};
-                    const hasPhoto = taskPhotos[task.id];
-                    html += `<div class="task-popup-item ${isCompleted ? 'completed' : 'pending'}" style="padding:12px;background:#f8fafc;border-radius:12px;margin-bottom:8px;border-left:4px solid ${isCompleted ? '#06d6a0' : '#64748b'}">
-                        <div class="task-name">${isCompleted ? '✅' : '⭕'} ${task.name}</div>
-                        ${isCompleted && detail.timestamp ? `<div class="task-time" style="font-size:12px;color:gray;">⏱️ Selesai: ${detail.timestamp}</div>` : ''}
-                        ${hasPhoto ? `<div style="margin-top:8px;"><img src="${hasPhoto}" style="width:100%;max-height:150px;object-fit:cover;border-radius:12px;cursor:pointer;" onclick="window.attendanceSystem.showSlideshow([${JSON.stringify(hasPhoto)}], '${task.name}')"></div>` : ''}
-                    </div>`;
-                });
-                body.innerHTML = html;
-                document.getElementById('task-popup-progress').innerHTML = `📊 Progress: ${record.progress || '0/0'}`;
-                popup.style.display = 'flex';
-            }
-
             async exportToExcel() {
                 const filtered = this.getFilteredData();
-                const wsData = filtered.map(r => ({ 
-                    'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'), 
-                    'Karyawan': r.userName || '', 
-                    'Email': r.userEmail || '', 
-                    'Cabang': r.branch || '', 
-                    'Lantai': r.floor || '', 
-                    'Progress': r.progress || '0/0', 
-                    'Status': r.status === 'completed' ? 'Selesai' : 'Progress',
+                const wsData = filtered.map(r => ({
+                    'Tanggal': new Date(r.createdAt).toLocaleString('id-ID'),
+                    'Karyawan': r.userName || '',
+                    'Email': r.userEmail || '',
+                    'Cabang': r.branch || '',
+                    'Lantai': r.floor || '',
+                    'Progress': r.progress || '0/0',
                     'Jumlah Foto': Object.keys(r.taskPhotos || {}).length
                 }));
                 const wb = XLSX.utils.book_new();
@@ -1033,20 +1104,22 @@
                 doc.text('Laporan Tugas OB - Genetek', 14, 15);
                 doc.setFontSize(10);
                 doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, 14, 22);
+                
                 const tableData = filtered.slice(0, 50).map(r => [
-                    new Date(r.createdAt).toLocaleDateString('id-ID'), 
-                    r.userName || '-', 
-                    r.branch || '-', 
-                    r.floor || '-', 
+                    new Date(r.createdAt).toLocaleDateString('id-ID'),
+                    r.userName || '-',
+                    r.branch || '-',
+                    r.floor || '-',
                     r.progress || '0/0',
                     Object.keys(r.taskPhotos || {}).length + ' foto'
                 ]);
-                doc.autoTable({ 
-                    startY: 30, 
-                    head: [['Tanggal','Karyawan','Cabang','Lantai','Progress','Foto']], 
-                    body: tableData, 
-                    theme: 'striped', 
-                    headStyles: { fillColor: [67,97,238] } 
+                
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Tanggal', 'Karyawan', 'Cabang', 'Lantai', 'Progress', 'Foto']],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: { fillColor: [67, 97, 238] }
                 });
                 doc.save(`tugas_ob_${new Date().toISOString().split('T')[0]}.pdf`);
                 this.showNotification('✅ Export PDF berhasil!', 'success');
@@ -1058,10 +1131,12 @@
                 const endDate = document.getElementById('filter-end-date')?.value;
                 const employeeId = document.getElementById('filter-employee')?.value;
                 const floor = document.getElementById('filter-floor')?.value;
-                if (startDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] >= startDate);
-                if (endDate) filtered = filtered.filter(r => r.createdAt?.split('T')[0] <= endDate);
+                
+                if (startDate) filtered = filtered.filter(r => r.date >= startDate);
+                if (endDate) filtered = filtered.filter(r => r.date <= endDate);
                 if (employeeId && employeeId !== 'all') filtered = filtered.filter(r => r.userId === employeeId);
                 if (floor && floor !== 'all') filtered = filtered.filter(r => r.floor === floor);
+                
                 return filtered;
             }
 
@@ -1069,18 +1144,11 @@
                 const today = new Date();
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                if (document.getElementById('filter-start-date')) {
-                    document.getElementById('filter-start-date').value = thirtyDaysAgo.toISOString().split('T')[0];
-                    document.getElementById('filter-end-date').value = today.toISOString().split('T')[0];
-                }
-            }
-
-            stopCamera() {
-                if (this.cameraStream) {
-                    this.cameraStream.getTracks().forEach(track => track.stop());
-                    this.cameraStream = null;
-                    this.isCameraReady = false;
-                }
+                
+                const startInput = document.getElementById('filter-start-date');
+                const endInput = document.getElementById('filter-end-date');
+                if (startInput) startInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+                if (endInput) endInput.value = today.toISOString().split('T')[0];
             }
 
             showLoginPage() {
@@ -1115,7 +1183,7 @@
                 const msg = document.getElementById('notification-message');
                 const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
                 icon.textContent = icons[type] || 'ℹ️';
-                notification.style.borderLeftColor = type === 'success' ? '#06d6a0' : type === 'error' ? '#ef476f' : type === 'warning' ? '#ffd166' : '#4361ee';
+                notification.style.borderLeftColor = type === 'success' ? '#06d6a0' : type === 'error' ? '#ef476f' : '#4361ee';
                 msg.textContent = message;
                 notification.style.display = 'flex';
                 notification.style.transform = 'translateY(0)';
@@ -1136,28 +1204,30 @@
             }
 
             setupEventListeners() {
-                document.getElementById('btn-login')?.addEventListener('click', () => { 
-                    const email = document.getElementById('login-email').value.trim(); 
-                    const password = document.getElementById('login-password').value; 
-                    if (email && password) this.login(email, password); 
-                    else this.showNotification('Isi email dan password!', 'warning'); 
+                document.getElementById('btn-login')?.addEventListener('click', () => {
+                    const email = document.getElementById('login-email').value.trim();
+                    const password = document.getElementById('login-password').value;
+                    if (email && password) this.login(email, password);
+                    else this.showNotification('Isi email dan password!', 'warning');
                 });
+                
                 document.getElementById('btn-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('admin-logout')?.addEventListener('click', () => this.logout());
                 document.getElementById('employee-start')?.addEventListener('click', () => this.startTaskSession());
                 document.getElementById('employee-save')?.addEventListener('click', () => this.saveProgress());
-                document.getElementById('btn-capture')?.addEventListener('click', () => this.showNotification('Pilih tugas terlebih dahulu, lalu klik ikon kamera di samping tugas', 'info'));
                 document.getElementById('btn-switch-camera')?.addEventListener('click', () => this.switchCamera());
                 document.getElementById('btn-apply-filter')?.addEventListener('click', () => this.renderTaskTable());
                 document.getElementById('btn-export-excel')?.addEventListener('click', () => this.exportToExcel());
                 document.getElementById('btn-export-pdf')?.addEventListener('click', () => this.exportToPDF());
-                window.addEventListener('beforeunload', () => { this.stopCamera(); if (this.clockInterval) clearInterval(this.clockInterval); });
+                
+                window.addEventListener('beforeunload', () => {
+                    this.stopCamera();
+                    if (this.clockInterval) clearInterval(this.clockInterval);
+                });
             }
         }
 
         window.attendanceSystem = new OBTaskSystem();
-        window.showSlideshowForRecord = (recordId) => window.attendanceSystem.showSlideshowForRecord(recordId);
-        window.showTaskDetail = (record) => window.attendanceSystem.showTaskDetail(record);
     </script>
 </body>
 </html>
