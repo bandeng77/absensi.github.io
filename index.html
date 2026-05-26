@@ -321,7 +321,7 @@
     <div id="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
 
     <div id="login-page">
-        <div class="login-header"><h1>✨ Genetek</h1><div>OB Task Management (Kolaborasi)</div></div>
+        <div class="login-header"><h1>✨ Genetek</h1><div>OB Task Management</div></div>
         <div class="form-group"><label>📧 Email</label><input type="email" id="login-email" placeholder="email@genetek.co.id" value="admin@genetek.co.id"></div>
         <div class="form-group"><label>🔑 Password</label><input type="password" id="login-password" placeholder="Minimal 6 karakter" value="123456"></div>
         <button id="btn-login" class="btn-login">🚀 Masuk</button>
@@ -329,14 +329,14 @@
 
     <div id="app-container">
         <div class="navbar">
-            <div class="nav-brand"><span style="font-size:1.8rem;">🧹</span><h2>Task OB • Kolaboratif</h2></div>
+            <div class="nav-brand"><span style="font-size:1.8rem;">🧹</span><h2>Task OB </h2></div>
             <div class="nav-menu"><span id="user-display" class="user-badge"></span><button id="btn-logout" class="btn-logout"><span>🚪</span> Keluar</button></div>
         </div>
         <div class="dashboard-grid">
             <!-- KAMERA DENGAN POSISI STICKY/FREEZE DI ATAS -->
             <div class="camera-sticky-wrapper">
                 <div class="card" id="camera-card" style="padding: 16px;">
-                    <div class="card-title"><span>📸</span> Kamera (Tetap di atas saat scroll)</div>
+                    <div class="card-title"><span>📸</span> Kamera </div>
                     <div class="camera-wrapper">
                         <video id="video-feed" autoplay playsinline muted></video>
                         <button id="btn-capture" class="btn-capture">📷 Foto</button>
@@ -355,7 +355,7 @@
                 <div id="live-clock"><div id="live-time">--:--:--</div><div id="live-date">--, -- -- ----</div></div>
                 <div class="location-card">
                     <div class="branch-selector"><label>🏢 Pilih Kantor</label><select id="branch-select"><option value="">-- Pilih Kantor --</option><option value="PURI">PURI</option><option value="ARTERI">ARTERI</option></select></div>
-                    <div class="floor-selector"><label>📍 Pilih Lantai (bisa lebih dari satu, kerjakan per lantai)</label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
+                    <div class="floor-selector"><label>📍 Pilih Lantai </label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
                 </div>
                 <div id="task-checklist-container" class="task-checklist"><p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p></div>
                 <div class="button-group"><button id="employee-start" class="btn btn-start" disabled>🚀 Mulai Lantai Ini</button><button id="employee-save" class="btn btn-save">💾 Simpan Progress</button></div>
@@ -404,10 +404,10 @@
         const auth = firebase.auth();
 
         const MASTER_TASKS = {
-            PURI: { 'Lantai 1': ['Membersihkan area Lantai 1','Membersihkan Ruang Meeting Lantai 1','Membersihkan Kaca','Membersihkan Pintu Depan','Membersihkan Lemari APD','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Area Pantry'],
-                      'Lantai 2': ['Menyapu dan Mengepel Lantai 2','Membersihkan Ruangan Direksi','Membersihkan Ruangan Komisaris','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Ruang Accounting'],
-                      'Lantai 3': ['Menyapu dan Mengepel Area Lantai 3','Membersihkan Meja','Mengelap Kaca','Membersihkan Langit-Langit','Membersihkan toilet'],
-                      'Lantai 4': ['Menyapu dan Mengepel Area Lantai 4','Membersihkan Meja','Mengelap Kaca','Membersihkan Ruang Meeting','Membersihkan Mushollah','Membersihkan Ruang Arsip','Membersihkan Area Pantry','Membersihkan Area Outdoor Ruang AC'] },
+            PURI: { 'Lantai 1': ['Menyapu Area Lantai 1','Mengepel Area Lantai 1','Membersihkan Ruang Meeting Lantai 1','Membersihkan Kaca','Membersihkan Pintu Depan','Membersihkan Lemari APD','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Area Pantry'],
+                      'Lantai 2': ['Menyapu Area Lantai 2','Mengepel Area Lantai 2','Membersihkan Ruangan Direksi','Membersihkan Ruangan Komisaris','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Ruang Accounting'],
+                      'Lantai 3': ['Menyapu Area Lantai 3','Mengepel Area Lantai 3','Membersihkan Meja','Mengelap Kaca','Membersihkan Langit-Langit','Membersihkan toilet'],
+                      'Lantai 4': ['Menyapu Area Lantai 4','Mengepel Area Lantai 4','Membersihkan Meja','Mengelap Kaca','Membersihkan Ruang Meeting','Membersihkan Mushollah','Membersihkan Ruang Arsip','Membersihkan Area Pantry','Membersihkan Area Outdoor Ruang AC'] },
             ARTERI: { 'Lantai 1': ['Membersihkan area lantai 1'], 'Lantai 2': ['Membersihkan area kerja','Membersihkan ruangan GM Tehnik','Membersihkan Toilet'], 'Lantai 3': ['Membersihkan area kerja','Membersihkan mushollah','Membersihkan Toilet'] }
         };
 
