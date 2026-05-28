@@ -44,7 +44,6 @@
             padding: 16px;
         }
 
-        /* Sticky Camera Wrapper untuk mobile - kamera tetap di atas saat scroll */
         .camera-sticky-wrapper {
             position: sticky;
             top: 16px;
@@ -171,13 +170,6 @@
             z-index: 10;
         }
         
-        /* Scrollable content */
-        .scrollable-content {
-            max-height: calc(100vh - 400px);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
         .location-card { background: #f8fafc; border-radius: 18px; padding: 18px; margin-bottom: 20px; }
         .branch-selector, .floor-selector { margin-bottom: 16px; }
         .branch-selector label, .floor-selector label { font-weight: 600; display: block; margin-bottom: 8px; }
@@ -186,7 +178,6 @@
         .task-checklist { max-height: 400px; overflow-y: auto; margin-top: 20px; -webkit-overflow-scrolling: touch; }
         .task-item { background: white; border-radius: 16px; padding: 14px; margin-bottom: 10px; border: 2px solid #e2e8f0; transition: all 0.2s; }
         .task-item.completed { border-color: var(--success); background: #f0fdf9; }
-        .task-item.disabled-task { opacity: 0.6; background: #f1f5f9; }
         .task-header { display: flex; align-items: center; gap: 10px; }
         .task-checkbox { width: 24px; height: 24px; accent-color: var(--success); cursor: pointer; }
         .task-checkbox:disabled { cursor: not-allowed; }
@@ -199,10 +190,12 @@
         .task-photo-preview img { width: 100%; border-radius: 12px; }
         .task-worker-info { font-size: 11px; color: var(--gray); margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0; }
         
-        .btn { padding: 14px; border-radius: 18px; font-weight: 600; border: none; cursor: pointer; color: white; }
+        .btn { padding: 14px; border-radius: 18px; font-weight: 600; border: none; cursor: pointer; color: white; width: 100%; text-align: center; }
         .btn-start { background: linear-gradient(145deg, #06d6a0, #05b386); }
-        .btn-save { background: linear-gradient(145deg, #4361ee, #3a56d4); display: none; }
-        .button-group { display: flex; gap: 12px; margin: 16px 0; }
+        .btn-start:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-save { background: linear-gradient(145deg, #4361ee, #3a56d4); }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .button-group { display: flex; flex-direction: column; gap: 12px; margin: 16px 0; }
         
         .status-badge { display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 14px; border-radius: 16px; }
         .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; }
@@ -235,8 +228,6 @@
         .progress-bar { background: #e2e8f0; height: 4px; border-radius: 2px; margin-top: 4px; }
         .progress-fill { background: var(--success); height: 4px; border-radius: 2px; }
         .task-list-detail { font-size: 12px; max-width: 250px; }
-        .task-list-detail .task-done { color: var(--success); }
-        .task-list-detail .task-pending { color: var(--gray); }
         
         .slideshow-modal {
             position: fixed;
@@ -296,13 +287,9 @@
         .slideshow-caption { color: white; text-align: center; padding: 16px; background: rgba(0,0,0,0.5); border-radius: 30px; margin-top: 16px; font-size: 14px; }
         .slideshow-counter { position: absolute; bottom: -40px; left: 0; right: 0; text-align: center; color: white; font-size: 14px; }
         
-        .task-popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 10002; display: none; }
-        .task-popup-content { background: white; border-radius: 24px; padding: 24px; max-width: 90%; width: 450px; max-height: 80vh; overflow: auto; }
-        
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.6; } }
         
-        /* Mobile specific */
         @media (max-width: 768px) {
             .camera-sticky-wrapper {
                 position: sticky;
@@ -310,15 +297,13 @@
                 z-index: 100;
                 margin-bottom: 16px;
             }
-            body {
-                padding: 10px;
-            }
+            body { padding: 10px; }
         }
     </style>
 </head>
 <body>
     <div id="loading-screen" class="loading-screen"><div class="loading-spinner"></div></div>
-    <div id="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
+    <div id="notification" style="position:fixed;top:20px;left:20px;right:20px;background:white;border-radius:16px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.2);transform:translateY(-100px);transition:0.3s;z-index:10003;max-width:400px;margin:auto;border-left:6px solid;display:none;align-items:center;gap:10px;"><span id="notification-icon">✅</span><span id="notification-message"></span></div>
 
     <div id="login-page">
         <div class="login-header"><h1>✨ Genetek</h1><div>OB Task Management</div></div>
@@ -333,7 +318,6 @@
             <div class="nav-menu"><span id="user-display" class="user-badge"></span><button id="btn-logout" class="btn-logout"><span>🚪</span> Keluar</button></div>
         </div>
         <div class="dashboard-grid">
-            <!-- KAMERA DENGAN POSISI STICKY/FREEZE DI ATAS -->
             <div class="camera-sticky-wrapper">
                 <div class="card" id="camera-card" style="padding: 16px;">
                     <div class="card-title"><span>📸</span> Kamera </div>
@@ -344,12 +328,11 @@
                     </div>
                     <div id="current-task-info" style="display:none; padding:12px; background:#f1f5f9; border-radius:14px; margin-top:12px;">
                         <div style="font-weight:600;">📌 Tugas Saat Ini:</div>
-                        <div id="current-task-name" style="color:var(--primary);"></div>
+                        <div id="current-task-name" style="color:var(--primary); font-weight: bold;"></div>
                     </div>
                 </div>
             </div>
             
-            <!-- KONTEN YANG BISA DI-SCROLL -->
             <div class="card">
                 <div class="card-title"><span>✅</span> Tugas Hari Ini (Kolaborasi dengan OB Lain)</div>
                 <div id="live-clock"><div id="live-time">--:--:--</div><div id="live-date">--, -- -- ----</div></div>
@@ -358,7 +341,10 @@
                     <div class="floor-selector"><label>📍 Pilih Lantai </label><select id="floor-select" disabled><option value="">Pilih kantor dulu</option></select></div>
                 </div>
                 <div id="task-checklist-container" class="task-checklist"><p style="color:var(--gray);text-align:center;">Pilih kantor & lantai</p></div>
-                <div class="button-group"><button id="employee-start" class="btn btn-start" disabled>🚀 Mulai Lantai Ini</button><button id="employee-save" class="btn btn-save">💾 Simpan Progress</button></div>
+                <div class="button-group">
+                    <button id="employee-start" class="btn btn-start" disabled>🚀 Mulai Lantai Ini</button>
+                    <button id="employee-save" class="btn btn-save" disabled style="margin-top: 8px;">💾 Simpan Progress</button>
+                </div>
                 <div id="employee-status" class="status-badge"><span class="status-indicator"></span><span class="status-text">Belum mulai</span><span id="task-progress" class="progress-text">0/0</span></div>
             </div>
         </div>
@@ -395,7 +381,6 @@
     </div>
 
     <div id="slideshow-modal" class="slideshow-modal"><button class="slideshow-close" id="slideshow-close">✕</button><div class="slideshow-container"><button class="slideshow-nav nav-prev" id="slideshow-prev">‹</button><img id="slideshow-image" class="slideshow-image" src=""><button class="slideshow-nav nav-next" id="slideshow-next">›</button></div><div class="slideshow-caption" id="slideshow-caption"></div><div class="slideshow-counter" id="slideshow-counter"></div></div>
-    <div id="task-popup" class="task-popup"><div class="task-popup-content"><div class="task-popup-header"><h3 id="task-popup-title">📋 Detail Kontribusi</h3><button onclick="closeTaskPopup()">✕</button></div><div id="task-popup-body"></div></div></div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyDPfvR6WFK29D9zAhfj_qOgi3ZMwQi4rRI", authDomain: "absen-efk.firebaseapp.com", projectId: "absen-efk", storageBucket: "absen-efk.firebasestorage.app", messagingSenderId: "63730633504", appId: "1:63730633504:web:d1b07245bcd43a0df92545" };
@@ -404,11 +389,17 @@
         const auth = firebase.auth();
 
         const MASTER_TASKS = {
-            PURI: { 'Lantai 1': ['Menyapu Area Lantai 1','Mengepel Area Lantai 1','Membersihkan Ruang Meeting Lantai 1','Membersihkan Kaca','Membersihkan Pintu Depan','Membersihkan Lemari APD','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Area Pantry'],
-                      'Lantai 2': ['Menyapu Area Lantai 2','Mengepel Area Lantai 2','Membersihkan Ruangan Direksi','Membersihkan Ruangan Komisaris','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Ruang Accounting'],
-                      'Lantai 3': ['Menyapu Area Lantai 3','Mengepel Area Lantai 3','Membersihkan Meja','Mengelap Kaca','Membersihkan Langit-Langit','Membersihkan toilet'],
-                      'Lantai 4': ['Menyapu Area Lantai 4','Mengepel Area Lantai 4','Membersihkan Meja','Mengelap Kaca','Membersihkan Ruang Meeting','Membersihkan Mushollah','Membersihkan Ruang Arsip','Membersihkan Area Pantry','Membersihkan Area Outdoor Ruang AC'] },
-            ARTERI: { 'Lantai 1': ['Membersihkan area lantai 1'], 'Lantai 2': ['Membersihkan area kerja','Membersihkan ruangan GM Tehnik','Membersihkan Toilet'], 'Lantai 3': ['Membersihkan area kerja','Membersihkan mushollah','Membersihkan Toilet'] }
+            PURI: { 
+                'Lantai 1': ['Menyapu Area Lantai 1','Mengepel Area Lantai 1','Membersihkan Ruang Meeting Lantai 1','Membersihkan Kaca','Membersihkan Pintu Depan','Membersihkan Lemari APD','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Area Pantry'],
+                'Lantai 2': ['Menyapu Area Lantai 2','Mengepel Area Lantai 2','Membersihkan Ruangan Direksi','Membersihkan Ruangan Komisaris','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Ruang Accounting'],
+                'Lantai 3': ['Menyapu Area Lantai 3','Mengepel Area Lantai 3','Membersihkan Meja','Mengelap Kaca','Membersihkan Langit-Langit','Membersihkan toilet'],
+                'Lantai 4': ['Menyapu Area Lantai 4','Mengepel Area Lantai 4','Membersihkan Meja','Mengelap Kaca','Membersihkan Ruang Meeting','Membersihkan Mushollah','Membersihkan Ruang Arsip','Membersihkan Area Pantry','Membersihkan Area Outdoor Ruang AC'] 
+            },
+            ARTERI: { 
+                'Lantai 1': ['Membersihkan area lantai 1'], 
+                'Lantai 2': ['Membersihkan area kerja','Membersihkan ruangan GM Tehnik','Membersihkan Toilet'], 
+                'Lantai 3': ['Membersihkan area kerja','Membersihkan mushollah','Membersihkan Toilet'] 
+            }
         };
 
         class CollaborativeOBSystem {
@@ -418,10 +409,9 @@
                 this.cameraStream = null; 
                 this.isCameraReady = false; 
                 this.currentFacingMode = 'environment'; 
-                this.currentSession = { branch: null, floor: null, selectedTasks: [], taskPhotos: {}, taskTimestamps: {}, sessionId: null }; 
+                this.currentSession = { branch: null, floor: null, selectedTasks: [], taskPhotos: {}, taskTimestamps: {}, sessionId: null, active: false }; 
                 this.slideImages = [];
                 this.slideIndex = 0;
-                window.closeTaskPopup = () => document.getElementById('task-popup').style.display = 'none'; 
             }
 
             async initialize() { 
@@ -450,7 +440,7 @@
             showSlideshow(images, title) { 
                 this.slideImages = images; 
                 this.slideIndex = 0; 
-                if(images.length){ 
+                if(images && images.length){ 
                     this.updateSlide(); 
                     document.getElementById('slideshow-modal').classList.add('active'); 
                     document.getElementById('slideshow-caption').innerText = title; 
@@ -477,9 +467,10 @@
                     this.showLoading(); 
                     await auth.signInWithEmailAndPassword(email, password); 
                 } catch(e) { 
-                    if(e.code === 'auth/user-not-found') await auth.createUserWithEmailAndPassword(email, password); 
-                    else { 
-                        this.showNotification('Login gagal', 'error'); 
+                    if(e.code === 'auth/user-not-found' || e.code === 'auth/user-disabled') {
+                        await auth.createUserWithEmailAndPassword(email, password); 
+                    } else { 
+                        this.showNotification('Login gagal. Periksa password.', 'error'); 
                         this.hideLoading(); 
                     } 
                 } 
@@ -509,12 +500,15 @@
             initSelectors() {
                 const branchSel = document.getElementById('branch-select'), floorSel = document.getElementById('floor-select');
                 branchSel.onchange = () => { 
-                    this.currentSession = { branch: branchSel.value, floor: null, selectedTasks: [], taskPhotos: {}, taskTimestamps: {}, sessionId: null }; 
-                    floorSel.innerHTML = '<option value="">Pilih Lantai</option>'; 
+                    this.currentSession = { branch: branchSel.value, floor: null, selectedTasks: [], taskPhotos: {}, taskTimestamps: {}, sessionId: null, active: false }; 
+                    floorSel.innerHTML = '<option value="">-- Pilih Lantai --</option>'; 
                     floorSel.disabled = !branchSel.value; 
-                    if(branchSel.value && MASTER_TASKS[branchSel.value]) Object.keys(MASTER_TASKS[branchSel.value]).forEach(f => floorSel.innerHTML += `<option value="${f}">${f}</option>`); 
-                    document.getElementById('task-checklist-container').innerHTML = '<p style="color:gray;">Pilih lantai</p>'; 
+                    if(branchSel.value && MASTER_TASKS[branchSel.value]) {
+                        Object.keys(MASTER_TASKS[branchSel.value]).forEach(f => floorSel.innerHTML += `<option value="${f}">${f}</option>`); 
+                    }
+                    document.getElementById('task-checklist-container').innerHTML = '<p style="color:gray;text-align:center;">Pilih lantai</p>'; 
                     document.getElementById('employee-start').disabled = true; 
+                    document.getElementById('employee-save').disabled = true;
                 };
                 
                 floorSel.onchange = async () => { 
@@ -523,8 +517,10 @@
                         this.currentSession.selectedTasks = []; 
                         this.currentSession.taskPhotos = {}; 
                         this.currentSession.taskTimestamps = {}; 
-                        await this.loadCollaborativeTasks(); 
+                        this.currentSession.active = false;
+                        document.getElementById('task-checklist-container').innerHTML = '<p style="color:var(--primary);text-align:center;font-weight:600;">Klik tombol "Mulai Lantai Ini" untuk memuat tugas.</p>';
                         document.getElementById('employee-start').disabled = false; 
+                        document.getElementById('employee-save').disabled = true;
                     } 
                 };
             }
@@ -533,10 +529,13 @@
                 const branch = this.currentSession.branch, floor = this.currentSession.floor;
                 const allTaskNames = MASTER_TASKS[branch]?.[floor] || [];
                 const todayStr = new Date().toISOString().split('T')[0];
+                
                 const snapshot = await db.collection('ob_submissions').where('branch','==',branch).where('floor','==',floor).where('date','==',todayStr).get();
                 const globalCompleted = new Set();
                 snapshot.forEach(doc => { const data = doc.data(); (data.completedTaskIds || []).forEach(id => globalCompleted.add(id)); });
+                
                 const tasks = allTaskNames.map((name, idx) => ({ id: `${branch}_${floor}_${idx}`, name, completed: globalCompleted.has(`${branch}_${floor}_${idx}`) }));
+                
                 let html = '<h4>📋 Daftar Tugas (Kolaborasi):</h4>';
                 tasks.forEach(task => { 
                     const isDone = task.completed; 
@@ -547,88 +546,124 @@
                             <button class="task-camera-btn" data-task-id="${task.id}" ${isDone ? 'disabled' : ''}>📸</button>
                         </div>
                         <div id="photo-preview-${task.id}" class="task-photo-preview"></div>
-                        ${isDone ? '<div class="task-worker-info">✅ Telah dikerjakan OB lain</div>' : ''}
+                        ${isDone ? '<div class="task-worker-info">✅ Telah dikerjakan oleh Tim OB hari ini</div>' : ''}
                     </div>`; 
                 });
+                
                 document.getElementById('task-checklist-container').innerHTML = html;
+                
+                // Event Listeners Dinamis
                 document.querySelectorAll('.task-checkbox:not(:disabled)').forEach(cb => cb.addEventListener('change', e => this.toggleTask(e.target.dataset.taskId, e.target.checked)));
-                document.querySelectorAll('.task-camera-btn:not(:disabled)').forEach(btn => btn.addEventListener('click', e => this.captureForTask(btn.dataset.taskId, tasks.find(t=>t.id===btn.dataset.taskId)?.name)));
+                document.querySelectorAll('.task-camera-btn:not(:disabled)').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        e.preventDefault();
+                        const tId = btn.getAttribute('data-task-id');
+                        const tName = tasks.find(t => t.id === tId)?.name;
+                        this.captureForTask(tId, tName);
+                    });
+                });
+                
                 this.updateProgressUI(tasks.filter(t=>t.completed).length, tasks.length);
             }
 
             async captureForTask(taskId, taskName) { 
                 if(!this.isCameraReady) return this.showNotification('Kamera belum siap','error'); 
                 const video = document.getElementById('video-feed'); 
-                if(!video || video.readyState !== 4) return; 
+                if(!video || video.readyState !== 4) return window.alert("Tunggu feed kamera stabil!"); 
+                
                 const canvas = document.createElement('canvas'); 
                 canvas.width = video.videoWidth; 
                 canvas.height = video.videoHeight; 
                 canvas.getContext('2d').drawImage(video,0,0); 
-                const photo = canvas.toDataURL('image/jpeg',0.7); 
+                const photo = canvas.toDataURL('image/jpeg',0.6); 
+                
                 this.currentSession.taskPhotos[taskId] = photo; 
                 this.currentSession.taskTimestamps[taskId] = new Date().toISOString(); 
+                
                 const previewDiv = document.getElementById(`photo-preview-${taskId}`);
                 if(previewDiv) {
-                    previewDiv.innerHTML = `<img src="${photo}" style="width:100%;border-radius:12px;">`;
+                    previewDiv.innerHTML = `<img src="${photo}">`;
                     previewDiv.classList.add('active');
                 }
                 const cameraBtn = document.querySelector(`.task-camera-btn[data-task-id="${taskId}"]`);
                 if(cameraBtn) cameraBtn.classList.add('completed');
+                
                 document.getElementById('current-task-info').style.display = 'block';
                 document.getElementById('current-task-name').innerText = taskName;
-                this.showNotification(`📸 Foto "${taskName}" tersimpan`, 'success'); 
+                this.showNotification(`📸 Foto berhasil diambil untuk tugas tersebut!`, 'success'); 
             }
 
             toggleTask(taskId, checked) { 
                 if(checked && !this.currentSession.taskPhotos[taskId]) { 
-                    this.showNotification('Ambil foto dulu!','warning'); 
+                    this.showNotification('Silahkan ambil foto tugasnya terlebih dahulu!','warning'); 
                     document.querySelector(`.task-checkbox[data-task-id="${taskId}"]`).checked = false; 
                     return; 
                 } 
-                if(checked) this.currentSession.selectedTasks.push(taskId); 
-                else this.currentSession.selectedTasks = this.currentSession.selectedTasks.filter(id=>id!==taskId); 
-                const saveBtn = document.getElementById('employee-save');
-                if(saveBtn) saveBtn.disabled = this.currentSession.selectedTasks.length === 0;
+                if(checked) {
+                    if(!this.currentSession.selectedTasks.includes(taskId)) this.currentSession.selectedTasks.push(taskId); 
+                } else {
+                    this.currentSession.selectedTasks = this.currentSession.selectedTasks.filter(id=>id!==taskId); 
+                }
+                document.getElementById('employee-save').disabled = this.currentSession.selectedTasks.length === 0;
             }
 
             updateProgressUI(done, total) { 
                 const progressEl = document.getElementById('task-progress');
                 if(progressEl) progressEl.innerText = `${done}/${total}`; 
                 const statusDiv = document.getElementById('employee-status'); 
-                if(done>0 && done<total) statusDiv.classList.add('active'); 
-                else if(done === total) statusDiv.classList.add('active');
-                else statusDiv.classList.remove('active');
+                const statusText = statusDiv.querySelector('.status-text');
+                
+                if(done > 0 && done < total) {
+                    statusDiv.classList.add('active');
+                    if(statusText) statusText.innerText = "Sedang Dikerjakan";
+                } else if(done === total && total > 0) {
+                    statusDiv.classList.add('active');
+                    if(statusText) statusText.innerText = "Selesai Seluruhnya";
+                } else {
+                    statusDiv.classList.remove('active');
+                    if(statusText) statusText.innerText = "Belum Mulai / Standby";
+                }
             }
 
             async startSession() { 
                 if(!this.currentSession.branch || !this.currentSession.floor) return; 
-                this.currentSession.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2,6)}`; 
-                this.showNotification('Mulai mengerjakan tugas di lantai ini (kolaborasi)','success'); 
+                this.showLoading();
+                this.currentSession.sessionId = `session_${Date.now()}`; 
+                this.currentSession.active = true;
+                await this.loadCollaborativeTasks();
+                document.getElementById('employee-start').disabled = true;
+                this.hideLoading();
+                this.showNotification('Sesi pengisian tugas kolaboratif berhasil dibuka!','success'); 
             }
 
             async saveProgress() { 
-                if(this.currentSession.selectedTasks.length === 0) return this.showNotification('Pilih minimal 1 tugas yang sudah difoto','warning'); 
-                const today = new Date().toISOString().split('T')[0]; 
-                const submission = { 
-                    userId: this.currentUser.uid, 
-                    userName: this.currentUser.name || this.currentUser.email, 
-                    userEmail: this.currentUser.email, 
-                    branch: this.currentSession.branch, 
-                    floor: this.currentSession.floor, 
-                    date: today, 
-                    completedTaskIds: this.currentSession.selectedTasks, 
-                    taskPhotos: this.currentSession.taskPhotos, 
-                    taskTimestamps: this.currentSession.taskTimestamps, 
-                    createdAt: new Date().toISOString() 
-                }; 
-                await db.collection('ob_submissions').add(submission); 
-                this.showNotification(`✅ Berhasil menyimpan ${this.currentSession.selectedTasks.length} tugas!`, 'success'); 
-                this.currentSession.selectedTasks = []; 
-                this.currentSession.taskPhotos = {}; 
-                await this.loadCollaborativeTasks(); 
-                const saveBtn = document.getElementById('employee-save');
-                if(saveBtn) saveBtn.disabled = true;
-                document.getElementById('current-task-info').style.display = 'none';
+                if(this.currentSession.selectedTasks.length === 0) return this.showNotification('Pilih minimal 1 tugas yang sudah selesai difoto','warning'); 
+                this.showLoading();
+                try {
+                    const today = new Date().toISOString().split('T')[0]; 
+                    const submission = { 
+                        userId: this.currentUser.uid, 
+                        userName: this.currentUser.name || this.currentUser.email, 
+                        userEmail: this.currentUser.email, 
+                        branch: this.currentSession.branch, 
+                        floor: this.currentSession.floor, 
+                        date: today, 
+                        completedTaskIds: this.currentSession.selectedTasks, 
+                        taskPhotos: this.currentSession.taskPhotos, 
+                        taskTimestamps: this.currentSession.taskTimestamps, 
+                        createdAt: new Date().toISOString() 
+                    }; 
+                    await db.collection('ob_submissions').add(submission); 
+                    this.showNotification(`✅ Berhasil menyimpan progress pekerjaan!`, 'success'); 
+                    this.currentSession.selectedTasks = []; 
+                    this.currentSession.taskPhotos = {}; 
+                    await this.loadCollaborativeTasks(); 
+                    document.getElementById('employee-save').disabled = true;
+                    document.getElementById('current-task-info').style.display = 'none';
+                } catch(e) {
+                    this.showNotification('Gagal menyimpan ke database.', 'error');
+                }
+                this.hideLoading();
             }
 
             async setupCamera() { 
@@ -640,7 +675,7 @@
                     if(video) video.srcObject = stream;
                     this.isCameraReady = true; 
                 } catch(e) { 
-                    this.showNotification('Gagal akses kamera','error'); 
+                    this.showNotification('Akses kamera ditolak/gagal','error'); 
                 } 
             }
             
@@ -655,7 +690,7 @@
                 this.isCameraReady = false; 
             }
 
-            // ADMIN
+            // --- MENU ADMIN ---
             async loadAdminData() { 
                 this.showLoading(); 
                 const usersSnap = await db.collection('users').get(); 
@@ -699,20 +734,34 @@
                 if(emp && emp !== 'all') filtered = filtered.filter(s=>s.userId === emp); 
                 if(branch && branch !== 'all') filtered = filtered.filter(s=>s.branch === branch); 
                 if(floor && floor !== 'all') filtered = filtered.filter(s=>s.floor === floor); 
+                
                 const tbody = document.getElementById('table-body'); 
-                if(filtered.length===0) { tbody.innerHTML = '<tr><td colspan="7">Tidak ada data</td></tr>'; return; }
+                if(filtered.length===0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Tidak ada data laporan ditemukan</td></tr>'; return; }
                 let html = ''; 
                 filtered.forEach(sub => { 
                     const date = new Date(sub.createdAt).toLocaleString('id-ID'); 
                     const allPhotos = Object.values(sub.taskPhotos || {}); 
-                    const gallery = `<div class="photo-gallery">${allPhotos.slice(0,3).map(p=>`<img src="${p}" class="photo-thumb" onclick='window.attendanceSystem.showSlideshow([${JSON.stringify(p)}], "Foto Tugas")'>`).join('')}${allPhotos.length>3?`<div class="photo-thumb" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;" onclick='window.attendanceSystem.showSlideshow(${JSON.stringify(allPhotos)}, "${sub.userName} - ${sub.floor}")'>+${allPhotos.length-3}</div>`:''}</div>`; 
+                    
+                    // Escape string untuk memitigasi issue onclick JSON array stringify
+                    const safePhotosJson = JSON.stringify(allPhotos).replace(/'/g, "&apos;").replace(/"/g, '&quot;');
+                    
+                    let gallery = '<div class="photo-gallery">';
+                    allPhotos.slice(0,3).forEach(p => {
+                        const singlePhotoJson = JSON.stringify([p]).replace(/'/g, "&apos;").replace(/"/g, '&quot;');
+                        gallery += `<img src="${p}" class="photo-thumb" onclick="window.attendanceSystem.showSlideshow(${singlePhotoJson}, 'Foto Tugas')">`;
+                    });
+                    if(allPhotos.length > 3) {
+                        gallery += `<div class="photo-thumb" style="background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;" onclick="window.attendanceSystem.showSlideshow(${safePhotosJson}, '${sub.userName} - ${sub.floor}')">+${allPhotos.length-3}</div>`;
+                    }
+                    gallery += '</div>';
+
                     html += `<tr>
                         <td>${date}</td>
                         <td><strong>${sub.userName||'-'}</strong></td>
                         <td>${sub.branch}</td>
                         <td><span class="badge-floor">${sub.floor}</span></td>
-                        <td class="task-list-detail">${(sub.completedTaskIds||[]).length} tugas</td>
-                        <td><span class="badge-floor">${(sub.completedTaskIds||[]).length} selesai</span><div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div></td>
+                        <td class="task-list-detail">${(sub.completedTaskIds||[]).length} tugas dikerjakan</td>
+                        <td><span class="badge-floor" style="background:#d1fae5; color:#065f46;">${(sub.completedTaskIds||[]).length} selesai</span><div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div></td>
                         <td>${gallery}</td>
                     </tr>`; 
                 }); 
@@ -798,7 +847,7 @@
                 document.getElementById('admin-logout')?.addEventListener('click',()=>this.logout()); 
                 document.getElementById('employee-start')?.addEventListener('click',()=>this.startSession()); 
                 document.getElementById('employee-save')?.addEventListener('click',()=>this.saveProgress()); 
-                document.getElementById('btn-capture')?.addEventListener('click',()=>this.showNotification('Pilih tugas, lalu klik ikon kamera di samping tugas','info'));
+                document.getElementById('btn-capture')?.addEventListener('click',()=>this.showNotification('Silahkan klik logo kamera di sebelah kanan masing-masing deskripsi tugas!','info'));
                 document.getElementById('btn-switch-camera')?.addEventListener('click',()=>this.switchCamera()); 
                 document.getElementById('btn-apply-filter')?.addEventListener('click',()=>this.renderTable()); 
                 document.getElementById('btn-export-excel')?.addEventListener('click',()=>this.exportToExcel()); 
