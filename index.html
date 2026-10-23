@@ -388,6 +388,9 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        // Tanggal lokal perangkat (WIB), format YYYY-MM-DD. toISOString() memakai UTC -> sebelum jam 07:00 WIB tanggalnya mundur sehari.
+        const localDateStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
         const MASTER_TASKS = {
             PURI: { 
                 'Lantai 1': ['Menyapu Area Lantai 1','Mengepel Area Lantai 1','Membersihkan Ruang Meeting Lantai 1','Membersihkan Kaca','Membersihkan Pintu Depan','Membersihkan Lemari APD','Membersihkan Langit-Langit','Membersihkan toilet','Membersihkan Area Pantry'],
@@ -528,7 +531,7 @@
             async loadCollaborativeTasks() {
                 const branch = this.currentSession.branch, floor = this.currentSession.floor;
                 const allTaskNames = MASTER_TASKS[branch]?.[floor] || [];
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = localDateStr();
                 
                 const snapshot = await db.collection('ob_submissions').where('branch','==',branch).where('floor','==',floor).where('date','==',todayStr).get();
                 const globalCompleted = new Set();
@@ -640,7 +643,7 @@
                 if(this.currentSession.selectedTasks.length === 0) return this.showNotification('Pilih minimal 1 tugas yang sudah selesai difoto','warning'); 
                 this.showLoading();
                 try {
-                    const today = new Date().toISOString().split('T')[0]; 
+                    const today = localDateStr(); 
                     const submission = { 
                         userId: this.currentUser.uid, 
                         userName: this.currentUser.name || this.currentUser.email, 
@@ -708,7 +711,7 @@
             updateStats() { 
                 document.getElementById('total-karyawan').innerText = this.employees.length; 
                 document.getElementById('total-submissions').innerText = this.submissions.length; 
-                const today = new Date().toISOString().split('T')[0]; 
+                const today = localDateStr(); 
                 const todaySubs = this.submissions.filter(s=>s.date===today); 
                 const uniqueFloors = new Set(todaySubs.map(s=>`${s.branch}_${s.floor}`)); 
                 document.getElementById('completed-floors').innerText = uniqueFloors.size; 
@@ -768,22 +771,143 @@
                 tbody.innerHTML = html; 
             }
             
-            getFilteredData() { 
+            getFilteredData(ignoreEmployee = false) { 
                 let f = [...this.submissions]; 
                 const s = document.getElementById('filter-start-date')?.value, e = document.getElementById('filter-end-date')?.value, emp = document.getElementById('filter-employee')?.value, br = document.getElementById('filter-branch')?.value, fl = document.getElementById('filter-floor-admin')?.value; 
                 if(s) f=f.filter(d=>d.date>=s); 
                 if(e) f=f.filter(d=>d.date<=e); 
-                if(emp && emp!=='all') f=f.filter(d=>d.userId===emp); 
+                if(!ignoreEmployee && emp && emp!=='all') f=f.filter(d=>d.userId===emp); 
                 if(br && br!=='all') f=f.filter(d=>d.branch===br); 
                 if(fl && fl!=='all') f=f.filter(d=>d.floor===fl); 
                 return f; 
             }
             
             async exportToExcel() { 
-                const data = this.getFilteredData().map(d=>({ Tanggal:d.date, OB:d.userName, Cabang:d.branch, Lantai:d.floor, TugasSelesai:(d.completedTaskIds||[]).length, Waktu:d.createdAt })); 
-                const wb = XLSX.utils.book_new(); 
-                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), 'Laporan OB'); 
-                XLSX.writeFile(wb, `laporan_ob_${new Date().toISOString().split('T')[0]}.xlsx`); 
+                const data  = this.getFilteredData();      // sesuai filter (termasuk filter OB)
+                const scope = this.getFilteredData(true);  // semua OB -> untuk tahu tugas yang dikerjakan OB lain
+                if(!data.length) return this.showNotification('Tidak ada data untuk diexport','warning');
+
+                const jam = iso => iso ? new Date(iso).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}) : '';
+                const waktu = iso => iso ? new Date(iso).toLocaleString('id-ID') : '';
+                const namaOB = s => s.userName || s.userEmail || '-';
+
+                // Siapa mengerjakan tugas apa: key "tanggal|cabang|lantai" -> { taskId: [{userId, nama, waktu}] }
+                const pelaksana = {};
+                scope.forEach(s => {
+                    const k = `${s.date}|${s.branch}|${s.floor}`;
+                    pelaksana[k] = pelaksana[k] || {};
+                    (s.completedTaskIds||[]).forEach(id => {
+                        const arr = pelaksana[k][id] = pelaksana[k][id] || [];
+                        if(!arr.some(x => x.userId === s.userId)) arr.push({ userId: s.userId, nama: namaOB(s), waktu: s.taskTimestamps?.[id] || s.createdAt });
+                    });
+                });
+
+                // ===== Gabungkan submission per OB + tanggal + cabang + lantai =====
+                const grup = {};
+                data.forEach(s => {
+                    const k = `${s.userId}|${s.date}|${s.branch}|${s.floor}`;
+                    const g = grup[k] = grup[k] || { userId:s.userId, nama:namaOB(s), email:s.userEmail||'', date:s.date, branch:s.branch, floor:s.floor, done:new Map(), submit:0, last:s.createdAt };
+                    g.submit++;
+                    if(s.createdAt > g.last) g.last = s.createdAt;
+                    (s.completedTaskIds||[]).forEach(id => { if(!g.done.has(id)) g.done.set(id, s.taskTimestamps?.[id] || s.createdAt); });
+                });
+                const grupList = Object.values(grup).sort((a,b) => a.date.localeCompare(b.date) || a.nama.localeCompare(b.nama) || a.branch.localeCompare(b.branch) || a.floor.localeCompare(b.floor));
+
+                const ringkasan = [], detail = [];
+                grupList.forEach(g => {
+                    const tugas = MASTER_TASKS[g.branch]?.[g.floor] || [];
+                    const pl = pelaksana[`${g.date}|${g.branch}|${g.floor}`] || {};
+                    const dikerjakan = [], olehLain = [], belum = [];
+                    tugas.forEach((nama, i) => {
+                        const id = `${g.branch}_${g.floor}_${i}`;
+                        const base = { 'Tanggal':g.date, 'Nama OB':g.nama, 'Cabang':g.branch, 'Lantai':g.floor, 'No':i+1, 'Tugas':nama };
+                        if(g.done.has(id)) {
+                            dikerjakan.push(`${nama} (${jam(g.done.get(id))})`);
+                            detail.push({ ...base, 'Status':'DIKERJAKAN', 'Jam':jam(g.done.get(id)), 'Keterangan':'Dikerjakan oleh OB ini' });
+                        } else if((pl[id]||[]).length) {
+                            const siapa = pl[id].map(x => `${x.nama} ${jam(x.waktu)}`).join(', ');
+                            olehLain.push(`${nama} [${siapa}]`);
+                            detail.push({ ...base, 'Status':'DIKERJAKAN OB LAIN', 'Jam':'', 'Keterangan':`Oleh: ${siapa}` });
+                        } else {
+                            belum.push(nama);
+                            detail.push({ ...base, 'Status':'BELUM DIKERJAKAN', 'Jam':'', 'Keterangan':'Belum dikerjakan siapa pun' });
+                        }
+                    });
+                    const selesaiLantai = tugas.length - belum.length;
+                    ringkasan.push({
+                        'Tanggal': g.date,
+                        'Nama OB': g.nama,
+                        'Email': g.email,
+                        'Cabang': g.branch,
+                        'Lantai': g.floor,
+                        'Total Tugas Lantai': tugas.length,
+                        'Dikerjakan OB Ini': dikerjakan.length,
+                        'Tidak Dikerjakan OB Ini': tugas.length - dikerjakan.length,
+                        'Daftar Dikerjakan': dikerjakan.join('; ') || '-',
+                        'Dikerjakan OB Lain': olehLain.join('; ') || '-',
+                        'Belum Dikerjakan Siapa Pun': belum.join('; ') || '-',
+                        'Progress Lantai (%)': tugas.length ? Math.round(selesaiLantai / tugas.length * 100) : 0,
+                        'Jumlah Simpan': g.submit,
+                        'Terakhir Simpan': waktu(g.last)
+                    });
+                });
+
+                // ===== Status lantai: semua tugas di semua lantai, per tanggal yang ada aktivitas =====
+                const brF = document.getElementById('filter-branch')?.value, flF = document.getElementById('filter-floor-admin')?.value;
+                const tanggalList = [...new Set(scope.map(s => s.date))].sort();
+                const statusLantai = [];
+                tanggalList.forEach(tgl => {
+                    Object.entries(MASTER_TASKS).forEach(([br, floors]) => {
+                        if(brF && brF !== 'all' && br !== brF) return;
+                        Object.entries(floors).forEach(([fl, tugas]) => {
+                            if(flF && flF !== 'all' && fl !== flF) return;
+                            const pl = pelaksana[`${tgl}|${br}|${fl}`] || {};
+                            tugas.forEach((nama, i) => {
+                                const p = pl[`${br}_${fl}_${i}`] || [];
+                                statusLantai.push({
+                                    'Tanggal':tgl, 'Cabang':br, 'Lantai':fl, 'No':i+1, 'Tugas':nama,
+                                    'Status': p.length ? 'SELESAI' : 'BELUM',
+                                    'Dikerjakan Oleh': p.map(x => x.nama).join(', ') || '-',
+                                    'Jam': p.map(x => jam(x.waktu)).join(', ')
+                                });
+                            });
+                        });
+                    });
+                });
+
+                // ===== Rekap per OB (total periode) =====
+                const rekapMap = {};
+                grupList.forEach(g => {
+                    const tugas = MASTER_TASKS[g.branch]?.[g.floor] || [];
+                    const r = rekapMap[g.userId] = rekapMap[g.userId] || { 'Nama OB':g.nama, 'Email':g.email, hari:new Set(), lantai:new Set(), 'Total Tugas Dikerjakan':0, 'Total Tugas di Lantai yang Dikunjungi':0 };
+                    r.hari.add(g.date); r.lantai.add(`${g.branch} ${g.floor}`);
+                    r['Total Tugas Dikerjakan'] += g.done.size;
+                    r['Total Tugas di Lantai yang Dikunjungi'] += tugas.length;
+                });
+                const rekap = Object.values(rekapMap).map(r => ({
+                    'Nama OB': r['Nama OB'], 'Email': r['Email'],
+                    'Hari Aktif': r.hari.size,
+                    'Lantai Dikerjakan': [...r.lantai].sort().join(', '),
+                    'Total Tugas Dikerjakan': r['Total Tugas Dikerjakan'],
+                    'Total Tugas di Lantai yang Dikunjungi': r['Total Tugas di Lantai yang Dikunjungi'],
+                    'Kontribusi (%)': r['Total Tugas di Lantai yang Dikunjungi'] ? Math.round(r['Total Tugas Dikerjakan'] / r['Total Tugas di Lantai yang Dikunjungi'] * 100) : 0
+                })).sort((a,b) => b['Total Tugas Dikerjakan'] - a['Total Tugas Dikerjakan']);
+
+                // ===== Tulis workbook =====
+                const sheet = (rows, widths) => {
+                    const ws = XLSX.utils.json_to_sheet(rows);
+                    ws['!cols'] = widths.map(w => ({ wch: w }));
+                    if(rows.length && ws['!ref']) ws['!autofilter'] = { ref: ws['!ref'] };
+                    return ws;
+                };
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, sheet(ringkasan,   [12,18,26,9,10,10,10,12,60,60,45,10,8,20]), 'Ringkasan per OB');
+                XLSX.utils.book_append_sheet(wb, sheet(detail,      [12,18,9,10,5,38,20,8,40]), 'Detail Tugas per OB');
+                XLSX.utils.book_append_sheet(wb, sheet(statusLantai,[12,9,10,5,38,10,30,16]), 'Status Lantai');
+                XLSX.utils.book_append_sheet(wb, sheet(rekap,       [18,26,10,40,12,16,12]), 'Rekap OB');
+
+                const s = document.getElementById('filter-start-date')?.value || '', e = document.getElementById('filter-end-date')?.value || localDateStr();
+                XLSX.writeFile(wb, `laporan_ob_${s ? s + '_sd_' : ''}${e}.xlsx`); 
                 this.showNotification('Export Excel berhasil','success'); 
             }
             
@@ -793,15 +917,15 @@
                 doc.text('Laporan Kolaborasi Tugas OB',14,15); 
                 const data = this.getFilteredData().slice(0,50).map(d=>[d.date, d.userName, d.branch, d.floor, (d.completedTaskIds||[]).length]); 
                 doc.autoTable({ startY:25, head:[['Tanggal','OB','Cabang','Lantai','Tugas Selesai']], body:data, theme:'striped' }); 
-                doc.save(`laporan_ob_${new Date().toISOString().split('T')[0]}.pdf`); 
+                doc.save(`laporan_ob_${localDateStr()}.pdf`); 
                 this.showNotification('Export PDF berhasil','success'); 
             }
             
             setDefaultFilterDates() { 
                 const today = new Date(), monthAgo = new Date(); 
                 monthAgo.setDate(monthAgo.getDate()-30); 
-                if(document.getElementById('filter-start-date')) document.getElementById('filter-start-date').value = monthAgo.toISOString().split('T')[0]; 
-                if(document.getElementById('filter-end-date')) document.getElementById('filter-end-date').value = today.toISOString().split('T')[0]; 
+                if(document.getElementById('filter-start-date')) document.getElementById('filter-start-date').value = localDateStr(monthAgo); 
+                if(document.getElementById('filter-end-date')) document.getElementById('filter-end-date').value = localDateStr(today); 
             }
 
             showLoginPage() { 
